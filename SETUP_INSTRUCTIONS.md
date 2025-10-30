@@ -53,4 +53,45 @@ Edita `frontend/src/styles/variables.scss` para cambiar la paleta.
 
 Ver `README.md` para documentación completa del proyecto.
 
+---
+
+## 🚀 Despliegue en Vercel
+
+### ⚠️ IMPORTANTE: Configurar Root Directory
+
+Vercel necesita que configures el **Root Directory** correctamente:
+
+1. Ve a tu proyecto en [Vercel Dashboard](https://vercel.com)
+2. **Settings** → **General**
+3. **Root Directory** → Cambia a `/frontend`
+4. **Save**
+
+### Configuración Automática
+
+Ya existe `vercel.json` en la carpeta `frontend/` con esta configuración:
+```json
+{
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist/frontend/browser",
+  "framework": "angular",
+  "installCommand": "npm install"
+}
+```
+
+### Deploy con CLI
+
+```bash
+cd frontend
+vercel login
+vercel
+```
+
+### Nota Importante
+
+- **Frontend**: Se despliega en Vercel
+- **Backend**: Se despliega en Render/Railway (NO en Vercel)
+- **Base de Datos**: Supabase
+
+Ver README.md para más detalles sobre el backend.
+
 

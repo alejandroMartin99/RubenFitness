@@ -274,6 +274,28 @@ vercel
 - [ ] Mobile app (React Native)
 - [ ] Premium subscription features
 
+## 🌐 Deployment
+
+**📖 Ver [DEPLOYMENT_INSTRUCTIONS.md](DEPLOYMENT_INSTRUCTIONS.md) para guía completa**
+
+### Despliegue Rápido en Vercel
+
+1. **Configura Root Directory** en Vercel Dashboard:
+   - Settings → General → Root Directory → `/frontend`
+
+2. O usa CLI:
+   ```bash
+   cd frontend
+   vercel login
+   vercel
+   ```
+
+3. **Backend**: Despliega en Render/Railway (ver instrucciones completas)
+
+**Nota**: Ya existe `vercel.json` configurado en la raíz y en `frontend/`
+
+---
+
 ## 🐛 Troubleshooting
 
 ### Backend won't start
@@ -288,6 +310,11 @@ vercel
 ### CORS errors
 - Verify backend is running on port 8000
 - Check CORS configuration in `backend/app/core/config.py`
+
+### Vercel deployment errors
+- **IMPORTANTE**: Configura Root Directory como `frontend` en Vercel Dashboard
+- Output Directory debe ser `dist/frontend/browser` para Angular 18
+- Si Root Directory no funciona, usa el `vercel.json` en la raíz
 
 ## 📄 License
 
