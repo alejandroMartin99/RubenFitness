@@ -1,0 +1,201 @@
+.register-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 85vh;
+  padding: 2rem 1rem;
+  position: relative;
+  overflow: hidden;
+
+  /* Animated background gradient */
+  &::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(245,158,11,0.1) 0%, transparent 70%);
+    animation: pulse 8s ease-in-out infinite;
+  }
+
+  .register-card {
+    width: 100%;
+    max-width: 500px;
+    position: relative;
+    z-index: 1;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-2xl);
+    overflow: hidden;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+
+    /* Glow effect on hover */
+    &:hover {
+      border-color: var(--color-border-glow);
+      box-shadow: var(--shadow-glow);
+    }
+
+    mat-card-header {
+      padding: 3rem 3rem 1rem;
+      text-align: center;
+      background: linear-gradient(135deg, rgba(139,92,246,0.1), rgba(59,130,246,0.05));
+      border-bottom: 1px solid var(--color-border);
+
+      @media (max-width: 768px) {
+        padding: 2rem 2rem 1rem;
+      }
+
+      mat-card-title {
+        font-size: 2rem;
+        font-weight: 800;
+        margin-bottom: 0.5rem;
+        background: var(--gradient-primary);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+
+        @media (max-width: 768px) {
+          font-size: 1.75rem;
+        }
+      }
+
+      mat-card-subtitle {
+        color: var(--color-text-secondary);
+        font-size: 1rem;
+        font-weight: 400;
+      }
+    }
+
+    mat-card-content {
+      padding: 2rem 3rem 3rem;
+      max-height: 70vh;
+      overflow-y: auto;
+
+      @media (max-width: 768px) {
+        padding: 1.5rem 2rem 2rem;
+        max-height: 75vh;
+      }
+
+      /* Custom scrollbar */
+      &::-webkit-scrollbar {
+        width: 6px;
+      }
+
+      &::-webkit-scrollbar-thumb {
+        background: var(--color-border);
+        border-radius: 3px;
+      }
+
+      form {
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+      }
+    }
+
+    .full-width {
+      width: 100%;
+      margin-bottom: 0;
+    }
+
+    button[type="submit"] {
+      margin-top: 1rem;
+      padding: 0.875rem 2rem;
+      height: 50px;
+      font-size: 1rem;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      border-radius: var(--radius-lg);
+      background: var(--gradient-primary);
+      transition: all 0.3s ease;
+
+      &:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(139, 92, 246, 0.6);
+      }
+
+      &:active {
+        transform: translateY(0);
+      }
+    }
+    ::ng-deep .mat-mdc-form-field {
+      mat-label {
+        color: var(--color-text-secondary);
+        font-weight: 500;
+      }
+
+      input {
+        color: var(--color-text);
+      }
+
+      .mat-mdc-text-field-wrapper {
+        background: var(--color-surface-hover);
+        border-radius: var(--radius-md);
+      }
+
+      &.mat-focused {
+        .mat-mdc-text-field-wrapper {
+          border: 1px solid var(--color-primary);
+        }
+      }
+    }
+  }
+
+  mat-card-footer {
+    padding: 1.5rem 3rem;
+    text-align: center;
+    border-top: 1px solid var(--color-border);
+    background: var(--color-surface-hover);
+
+    p {
+      color: var(--color-text-secondary);
+      margin: 0;
+
+      a {
+        color: var(--color-primary);
+        text-decoration: none;
+        font-weight: 600;
+        transition: all 0.2s ease;
+
+        &:hover {
+          color: var(--color-primary-light);
+        }
+      }
+    }
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 0.5;
+  }
+  50% {
+    opacity: 0.8;
+  }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .register-container {
+    min-height: 80vh;
+    padding: 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .register-container {
+    .register-card {
+      mat-card-header {
+        padding: 1.5rem 1.5rem 0.5rem;
+      }
+
+      mat-card-content {
+        padding: 1rem 1.5rem 1.5rem;
+        gap: 1rem;
+      }
+    }
+  }
+}
+
+

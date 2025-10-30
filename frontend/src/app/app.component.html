@@ -1,0 +1,53 @@
+<!-- Main Application Shell -->
+<div class="app-container">
+  <!-- Navigation Bar -->
+  <mat-toolbar color="primary" class="navbar">
+    <button mat-icon-button class="menu-icon" *ngIf="isAuthenticated">
+      <mat-icon>menu</mat-icon>
+    </button>
+    
+    <span class="navbar-title">{{ title }}</span>
+    
+    <span class="spacer"></span>
+    
+    <!-- Authenticated User Menu -->
+    <ng-container *ngIf="isAuthenticated">
+      <span class="user-info">
+        {{ authService.getCurrentUser()?.fullName || authService.getCurrentUser()?.email }}
+      </span>
+      <button mat-icon-button [matMenuTriggerFor]="userMenu">
+        <mat-icon>account_circle</mat-icon>
+      </button>
+      <mat-menu #userMenu="matMenu">
+        <button mat-menu-item routerLink="/dashboard">
+          <mat-icon>dashboard</mat-icon>
+          <span>Dashboard</span>
+        </button>
+        <button mat-menu-item routerLink="/progress">
+          <mat-icon>bar_chart</mat-icon>
+          <span>Progress</span>
+        </button>
+        <button mat-menu-item routerLink="/assistant">
+          <mat-icon>chat</mat-icon>
+          <span>AI Assistant</span>
+        </button>
+        <button mat-menu-item routerLink="/coach" *ngIf="authService.isAdmin()">
+          <mat-icon>dashboard</mat-icon>
+          <span>Coach Panel</span>
+        </button>
+        <mat-divider></mat-divider>
+        <button mat-menu-item (click)="onLogout()">
+          <mat-icon>logout</mat-icon>
+          <span>Logout</span>
+        </button>
+      </mat-menu>
+    </ng-container>
+  </mat-toolbar>
+
+  <!-- Main Content Area -->
+  <main class="main-content">
+    <router-outlet></router-outlet>
+  </main>
+</div>
+
+

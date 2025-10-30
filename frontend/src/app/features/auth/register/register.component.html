@@ -1,0 +1,42 @@
+<div class="register-container">
+  <mat-card class="register-card">
+    <mat-card-header>
+      <mat-card-title>Create Account</mat-card-title>
+      <mat-card-subtitle>Join Rubén Fitness today</mat-card-subtitle>
+    </mat-card-header>
+    
+    <mat-card-content>
+      <form (ngSubmit)="onSubmit()">
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Full Name</mat-label>
+          <input matInput [(ngModel)]="fullName" name="fullName">
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Email</mat-label>
+          <input matInput type="email" [(ngModel)]="email" name="email" required>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Age</mat-label>
+          <input matInput type="number" [(ngModel)]="age" name="age">
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Password</mat-label>
+          <input matInput type="password" [(ngModel)]="password" name="password" required>
+        </mat-form-field>
+
+        <button mat-raised-button color="primary" type="submit" class="full-width">
+          Sign Up
+        </button>
+      </form>
+    </mat-card-content>
+
+    <mat-card-footer>
+      <p class="text-center">Already have an account? <a routerLink="/auth/login">Sign in</a></p>
+    </mat-card-footer>
+  </mat-card>
+</div>
+
+

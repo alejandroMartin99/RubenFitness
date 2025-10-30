@@ -1,0 +1,104 @@
+<div class="home-container">
+  <!-- Hero Section -->
+  <div class="hero-section">
+    <div class="hero-content">
+      <h1 class="hero-title">
+        Welcome back, <span class="text-gradient">{{ user?.fullName || user?.email }}</span>
+      </h1>
+      <p class="hero-subtitle">Ready to crush your fitness goals today?</p>
+    </div>
+  </div>
+
+  <!-- Feature Cards Grid -->
+  <div class="cards-grid">
+    <mat-card class="feature-card">
+      <div class="card-image-container">
+        <div class="card-image" style="background-image: linear-gradient(0deg, rgba(0,0,0,0.06), rgba(0,0,0,0.06)), url('https://images.pexels.com/photos/414029/pexels-photo-414029.jpeg?auto=compress&cs=tinysrgb&w=1600');"></div>
+        <div class="card-overlay"></div>
+        <div class="card-icon">
+          <mat-icon>fitness_center</mat-icon>
+        </div>
+      </div>
+      <mat-card-content>
+        <h2>Your Progress</h2>
+        <p>Track your fitness journey with detailed analytics and insights. Monitor your strength gains, body measurements, and workout consistency.</p>
+        <button mat-raised-button color="primary" class="feature-button" routerLink="/progress">
+          <mat-icon>arrow_forward</mat-icon>
+          View Progress
+        </button>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="feature-card">
+      <div class="card-image-container">
+        <div class="card-image" style="background-image: linear-gradient(0deg, rgba(0,0,0,0.06), rgba(0,0,0,0.06)), url('https://images.pexels.com/photos/1552242/pexels-photo-1552242.jpeg?auto=compress&cs=tinysrgb&w=1600');"></div>
+        <div class="card-overlay"></div>
+        <div class="card-icon">
+          <mat-icon>psychology</mat-icon>
+        </div>
+      </div>
+      <mat-card-content>
+        <h2>AI Assistant</h2>
+        <p>Get personalized fitness advice powered by AI. Chat with Rubén for workout plans, nutrition tips, and motivation anytime.</p>
+        <button mat-raised-button color="primary" class="feature-button" routerLink="/assistant">
+          <mat-icon>arrow_forward</mat-icon>
+          Start Chat
+        </button>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="feature-card">
+      <div class="card-image-container">
+        <div class="card-image" style="background-image: linear-gradient(0deg, rgba(0,0,0,0.06), rgba(0,0,0,0.06)), url('https://images.pexels.com/photos/4754148/pexels-photo-4754148.jpeg?auto=compress&cs=tinysrgb&w=1600');"></div>
+        <div class="card-overlay"></div>
+        <div class="card-icon">
+          <mat-icon>bar_chart</mat-icon>
+        </div>
+      </div>
+      <mat-card-content>
+        <h2>Coach Panel</h2>
+        <p>Manage clients, workouts, and coaching programs. Track client progress and create customized training programs.</p>
+        <button mat-raised-button color="primary" class="feature-button" routerLink="/coach">
+          <mat-icon>arrow_forward</mat-icon>
+          Coach Panel
+        </button>
+      </mat-card-content>
+    </mat-card>
+  </div>
+
+  <!-- Stats Section -->
+  <div class="stats-section">
+    <h2 class="section-title">Your Fitness Stats</h2>
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-icon">
+          <mat-icon>calendar_today</mat-icon>
+        </div>
+        <div class="stat-content">
+          <div class="stat-value">12</div>
+          <div class="stat-label">Days Active</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">
+          <mat-icon>local_fire_department</mat-icon>
+        </div>
+        <div class="stat-content">
+          <div class="stat-value">847</div>
+          <div class="stat-label">Calories Burned</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">
+          <mat-icon>trending_up</mat-icon>
+        </div>
+        <div class="stat-content">
+          <div class="stat-value">94%</div>
+          <div class="stat-label">Goal Completion</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
