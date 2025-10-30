@@ -1,4 +1,5 @@
-<div class="home-container">
+<!-- USER/TESTER DASHBOARD -->
+<div class="home-container" *ngIf="!isAdmin">
   <!-- Hero Section -->
   <div class="hero-section">
     <div class="hero-content">
@@ -9,6 +10,82 @@
     </div>
   </div>
 
+  <!-- Daily Workout Panel -->
+  <div class="daily-workout-section">
+    <mat-card class="workout-card">
+      <mat-card-header>
+        <mat-card-title>
+          <mat-icon>fitness_center</mat-icon>
+          Today's Workout
+        </mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="workout-info">
+          <h3>Full Body Strength</h3>
+          <p class="workout-time">
+            <mat-icon>schedule</mat-icon>
+            Estimated: 45 minutes
+          </p>
+        </div>
+        <button mat-raised-button color="primary" class="start-workout-btn">
+          <mat-icon>play_arrow</mat-icon>
+          Start Workout
+        </button>
+      </mat-card-content>
+    </mat-card>
+  </div>
+
+  <!-- Daily Progress Indicators -->
+  <div class="progress-indicators">
+    <h2 class="section-title">Today's Progress</h2>
+    <div class="indicators-grid">
+      <div class="indicator-card">
+        <div class="indicator-icon steps">
+          <mat-icon>directions_walk</mat-icon>
+        </div>
+        <div class="indicator-content">
+          <div class="indicator-value">8,234</div>
+          <div class="indicator-label">Steps</div>
+          <div class="indicator-progress">
+            <div class="progress-bar">
+              <div class="progress-fill" style="width: 82%"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="indicator-card">
+        <div class="indicator-icon water">
+          <mat-icon>water_drop</mat-icon>
+        </div>
+        <div class="indicator-content">
+          <div class="indicator-value">1.8L</div>
+          <div class="indicator-label">Water</div>
+          <div class="indicator-progress">
+            <div class="progress-bar">
+              <div class="progress-fill" style="width: 60%"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="indicator-card">
+        <div class="indicator-icon sleep">
+          <mat-icon>bedtime</mat-icon>
+        </div>
+        <div class="indicator-content">
+          <div class="indicator-value">7h 32m</div>
+          <div class="indicator-label">Sleep</div>
+          <div class="indicator-progress">
+            <div class="progress-bar">
+              <div class="progress-fill" style="width: 94%"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Feature Cards Grid -->
   <div class="cards-grid">
     <mat-card class="feature-card">
@@ -16,12 +93,12 @@
         <div class="card-image" style="background-image: linear-gradient(0deg, rgba(0,0,0,0.06), rgba(0,0,0,0.06)), url('https://images.pexels.com/photos/414029/pexels-photo-414029.jpeg?auto=compress&cs=tinysrgb&w=1600');"></div>
         <div class="card-overlay"></div>
         <div class="card-icon">
-          <mat-icon>fitness_center</mat-icon>
+          <mat-icon>bar_chart</mat-icon>
         </div>
       </div>
       <mat-card-content>
         <h2>Your Progress</h2>
-        <p>Track your fitness journey with detailed analytics and insights. Monitor your strength gains, body measurements, and workout consistency.</p>
+        <p>Track your fitness journey with detailed analytics. Monitor strength gains, body measurements, and consistency.</p>
         <button mat-raised-button color="primary" class="feature-button" routerLink="/progress">
           <mat-icon>arrow_forward</mat-icon>
           View Progress
@@ -39,7 +116,7 @@
       </div>
       <mat-card-content>
         <h2>AI Assistant</h2>
-        <p>Get personalized fitness advice powered by AI. Chat with Rubén for workout plans, nutrition tips, and motivation anytime.</p>
+        <p>Get personalized fitness advice from Rubén. Chat about workouts, nutrition, and motivation anytime.</p>
         <button mat-raised-button color="primary" class="feature-button" routerLink="/assistant">
           <mat-icon>arrow_forward</mat-icon>
           Start Chat
@@ -52,15 +129,15 @@
         <div class="card-image" style="background-image: linear-gradient(0deg, rgba(0,0,0,0.06), rgba(0,0,0,0.06)), url('https://images.pexels.com/photos/4754148/pexels-photo-4754148.jpeg?auto=compress&cs=tinysrgb&w=1600');"></div>
         <div class="card-overlay"></div>
         <div class="card-icon">
-          <mat-icon>bar_chart</mat-icon>
+          <mat-icon>emoji_events</mat-icon>
         </div>
       </div>
       <mat-card-content>
-        <h2>Coach Panel</h2>
-        <p>Manage clients, workouts, and coaching programs. Track client progress and create customized training programs.</p>
-        <button mat-raised-button color="primary" class="feature-button" routerLink="/coach">
+        <h2>Achievements</h2>
+        <p>Your streaks, badges, and milestones. Celebrate your progress and stay motivated every day.</p>
+        <button mat-raised-button color="primary" class="feature-button" routerLink="/progress">
           <mat-icon>arrow_forward</mat-icon>
-          Coach Panel
+          View Achievements
         </button>
       </mat-card-content>
     </mat-card>
@@ -97,8 +174,166 @@
           <div class="stat-label">Goal Completion</div>
         </div>
       </div>
+      <div class="stat-card">
+        <div class="stat-icon">
+          <mat-icon>whatshot</mat-icon>
+        </div>
+        <div class="stat-content">
+          <div class="stat-value">5</div>
+          <div class="stat-label">Day Streak</div>
+        </div>
+      </div>
     </div>
   </div>
 </div>
 
+<!-- ADMIN/COACH DASHBOARD -->
+<div class="home-container" *ngIf="isAdmin">
+  <!-- Hero Section -->
+  <div class="hero-section">
+    <div class="hero-content">
+      <h1 class="hero-title">
+        Coach Dashboard, <span class="text-gradient">{{ user?.fullName || 'Rubén' }}</span>
+      </h1>
+      <p class="hero-subtitle">Manage your clients and track their progress</p>
+    </div>
+  </div>
 
+  <!-- Quick Stats -->
+  <div class="stats-section">
+    <h2 class="section-title">Overview</h2>
+    <div class="stats-grid">
+      <div class="stat-card admin-stat">
+        <div class="stat-icon">
+          <mat-icon>people</mat-icon>
+        </div>
+        <div class="stat-content">
+          <div class="stat-value">24</div>
+          <div class="stat-label">Active Clients</div>
+        </div>
+      </div>
+      <div class="stat-card admin-stat">
+        <div class="stat-icon">
+          <mat-icon>check_circle</mat-icon>
+        </div>
+        <div class="stat-content">
+          <div class="stat-value">87%</div>
+          <div class="stat-label">Completion Rate</div>
+        </div>
+      </div>
+      <div class="stat-card admin-stat">
+        <div class="stat-icon">
+          <mat-icon>warning</mat-icon>
+        </div>
+        <div class="stat-content">
+          <div class="stat-value">3</div>
+          <div class="stat-label">At Risk</div>
+        </div>
+      </div>
+      <div class="stat-card admin-stat">
+        <div class="stat-icon">
+          <mat-icon>trending_up</mat-icon>
+        </div>
+        <div class="stat-content">
+          <div class="stat-value">12%</div>
+          <div class="stat-label">Growth</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Feature Cards Grid -->
+  <div class="cards-grid">
+    <mat-card class="feature-card">
+      <div class="card-image-container">
+        <div class="card-image" style="background-image: linear-gradient(0deg, rgba(0,0,0,0.06), rgba(0,0,0,0.06)), url('https://images.pexels.com/photos/3861958/pexels-photo-3861958.jpeg?auto=compress&cs=tinysrgb&w=1600');"></div>
+        <div class="card-overlay"></div>
+        <div class="card-icon">
+          <mat-icon>people_outline</mat-icon>
+        </div>
+      </div>
+      <mat-card-content>
+        <h2>Client Management</h2>
+        <p>View and manage all your clients. Filter by activity level, progress, and risk of abandonment.</p>
+        <button mat-raised-button color="primary" class="feature-button" routerLink="/coach">
+          <mat-icon>arrow_forward</mat-icon>
+          Manage Clients
+        </button>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="feature-card">
+      <div class="card-image-container">
+        <div class="card-image" style="background-image: linear-gradient(0deg, rgba(0,0,0,0.06), rgba(0,0,0,0.06)), url('https://images.pexels.com/photos/7988079/pexels-photo-7988079.jpeg?auto=compress&cs=tinysrgb&w=1600');"></div>
+        <div class="card-overlay"></div>
+        <div class="card-icon">
+          <mat-icon>chat_bubble_outline</mat-icon>
+        </div>
+      </div>
+      <mat-card-content>
+        <h2>Automated Messages</h2>
+        <p>AI-generated motivational messages. Quick response templates for personalized communication.</p>
+        <button mat-raised-button color="primary" class="feature-button" routerLink="/coach">
+          <mat-icon>arrow_forward</mat-icon>
+          View Messages
+        </button>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="feature-card">
+      <div class="card-image-container">
+        <div class="card-image" style="background-image: linear-gradient(0deg, rgba(0,0,0,0.06), rgba(0,0,0,0.06)), url('https://images.pexels.com/photos/618833/pexels-photo-618833.jpeg?auto=compress&cs=tinysrgb&w=1600');"></div>
+        <div class="card-overlay"></div>
+        <div class="card-icon">
+          <mat-icon>share</mat-icon>
+        </div>
+      </div>
+      <mat-card-content>
+        <h2>Social Content</h2>
+        <p>Generate achievement images and progress posts. Ready-to-share content for testimonials.</p>
+        <button mat-raised-button color="primary" class="feature-button" routerLink="/coach">
+          <mat-icon>arrow_forward</mat-icon>
+          Generate Content
+        </button>
+      </mat-card-content>
+    </mat-card>
+  </div>
+
+  <!-- Recent Activity -->
+  <div class="activity-section">
+    <h2 class="section-title">Recent Activity</h2>
+    <mat-card class="activity-card">
+      <mat-card-content>
+        <div class="activity-list">
+          <div class="activity-item">
+            <div class="activity-icon">
+              <mat-icon>check_circle</mat-icon>
+            </div>
+            <div class="activity-content">
+              <strong>John Doe</strong> completed today's workout
+              <span class="activity-time">2 hours ago</span>
+            </div>
+          </div>
+          <div class="activity-item">
+            <div class="activity-icon warning">
+              <mat-icon>warning</mat-icon>
+            </div>
+            <div class="activity-content">
+              <strong>Sarah Smith</strong> missed 3 consecutive workouts
+              <span class="activity-time">4 hours ago</span>
+            </div>
+          </div>
+          <div class="activity-item">
+            <div class="activity-icon">
+              <mat-icon>emoji_events</mat-icon>
+            </div>
+            <div class="activity-content">
+              <strong>Mike Johnson</strong> reached a new PR!
+              <span class="activity-time">6 hours ago</span>
+            </div>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+</div>
