@@ -52,11 +52,15 @@ RubenFitness/
 
 ## 🛠️ Installation & Setup
 
+### ⚡ Quick Start
+
+For the fastest setup, see [QUICK_SETUP.md](QUICK_SETUP.md)
+
 ### Prerequisites
 
 - **Node.js** 18+ and npm
 - **Python** 3.10+
-- **Supabase** account (free tier)
+- **Supabase** account (free tier) - Optional for initial development
 - **OpenAI** API key (optional for development)
 
 ### Backend Setup
@@ -84,7 +88,7 @@ pip install -r requirements.txt
 
 4. Configure environment variables:
 ```bash
-copy .env.example .env
+cp .env.example .env
 ```
 
 Edit `.env` and add your credentials:
@@ -92,7 +96,10 @@ Edit `.env` and add your credentials:
 SUPABASE_URL=your_supabase_url
 SUPABASE_KEY=your_supabase_key
 OPENAI_API_KEY=your_openai_key
+CORS_ORIGINS=http://localhost:4200
 ```
+
+**Note**: You can leave Supabase credentials empty to use mock mode for development.
 
 5. Run the backend server:
 ```bash
@@ -100,6 +107,7 @@ uvicorn app.main:app --reload --port 8000
 ```
 
 Backend will be available at `http://localhost:8000`
+API Documentation: `http://localhost:8000/docs`
 
 ### Frontend Setup
 
@@ -113,8 +121,17 @@ cd frontend
 npm install
 ```
 
-3. Update environment configuration (optional):
-Edit `src/environments/environment.ts` and add your API URL if different from default.
+3. Update environment configuration:
+Edit `src/environments/environment.ts`:
+```typescript
+export const environment = {
+  production: false,
+  apiUrl: 'http://localhost:8000',
+  supabaseUrl: '',  // Optional for initial development
+  supabaseKey: '',   // Optional for initial development
+  // ...
+};
+```
 
 4. Run the development server:
 ```bash
@@ -124,6 +141,15 @@ ng serve
 ```
 
 Frontend will be available at `http://localhost:4200`
+
+### 🔐 Supabase Setup (Optional)
+
+For production features, configure Supabase:
+
+1. Read [SUPABASE_SETUP.md](SUPABASE_SETUP.md) for detailed instructions
+2. Execute `backend/supabase_schema.sql` in Supabase SQL Editor
+3. Update environment variables with your credentials
+4. Restart both servers
 
 ## 🎨 Customizing the Color Palette
 
@@ -302,6 +328,8 @@ vercel
 - Check if port 8000 is available
 - Verify Python version is 3.10+
 - Ensure virtual environment is activated
+- See [backend/START_SERVER.md](backend/START_SERVER.md) for detailed instructions
+- Dependencies installed: `.venv\Scripts\python.exe -m pip install -r requirements.txt`
 
 ### Frontend build errors
 - Clear node_modules and reinstall: `rm -rf node_modules && npm install`
