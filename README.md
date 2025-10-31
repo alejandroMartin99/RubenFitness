@@ -1,359 +1,214 @@
-# Rubén Fitness - AI-Powered Training Platform
+# 🏋️ Rubén Fitness - AI-Powered Training Platform
 
-A modern fitness application powered by AI, featuring personalized workout plans, progress tracking, and an intelligent fitness assistant.
-
-## 🚀 Features
-
-- **AI-Powered Chat Assistant**: Get personalized fitness advice from Rubén
-- **Progress Tracking**: Monitor your workouts and track your fitness journey
-- **Smart Workout Plans**: AI-generated workouts based on your goals
-- **Dashboard**: Beautiful, intuitive interface for managing your fitness goals
-- **Real-time Analytics**: Visualize your progress with charts and statistics
-
-## 📋 Tech Stack
-
-### Frontend
-- **Angular 18** (without standalone components)
-- **TypeScript** with strict typing
-- **SCSS** for styling with CSS variables
-- **Tailwind CSS** for utility classes
-- **Angular Material** for UI components
-- **Chart.js** for data visualization
-
-### Backend
-- **FastAPI** (Python)
-- **Pydantic** for data validation
-- **Supabase** for database and authentication
-- **OpenAI** for AI chat functionality
-- **Firebase Cloud Messaging** for notifications
-
-## 📁 Project Structure
-
-```
-RubenFitness/
-├── frontend/          # Angular 18 application
-│   ├── src/
-│   │   ├── app/
-│   │   │   ├── core/           # Services, guards, models
-│   │   │   ├── features/       # Feature modules (auth, dashboard, etc.)
-│   │   │   └── app.module.ts
-│   │   ├── assets/
-│   │   └── styles/
-│   └── package.json
-├── backend/           # FastAPI application
-│   ├── app/
-│   │   ├── api/      # API endpoints
-│   │   ├── core/     # Configuration
-│   │   ├── models/   # Pydantic schemas
-│   │   └── services/ # Business logic
-│   └── requirements.txt
-└── README.md
-```
-
-## 🛠️ Installation & Setup
-
-### ⚡ Quick Start
-
-For the fastest setup, see [QUICK_SETUP.md](QUICK_SETUP.md)
-
-### Prerequisites
-
-- **Node.js** 18+ and npm
-- **Python** 3.10+
-- **Supabase** account (free tier) - Optional for initial development
-- **OpenAI** API key (optional for development)
-
-### Backend Setup
-
-1. Navigate to backend directory:
-```bash
-cd backend
-```
-
-2. Create virtual environment:
-```bash
-# Windows
-python -m venv .venv
-.venv\Scripts\activate
-
-# Linux/Mac
-python3 -m venv .venv
-source .venv/bin/activate
-```
-
-3. Install dependencies:
-```bash
-pip install -r requirements.txt
-```
-
-4. Configure environment variables:
-```bash
-cp .env.example .env
-```
-
-Edit `.env` and add your credentials:
-```env
-SUPABASE_URL=your_supabase_url
-SUPABASE_KEY=your_supabase_key
-OPENAI_API_KEY=your_openai_key
-CORS_ORIGINS=http://localhost:4200
-```
-
-**Note**: You can leave Supabase credentials empty to use mock mode for development.
-
-5. Run the backend server:
-```bash
-uvicorn app.main:app --reload --port 8000
-```
-
-Backend will be available at `http://localhost:8000`
-API Documentation: `http://localhost:8000/docs`
-
-### Frontend Setup
-
-1. Navigate to frontend directory:
-```bash
-cd frontend
-```
-
-2. Install dependencies:
-```bash
-npm install
-```
-
-3. Update environment configuration:
-Edit `src/environments/environment.ts`:
-```typescript
-export const environment = {
-  production: false,
-  apiUrl: 'http://localhost:8000',
-  supabaseUrl: '',  // Optional for initial development
-  supabaseKey: '',   // Optional for initial development
-  // ...
-};
-```
-
-4. Run the development server:
-```bash
-npm start
-# or
-ng serve
-```
-
-Frontend will be available at `http://localhost:4200`
-
-### 🔐 Supabase Setup (Optional)
-
-For production features, configure Supabase:
-
-1. Read [SUPABASE_SETUP.md](SUPABASE_SETUP.md) for detailed instructions
-2. Execute `backend/supabase_schema.sql` in Supabase SQL Editor
-3. Update environment variables with your credentials
-4. Restart both servers
-
-## 🎨 Customizing the Color Palette
-
-The application uses CSS variables for easy theming. To customize colors:
-
-1. Open `frontend/src/styles/variables.scss`
-2. Modify the color values under `:root`
-3. Save and refresh the application
-
-Example:
-```scss
-:root {
-  --color-primary: #3b82f6;    /* Change to your brand color */
-  --color-accent: #06b6d4;     /* Change accent color */
-  /* ... */
-}
-```
-
-## 📱 Features Documentation
-
-### Authentication
-- Mock authentication (easily replaceable with Supabase Auth)
-- Protected routes with AuthGuard
-- User session management
-
-### Chat Assistant
-- AI-powered fitness advice
-- Conversation history
-- Context-aware responses
-
-### Progress Tracking
-- Workout completion tracking
-- Progress statistics
-- Streak counting
-
-### Dashboard
-- Overview of user activities
-- Quick access to features
-- User profile information
-
-## 🔧 API Endpoints
-
-### Chat
-- `POST /api/v1/chat` - Send message to AI assistant
-- `GET /api/v1/chat/history/{user_id}` - Get chat history
-
-### Progress
-- `POST /api/v1/progress` - Record workout progress
-- `GET /api/v1/progress/{user_id}` - Get progress summary
-- `GET /api/v1/progress/{user_id}/stats` - Get detailed statistics
-
-### Health Check
-- `GET /` - Root endpoint
-- `GET /health` - Health check
-
-API documentation available at `http://localhost:8000/docs` (Swagger UI)
-
-## 🗄️ Database Schema (Supabase)
-
-### Tables Required
-
-1. **users**
-   - id (uuid, PK)
-   - email (text, unique)
-   - full_name (text)
-   - age (integer)
-   - fitness_level (text)
-   - created_at (timestamp)
-
-2. **chat_messages**
-   - id (uuid, PK)
-   - user_id (uuid, FK)
-   - role (text)
-   - content (text)
-   - timestamp (timestamp)
-
-3. **progress**
-   - id (uuid, PK)
-   - user_id (uuid, FK)
-   - workout_id (text)
-   - date (timestamp)
-   - notes (text)
-
-## 🚢 Deployment Instructions
-
-### Frontend (Vercel)
-
-1. Install Vercel CLI:
-```bash
-npm i -g vercel
-```
-
-2. From frontend directory:
-```bash
-vercel
-```
-
-3. Update environment variables in Vercel dashboard
-
-### Backend (Railway / Render)
-
-1. Create account on Railway or Render
-2. Connect your GitHub repository
-3. Set environment variables in platform dashboard
-4. Deploy
-
-### Supabase Setup
-
-1. Create a new Supabase project
-2. Run the SQL scripts to create tables (see `backend/README.md`)
-3. Copy your project URL and anon key
-4. Add to backend `.env` file
-
-### Firebase (Notifications)
-
-1. Create a Firebase project
-2. Download service account JSON
-3. Add path to `FIREBASE_CREDENTIALS_PATH` in `.env`
-4. Configure Cloud Messaging
-
-## 📝 Development Notes
-
-- The app runs in mock mode if Supabase/OpenAI credentials are not configured
-- CORS is configured to allow frontend requests
-- All API endpoints return JSON responses
-- Error handling is implemented throughout
-
-## ✅ Completed Features (Hito 1 & 2)
-
-- [x] Project structure and setup
-- [x] Authentication system with guards
-- [x] AI chat assistant integration
-- [x] Progress tracking functionality
-- [x] Dashboard with navigation
-- [x] Lazy-loaded feature modules
-- [x] Responsive design
-- [x] Mock data support for development
-- [x] API documentation with Swagger
-
-## 🚧 Pending Features
-
-- [ ] Production Supabase integration
-- [ ] Firebase Cloud Messaging setup
-- [ ] Advanced coach panel
-- [ ] Community features
-- [ ] Workout photo uploads
-- [ ] Email notifications
-- [ ] Mobile app (React Native)
-- [ ] Premium subscription features
-
-## 🌐 Deployment
-
-**📖 Ver [DEPLOYMENT_INSTRUCTIONS.md](DEPLOYMENT_INSTRUCTIONS.md) para guía completa**
-
-### Despliegue Rápido en Vercel
-
-1. **Configura Root Directory** en Vercel Dashboard:
-   - Settings → General → Root Directory → `/frontend`
-
-2. O usa CLI:
-   ```bash
-   cd frontend
-   vercel login
-   vercel
-   ```
-
-3. **Backend**: Despliega en Render/Railway (ver instrucciones completas)
-
-**Nota**: Ya existe `vercel.json` configurado en la raíz y en `frontend/`
+Plataforma de entrenamiento inteligente con asesoramiento por IA, seguimiento de progreso y dashboards diferenciados para usuarios y coaches.
 
 ---
 
-## 🐛 Troubleshooting
+## 🚀 Inicio Rápido
 
-### Backend won't start
-- Check if port 8000 is available
-- Verify Python version is 3.10+
-- Ensure virtual environment is activated
-- See [backend/START_SERVER.md](backend/START_SERVER.md) for detailed instructions
-- Dependencies installed: `.venv\Scripts\python.exe -m pip install -r requirements.txt`
+### Backend
 
-### Frontend build errors
-- Clear node_modules and reinstall: `rm -rf node_modules && npm install`
-- Check Node.js version: `node --version` (should be 18+)
+```bash
+cd backend
+python -m venv .venv
+.venv\Scripts\activate        # Windows
+source .venv/bin/activate     # Linux/Mac
 
-### CORS errors
-- Verify backend is running on port 8000
-- Check CORS configuration in `backend/app/core/config.py`
+pip install -r requirements.txt
+uvicorn app.main:app --reload --port 8000
+```
 
-### Vercel deployment errors
-- **IMPORTANTE**: Configura Root Directory como `frontend` en Vercel Dashboard
-- Output Directory debe ser `dist/frontend/browser` para Angular 18
-- Si Root Directory no funciona, usa el `vercel.json` en la raíz
+✅ Backend: http://localhost:8000  
+📚 Swagger: http://localhost:8000/docs
 
-## 📄 License
+### Frontend
 
-This project is part of the Rubén Fitness platform development.
+```bash
+cd frontend
+npm install
+npm start
+```
 
-## 🤝 Contributing
+✅ Frontend: http://localhost:4200
 
-This is a private project. For issues or questions, please contact the development team.
+**Login de prueba**: `tester@ruben.fitness` / `tester` o `admin@ruben.fitness` / `admin`
+
+---
+
+## 🎯 Características
+
+### 👤 Dashboard Usuario/Tester
+- Panel diario de entrenamiento
+- Indicadores: pasos, agua, sueño
+- Progreso y estadísticas
+- Chat con asistente IA
+- Logros y rachas
+
+### 👨‍🏫 Dashboard Coach/Admin
+- Gestión de clientes
+- Métricas clave y riesgo de abandono
+- Mensajes automatizados
+- Generación de contenido social
+
+---
+
+## 📋 Stack Tecnológico
+
+**Frontend**: Angular 18 + TypeScript + Tailwind CSS + Angular Material  
+**Backend**: FastAPI + Python + Pydantic  
+**Base de Datos**: Supabase (PostgreSQL)  
+**IA**: OpenAI para chat  
+**Notificaciones**: Firebase Cloud Messaging
+
+---
+
+## 🔧 Configuración
+
+### Variables de Entorno
+
+**Backend** (`backend/.env`):
+```env
+SUPABASE_URL=https://tu-proyecto.supabase.co
+SUPABASE_KEY=tu-service-role-key
+OPENAI_API_KEY=tu-openai-key
+CORS_ORIGINS=http://localhost:4200
+```
+
+**Frontend** (`frontend/src/environments/environment.ts`):
+```typescript
+apiUrl: 'http://localhost:8000',
+supabaseUrl: 'https://tu-proyecto.supabase.co',
+supabaseKey: 'tu-anon-key'
+```
+
+### Supabase (Opcional para Desarrollo)
+
+1. Crea proyecto en [supabase.com](https://supabase.com)
+2. Ejecuta `backend/supabase_schema.sql` en SQL Editor
+3. Copia credenciales a variables de entorno
+
+**Nota**: La app funciona sin Supabase usando datos mock.
+
+---
+
+## 📁 Estructura
+
+```
+RubenFitness/
+├── frontend/          # Angular 18
+│   ├── src/app/
+│   │   ├── core/      # Services, guards, models
+│   │   └── features/  # Modules lazy: auth, dashboard, assistant, progress, coach
+│   └── package.json
+├── backend/           # FastAPI
+│   ├── app/
+│   │   ├── api/v1/    # Endpoints: auth, chat, progress
+│   │   ├── services/  # Supabase, OpenAI
+│   │   └── models/    # Schemas Pydantic
+│   └── requirements.txt
+├── supabase_schema.sql
+└── README.md
+```
+
+---
+
+## 🔌 API Endpoints
+
+### Autenticación
+- `POST /api/v1/auth/login` - Iniciar sesión
+- `POST /api/v1/auth/register` - Registro
+- `POST /api/v1/auth/logout` - Cerrar sesión
+
+### Chat IA
+- `POST /api/v1/chat` - Enviar mensaje
+- `GET /api/v1/chat/history/{user_id}` - Historial
+
+### Progreso
+- `POST /api/v1/progress` - Registrar entrenamiento
+- `GET /api/v1/progress/{user_id}` - Resumen
+- `GET /api/v1/progress/{user_id}/stats` - Estadísticas
+
+**Docs**: http://localhost:8000/docs
+
+---
+
+## 🌐 Deploy
+
+### Frontend (Vercel)
+
+```bash
+cd frontend
+vercel login
+vercel
+```
+
+**Importante**: Configura **Root Directory** = `frontend` en Vercel Dashboard
+
+### Backend (Render/Railway)
+
+1. Crea cuenta en [render.com](https://render.com) o [railway.app](https://railway.app)
+2. Conecta GitHub
+3. Root Directory: `backend`
+4. Start Command: `uvicorn app.main:app --host 0.0.0.0 --port $PORT`
+
+---
+
+## 🎨 Personalizar Colores
+
+Edita `frontend/src/styles/variables.scss`:
+
+```scss
+:root {
+  --color-primary: #3b82f6;   /* Tu color principal */
+  --color-accent: #06b6d4;    /* Color accent */
+}
+```
+
+---
+
+## 🐛 Solución de Problemas
+
+**Backend no inicia**:
+- Verifica Python 3.10+
+- Activa entorno virtual
+- Reinstala: `pip install -r requirements.txt`
+
+**Frontend no compila**:
+- Node.js 18+
+- Limpia: `rm -rf node_modules && npm install`
+
+**CORS**:
+- Backend en puerto 8000
+- `CORS_ORIGINS` incluye `http://localhost:4200`
+
+---
+
+## ✅ Estado del Proyecto
+
+**Completado (Hito 1-2)**:
+- ✅ Estructura modular
+- ✅ Autenticación y guards
+- ✅ Dashboards diferenciados
+- ✅ Integración IA (Chat)
+- ✅ Tracking de progreso
+- ✅ API documentada
+- ✅ Modo mock para desarrollo
+
+**Pendiente**:
+- ⏳ Supabase en producción
+- ⏳ Panel coach avanzado
+- ⏳ Upload de fotos
+- ⏳ Push notifications
+- ⏳ App móvil
+
+---
+
+## 📚 Documentación Adicional
+
+- `backend/supabase_schema.sql` - Schema completo de BD
+- `backend/.env.example` - Variables de entorno
+- `SUPABASE_SETUP.md` - Guía detallada Supabase (si se necesita)
 
 ---
 
 **Built with ❤️ for fitness enthusiasts**
-
-

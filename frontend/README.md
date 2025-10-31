@@ -1,51 +1,28 @@
-# Rubén Fitness Frontend
+# Frontend - Rubén Fitness
 
-Angular 18 frontend application for the Rubén Fitness platform.
+Angular 18 con dashboards diferenciados para usuarios y coaches.
 
-## Installation
+## 🚀 Inicio Rápido
 
 ```bash
 npm install
-```
-
-## Development
-
-```bash
 npm start
-# or
-ng serve
 ```
 
-The app will be available at `http://localhost:4200`
+✅ App: http://localhost:4200
 
-## Build
+**Login**: `tester@ruben.fitness` / `tester` o `admin@ruben.fitness` / `admin`
+
+## 🎨 Personalizar Colores
+
+Edita `src/styles/variables.scss`
+
+## 📦 Build
 
 ```bash
 npm run build
 ```
 
-## Tech Stack
+## 🛠️ Stack
 
-- Angular 18
-- TypeScript
-- SCSS with CSS Variables
-- Tailwind CSS
-- Angular Material
-
-## Project Structure
-
-```
-src/
-├── app/
-│   ├── core/           # Services, guards, models
-│   ├── features/       # Feature modules
-│   └── app.module.ts   # Root module
-├── assets/            # Static assets
-└── styles/            # Global styles and variables
-```
-
-## Color Customization
-
-Edit `src/styles/variables.scss` to customize the color scheme.
-
-
+Angular 18 | TypeScript | Tailwind CSS | Angular Material
