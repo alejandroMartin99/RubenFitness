@@ -203,11 +203,12 @@ Edita `frontend/src/styles/variables.scss`:
 
 ---
 
-## 📚 Documentación Adicional
+## 📚 Archivos Importantes
 
-- `backend/supabase_schema.sql` - Schema completo de BD
-- `backend/.env.example` - Variables de entorno
-- `SUPABASE_SETUP.md` - Guía detallada Supabase (si se necesita)
+- `backend/supabase_schema.sql` - Schema completo de BD (ejecutar en Supabase)
+- `backend/START_SERVER.md` - Instrucciones de inicio backend
+- `backend/README.md` - Documentación backend
+- `frontend/README.md` - Documentación frontend
 
 ---
 
