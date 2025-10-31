@@ -83,9 +83,12 @@ supabaseKey: 'tu-anon-key'
 
 ### Supabase (Opcional para Desarrollo)
 
+Ver guía completa: **[CONNECT_SUPABASE.md](CONNECT_SUPABASE.md)**
+
+**Quick**:
 1. Crea proyecto en [supabase.com](https://supabase.com)
 2. Ejecuta `backend/supabase_schema.sql` en SQL Editor
-3. Copia credenciales a variables de entorno
+3. Copia credenciales a `.env` y `environment.ts`
 
 **Nota**: La app funciona sin Supabase usando datos mock.
 
