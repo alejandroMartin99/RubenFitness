@@ -13,11 +13,19 @@ Ve a [render.com](https://render.com) y crea una cuenta
 1. Click en **"New"** → **"Web Service"**
 2. Conecta tu repositorio de GitHub
 3. Configura:
-   - **Name**: `ruben-fitness-backend` (o el que prefieras)
+
+**IMPORTANTE**: La raíz del repositorio tiene `backend/` y `frontend/` como carpetas. Al poner `Root Directory: backend`, Render cambia a esa carpeta y ejecuta todos los comandos desde ahí.
+
+   - **Name**: `ruben-fitness-backend`
    - **Root Directory**: `backend`
    - **Environment**: `Python 3`
    - **Build Command**: `pip install -r requirements.txt`
    - **Start Command**: `uvicorn app.main:app --host 0.0.0.0 --port $PORT`
+
+**Cómo funciona**:
+- Render entra en `backend/`
+- `pip install -r requirements.txt` encuentra `backend/requirements.txt` ✅
+- `uvicorn app.main:app` encuentra `backend/app/main.py` ✅
 
 ### 3. Variables de Entorno
 
