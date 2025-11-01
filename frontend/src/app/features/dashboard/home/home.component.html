@@ -54,18 +54,44 @@
         </div>
       </div>
 
-      <div class="indicator-card">
-        <div class="indicator-icon water">
-          <mat-icon>water_drop</mat-icon>
-        </div>
-        <div class="indicator-content">
-          <div class="indicator-value">1.8L</div>
-          <div class="indicator-label">Water</div>
-          <div class="indicator-progress">
-            <div class="progress-bar">
-              <div class="progress-fill" style="width: 60%"></div>
-            </div>
+      <!-- Water Tracking Card -->
+      <div class="water-card-expanded">
+        <div class="water-header">
+          <div class="water-icon-wrapper">
+            <mat-icon class="water-icon">water_drop</mat-icon>
           </div>
+          <div class="water-stats-header">
+            <div class="water-value">{{ (waterDrunk / 1000).toFixed(1) }}L</div>
+            <div class="water-label">de {{ (waterGoal / 1000).toFixed(1) }}L</div>
+            <div class="water-progress-text">{{ Math.round(waterPercentage) }}%</div>
+          </div>
+        </div>
+        
+        <!-- Progress Bar -->
+        <div class="water-progress-bar">
+          <div class="progress-track">
+            <div class="progress-fill-water" [style.width.%]="waterPercentage" [class.completed]="isGoalCompleted()"></div>
+          </div>
+        </div>
+        
+        <!-- Add Water Button -->
+        <button mat-raised-button color="primary" class="add-water-btn" (click)="addWater()">
+          <mat-icon>add</mat-icon>
+          Añadir 200ml
+        </button>
+        
+        <!-- Water Marks (10 dots) -->
+        <div class="water-marks-grid">
+          <div
+            *ngFor="let mark of [1,2,3,4,5,6,7,8,9,10]"
+            class="water-dot"
+            [class.filled]="waterGlasses >= mark"
+          ></div>
+        </div>
+        
+        <div class="water-footer">
+          <span *ngIf="!isGoalCompleted()">{{ getRemainingWater() }}ml restantes</span>
+          <span *ngIf="isGoalCompleted()" class="completed-text">¡Meta! 🎉</span>
         </div>
       </div>
 
