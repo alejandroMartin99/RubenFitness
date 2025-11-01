@@ -17,10 +17,10 @@ export interface SleepRequest {
 }
 
 export interface SleepResponse {
-  userId: string;
-  todaySleep?: SleepRecord;
-  last7Days: SleepRecord[];
-  averageSleep?: number;
-  createdAt: Date;
+  user_id: string;
+  today_sleep?: SleepRecord;
+  last_7_days: SleepRecord[];
+  average_sleep?: number;
+  created_at: string;
 }
 

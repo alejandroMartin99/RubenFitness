@@ -15,11 +15,11 @@ export interface WaterRequest {
 }
 
 export interface WaterResponse {
-  userId: string;
-  todayWater?: WaterRecord;
-  last7Days: WaterRecord[];
-  totalToday: number;
+  user_id: string;
+  today_water?: WaterRecord;
+  last_7_days: WaterRecord[];
+  total_today: number;
   goal: number;
-  createdAt: Date;
+  created_at: string;
 }
 

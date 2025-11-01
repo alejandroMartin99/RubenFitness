@@ -3,7 +3,6 @@ import { AuthService } from '../../../core/services/auth.service';
 import { SleepService } from '../../../core/services/sleep.service';
 import { WaterService } from '../../../core/services/water.service';
 import { User } from '../../../core/models/user.model';
-import { SleepRecord } from '../../../core/models/sleep.model';
 
 @Component({
   selector: 'app-home',
@@ -19,7 +18,6 @@ export class HomeComponent implements OnInit {
   waterDrunk: number = 0;
   waterPercentage: number = 0;
   waterGlasses: number = 0; // Number of 200ml glasses
-  motivationalMessage: string = '';
   
   private readonly motivationalMessages = {
     empty: '¡Empecemos! Tu primera copa te está esperando 💧',
@@ -33,7 +31,7 @@ export class HomeComponent implements OnInit {
   // Sleep tracking
   todaySleepHours: number = 0;
   todaySleepMinutes: number = 0;
-  sleepHistory: SleepRecord[] = [];
+  sleepHistory: any[] = [];
   averageSleep: number = 0;
   loadingSleep: boolean = false;
 
@@ -47,40 +45,33 @@ export class HomeComponent implements OnInit {
     this.user = this.authService.getCurrentUser();
     this.isAdmin = this.authService.isAdmin();
     this.loadWaterData();
-    this.updateMotivationalMessage();
     this.loadSleepData();
   }
 
+  // ==================== WATER TRACKING ====================
+  
   loadWaterData(): void {
     if (!this.user) return;
     
     this.waterService.getWaterData(7).subscribe({
-      next: (response) => {
-        if (response.todayWater) {
-          this.waterDrunk = response.todayWater.water_ml;
-          this.waterGlasses = Math.floor(this.waterDrunk / 200);
-        } else {
-          this.waterDrunk = 0;
-          this.waterGlasses = 0;
-        }
+      next: (response: any) => {
+        console.log('💧 Water GET response:', response);
+        
+        // Extract water amount from response
+        const waterAmount = response.total_today || response.water_ml || 0;
+        
+        // Update state
+        this.waterDrunk = waterAmount;
+        this.waterGlasses = Math.floor(this.waterDrunk / 200);
         this.calculateProgress();
-        this.updateMotivationalMessage();
+        
+        console.log('✅ Water updated:', this.waterDrunk, 'ml,', this.waterGlasses, 'glasses');
       },
       error: (err) => {
-        console.error('Error loading water data:', err);
-        // Fallback to localStorage
-        const today = new Date().toDateString();
-        const savedData = localStorage.getItem(`water_${this.user?.id || 'default'}_${today}`);
-        if (savedData) {
-          const data = JSON.parse(savedData);
-          this.waterDrunk = data.waterDrunk || 0;
-          this.waterGlasses = data.waterGlasses || 0;
-        } else {
-          this.waterDrunk = 0;
-          this.waterGlasses = 0;
-        }
+        console.error('❌ Error loading water:', err);
+        this.waterDrunk = 0;
+        this.waterGlasses = 0;
         this.calculateProgress();
-        this.updateMotivationalMessage();
       }
     });
   }
@@ -88,64 +79,57 @@ export class HomeComponent implements OnInit {
   addWater(): void {
     if (!this.user) return;
     
-    // Update UI immediately
-    this.waterDrunk += 200;
-    this.waterGlasses++;
-    this.calculateProgress();
-    this.updateMotivationalMessage();
+    console.log('💧 Adding 200ml water...');
     
-    // Save to backend
     this.waterService.addWater(200).subscribe({
-      next: (response) => {
-        // Reload to ensure sync with backend
+      next: (response: any) => {
+        console.log('💧 Water POST response:', response);
+        
+        // Update immediately from POST response
+        const newAmount = response.total_today || response.water_ml || (this.waterDrunk + 200);
+        this.waterDrunk = newAmount;
+        this.waterGlasses = Math.floor(this.waterDrunk / 200);
+        this.calculateProgress();
+        
+        console.log('✅ Water added:', this.waterDrunk, 'ml,', this.waterGlasses, 'glasses');
+        
+        // Reload from backend after a short delay to ensure consistency
         setTimeout(() => {
           this.loadWaterData();
-        }, 200);
+        }, 300);
       },
       error: (err) => {
-        console.error('Error saving water:', err);
-        // Fallback: save to localStorage
-        this.saveWaterDataLocal();
+        console.error('❌ Error adding water:', err);
       }
     });
-  }
-
-  saveWaterDataLocal(): void {
-    const today = new Date().toDateString();
-    const data = {
-      waterDrunk: this.waterDrunk,
-      waterGlasses: this.waterGlasses,
-      date: today
-    };
-    localStorage.setItem(`water_${this.user?.id || 'default'}_${today}`, JSON.stringify(data));
   }
 
   calculateProgress(): void {
     this.waterPercentage = Math.min((this.waterDrunk / this.waterGoal) * 100, 100);
   }
 
-  updateMotivationalMessage(): void {
+  getMotivationalMessage(): string {
     const percentage = this.waterPercentage;
     
     if (this.waterGlasses === 0) {
-      this.motivationalMessage = this.motivationalMessages.empty;
+      return this.motivationalMessages.empty;
     } else if (percentage >= 100) {
       if (this.waterDrunk > this.waterGoal) {
         const messages = this.motivationalMessages.exceeded;
-        this.motivationalMessage = messages[Math.floor(Math.random() * messages.length)];
+        return messages[Math.floor(Math.random() * messages.length)];
       } else {
         const messages = this.motivationalMessages.completed;
-        this.motivationalMessage = messages[Math.floor(Math.random() * messages.length)];
+        return messages[Math.floor(Math.random() * messages.length)];
       }
     } else if (percentage >= 75) {
       const messages = this.motivationalMessages.high;
-      this.motivationalMessage = messages[Math.floor(Math.random() * messages.length)];
+      return messages[Math.floor(Math.random() * messages.length)];
     } else if (percentage >= 50) {
       const messages = this.motivationalMessages.medium;
-      this.motivationalMessage = messages[Math.floor(Math.random() * messages.length)];
+      return messages[Math.floor(Math.random() * messages.length)];
     } else {
       const messages = this.motivationalMessages.low;
-      this.motivationalMessage = messages[Math.floor(Math.random() * messages.length)];
+      return messages[Math.floor(Math.random() * messages.length)];
     }
   }
 
@@ -157,31 +141,32 @@ export class HomeComponent implements OnInit {
     return this.waterDrunk >= this.waterGoal;
   }
   
-  // Sleep Methods
+  // ==================== SLEEP TRACKING ====================
+  
   loadSleepData(): void {
     if (!this.user) return;
     
     this.loadingSleep = true;
     this.sleepService.getSleepData(7).subscribe({
-      next: (response) => {
-        this.sleepHistory = response.last7Days || [];
-        this.averageSleep = response.averageSleep || 0;
+      next: (response: any) => {
+        console.log('😴 Sleep GET response:', response);
         
-        if (response.todaySleep) {
-          this.todaySleepHours = Math.floor(response.todaySleep.hours);
-          this.todaySleepMinutes = Math.round((response.todaySleep.hours - this.todaySleepHours) * 60);
-        } else {
-          this.todaySleepHours = 0;
-          this.todaySleepMinutes = 0;
-        }
+        // Extract sleep data from response
+        this.todaySleepHours = response.hours || 0;
+        this.todaySleepMinutes = response.minutes || 0;
+        this.sleepHistory = response.last_7_days || [];
+        this.averageSleep = response.average_sleep || 0;
         
         this.loadingSleep = false;
+        
+        console.log('✅ Sleep updated:', this.todaySleepHours, 'h', this.todaySleepMinutes, 'm');
       },
       error: (err) => {
-        console.error('Error loading sleep data:', err);
-        this.sleepHistory = [];
+        console.error('❌ Error loading sleep:', err);
         this.todaySleepHours = 0;
         this.todaySleepMinutes = 0;
+        this.sleepHistory = [];
+        this.averageSleep = 0;
         this.loadingSleep = false;
       }
     });
@@ -192,34 +177,31 @@ export class HomeComponent implements OnInit {
     
     const totalHours = this.todaySleepHours + (this.todaySleepMinutes / 60);
     
+    console.log('😴 Saving sleep:', totalHours, 'hours');
+    
     this.loadingSleep = true;
-    this.sleepService.recordSleep(totalHours, this.todaySleepMinutes).subscribe({
-      next: (response) => {
-        // Small delay to ensure backend has saved the data
+    this.sleepService.recordSleep(this.todaySleepHours, this.todaySleepMinutes).subscribe({
+      next: (response: any) => {
+        console.log('😴 Sleep POST response:', response);
+        
+        // Update immediately from POST response
+        this.todaySleepHours = response.hours || this.todaySleepHours;
+        this.todaySleepMinutes = response.minutes || this.todaySleepMinutes;
+        
+        this.loadingSleep = false;
+        
+        console.log('✅ Sleep saved:', this.todaySleepHours, 'h', this.todaySleepMinutes, 'm');
+        
+        // Reload from backend after a short delay to ensure consistency
         setTimeout(() => {
-          this.loadSleepData(); // Reload to get updated data
+          this.loadSleepData();
         }, 300);
       },
       error: (err) => {
-        console.error('Error saving sleep:', err);
+        console.error('❌ Error saving sleep:', err);
         this.loadingSleep = false;
       }
     });
-  }
-
-  formatSleepHours(hours: number): string {
-    const h = Math.floor(hours);
-    const m = Math.round((hours - h) * 60);
-    if (m === 0) {
-      return `${h}h`;
-    }
-    return `${h}h ${m}m`;
-  }
-
-  getSleepBarHeight(hours: number): number {
-    // Max height is 100px, and max sleep is 12 hours
-    const maxSleep = 12;
-    return Math.min((hours / maxSleep) * 100, 100);
   }
 
   adjustSleep(type: 'hours' | 'minutes', delta: number): void {
@@ -248,15 +230,28 @@ export class HomeComponent implements OnInit {
     }
   }
 
+  formatSleepHours(hours: number): string {
+    const h = Math.floor(hours);
+    const m = Math.round((hours - h) * 60);
+    if (m === 0) {
+      return `${h}h`;
+    }
+    return `${h}h ${m}m`;
+  }
+
   formatSleepDisplay(hours: number, minutes: number): string {
     if (hours === 0 && minutes === 0) {
       return '--:--';
     }
     return `${hours}h ${minutes.toString().padStart(2, '0')}m`;
   }
+
+  getSleepBarHeight(hours: number): number {
+    // Max height is 100px, and max sleep is 12 hours
+    const maxSleep = 12;
+    return Math.min((hours / maxSleep) * 100, 100);
+  }
   
   // Expose Math for template
   Math = Math;
 }
-
-

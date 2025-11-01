@@ -20,7 +20,7 @@ async def record_sleep(request: SleepRequest):
         request: Sleep tracking request with user_id, date, and hours
     
     Returns:
-        Success confirmation with sleep data
+        Updated sleep data after saving
     """
     try:
         # Save sleep data to database
@@ -31,18 +31,33 @@ async def record_sleep(request: SleepRequest):
             minutes=request.minutes or 0
         )
         
-        if result is None:
-            # Return mock response if database is not connected
-            return {
-                "message": "Sleep recorded (mock mode)",
-                "user_id": request.user_id,
-                "date": request.date.isoformat(),
-                "hours": request.hours
-            }
+        # Get updated sleep data for today
+        sleep_data = supabase_service.get_sleep_data(request.user_id, days=1)
+        today = date.today()
+        today_str = today.isoformat()
+        
+        today_hours = 0
+        today_minutes = 0
+        if sleep_data:
+            for s in sleep_data:
+                record_date = s.get("date", "")
+                if isinstance(record_date, str):
+                    record_date = record_date.split('T')[0] if 'T' in record_date else record_date
+                    record_date = record_date.split(' ')[0] if ' ' in record_date else record_date
+                
+                if str(record_date) == today_str:
+                    hours = float(s.get("hours", 0))
+                    today_hours = int(hours)
+                    today_minutes = int(round((hours - today_hours) * 60))
+                    break
         
         return {
-            "message": "Sleep recorded successfully",
-            "sleep": result,
+            "success": True,
+            "user_id": request.user_id,
+            "hours": today_hours,
+            "minutes": today_minutes,
+            "total_hours": today_hours + (today_minutes / 60),
+            "date": today_str,
             "timestamp": datetime.utcnow().isoformat()
         }
     
@@ -50,7 +65,7 @@ async def record_sleep(request: SleepRequest):
         raise HTTPException(status_code=500, detail=f"Error recording sleep: {str(e)}")
 
 
-@router.get("/sleep/{user_id}", response_model=SleepResponse)
+@router.get("/sleep/{user_id}")
 async def get_sleep_data(user_id: str, days: int = 7):
     """
     Get user's sleep data
@@ -60,94 +75,66 @@ async def get_sleep_data(user_id: str, days: int = 7):
         days: Number of days to retrieve (default: 7)
     
     Returns:
-        SleepResponse with today's sleep and last N days history
+        Simple JSON response with sleep data
     """
     try:
         sleep_data = supabase_service.get_sleep_data(user_id, days=days)
         
-        # Get today's sleep
-        today_sleep = None
-        last_7_days = []
+        today = date.today()
+        today_str = today.isoformat()
         
+        # Build a map of date -> hours for quick lookup
+        sleep_map = {}
         if sleep_data:
-            today = date.today()
-            today_str = today.isoformat()
-            
-            # Find today's record - handle date string matching
-            today_record = None
             for s in sleep_data:
                 record_date = s.get("date", "")
-                # Normalize date strings (remove time portion if present)
+                # Normalize date strings
                 if isinstance(record_date, str):
                     record_date = record_date.split('T')[0] if 'T' in record_date else record_date
                     record_date = record_date.split(' ')[0] if ' ' in record_date else record_date
                 
-                if str(record_date) == today_str:
-                    today_record = s
-                    break
+                hours = float(s.get("hours", 0))
+                sleep_map[str(record_date)] = hours
+        
+        # Get today's sleep
+        today_hours_value = sleep_map.get(today_str, 0)
+        today_hours = int(today_hours_value)
+        today_minutes = int(round((today_hours_value - today_hours) * 60))
+        
+        # Build history
+        last_7_days = []
+        for i in range(days):
+            day_date = today - timedelta(days=i)
+            day_str = day_date.isoformat()
+            day_hours_value = sleep_map.get(day_str, 0)
             
-            if today_record:
-                total_hours = float(today_record.get("hours", 0))
-                hours = int(total_hours)
-                minutes = int(round((total_hours - hours) * 60))
-                today_sleep = SleepRecord(
-                    date=today,
-                    hours=total_hours,
-                    minutes=minutes
-                )
-            
-            # Get last N days
-            for i in range(days):
-                day_date = today - timedelta(days=i)
-                day_str = day_date.isoformat()
-                
-                # Find day record - handle date string matching
-                day_record = None
-                for s in sleep_data:
-                    record_date = s.get("date", "")
-                    # Normalize date strings
-                    if isinstance(record_date, str):
-                        record_date = record_date.split('T')[0] if 'T' in record_date else record_date
-                        record_date = record_date.split(' ')[0] if ' ' in record_date else record_date
-                    
-                    if str(record_date) == day_str:
-                        day_record = s
-                        break
-                
-                if day_record:
-                    total_hours = float(day_record.get("hours", 0))
-                    hours = int(total_hours)
-                    minutes = int(round((total_hours - hours) * 60))
-                    last_7_days.append(SleepRecord(
-                        date=day_date,
-                        hours=total_hours,
-                        minutes=minutes
-                    ))
-                else:
-                    last_7_days.append(SleepRecord(
-                        date=day_date,
-                        hours=0,
-                        minutes=0
-                    ))
-            
-            # Reverse to get chronological order (oldest to newest)
-            last_7_days.reverse()
+            last_7_days.append({
+                "date": day_str,
+                "hours": day_hours_value
+            })
+        
+        # Reverse to get chronological order (oldest to newest)
+        last_7_days.reverse()
         
         # Calculate average
-        if last_7_days:
-            total = sum(day.hours for day in last_7_days if day.hours > 0)
-            count = sum(1 for day in last_7_days if day.hours > 0)
-            average = total / count if count > 0 else 0
-        else:
-            average = None
+        total = sum(day["hours"] for day in last_7_days if day["hours"] > 0)
+        count = sum(1 for day in last_7_days if day["hours"] > 0)
+        average = total / count if count > 0 else 0
         
-        return SleepResponse(
-            user_id=user_id,
-            today_sleep=today_sleep,
-            last_7_days=last_7_days,
-            average_sleep=average,
-            created_at=datetime.utcnow()
-        )
+        # Return simple JSON response
+        response = {
+            "user_id": user_id,
+            "hours": today_hours,
+            "minutes": today_minutes,
+            "total_hours": today_hours_value,
+            "last_7_days": last_7_days,
+            "average_sleep": average,
+            "success": True
+        }
+        
+        print(f"Sleep GET response: hours={today_hours}, minutes={today_minutes}")
+        
+        return response
     
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error fetching sleep data: {str(e)}")

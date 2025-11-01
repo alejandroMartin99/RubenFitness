@@ -20,7 +20,7 @@ async def record_water(request: WaterRequest):
         request: Water tracking request with user_id, date, and water_ml
     
     Returns:
-        Success confirmation with water data
+        Updated water data after saving
     """
     try:
         # Save water data to database
@@ -30,18 +30,29 @@ async def record_water(request: WaterRequest):
             water_ml=request.water_ml
         )
         
-        if result is None:
-            # Return mock response if database is not connected
-            return {
-                "message": "Water recorded (mock mode)",
-                "user_id": request.user_id,
-                "date": request.date.isoformat(),
-                "water_ml": request.water_ml
-            }
+        # Get updated water data for today
+        water_data = supabase_service.get_water_data(request.user_id, days=1)
+        today = date.today()
+        today_str = today.isoformat()
+        
+        total_today = 0
+        if water_data:
+            for w in water_data:
+                record_date = w.get("date", "")
+                if isinstance(record_date, str):
+                    record_date = record_date.split('T')[0] if 'T' in record_date else record_date
+                    record_date = record_date.split(' ')[0] if ' ' in record_date else record_date
+                
+                if str(record_date) == today_str:
+                    total_today = int(w.get("water_ml", 0) or 0)
+                    break
         
         return {
-            "message": "Water recorded successfully",
-            "water": result,
+            "success": True,
+            "user_id": request.user_id,
+            "total_today": total_today,
+            "water_ml": total_today,
+            "date": today_str,
             "timestamp": datetime.utcnow().isoformat()
         }
     
@@ -49,7 +60,7 @@ async def record_water(request: WaterRequest):
         raise HTTPException(status_code=500, detail=f"Error recording water: {str(e)}")
 
 
-@router.get("/water/{user_id}", response_model=WaterResponse)
+@router.get("/water/{user_id}")
 async def get_water_data(user_id: str, days: int = 7):
     """
     Get user's water intake data
@@ -59,22 +70,17 @@ async def get_water_data(user_id: str, days: int = 7):
         days: Number of days to retrieve (default: 7)
     
     Returns:
-        WaterResponse with today's water and last N days history
+        Simple JSON response with water data
     """
     try:
         water_data = supabase_service.get_water_data(user_id, days=days)
         
-        # Get today's water
-        today_water = None
-        last_7_days = []
-        total_today = 0
+        today = date.today()
+        today_str = today.isoformat()
         
+        # Build a map of date -> water_ml for quick lookup
+        water_map = {}
         if water_data:
-            today = date.today()
-            today_str = today.isoformat()
-            
-            # Find today's record
-            today_record = None
             for w in water_data:
                 record_date = w.get("date", "")
                 # Normalize date strings
@@ -82,58 +88,40 @@ async def get_water_data(user_id: str, days: int = 7):
                     record_date = record_date.split('T')[0] if 'T' in record_date else record_date
                     record_date = record_date.split(' ')[0] if ' ' in record_date else record_date
                 
-                if str(record_date) == today_str:
-                    today_record = w
-                    break
-            
-            if today_record:
-                water_ml = int(today_record.get("water_ml", 0))
-                total_today = water_ml
-                today_water = WaterRecord(
-                    date=today,
-                    water_ml=water_ml
-                )
-            
-            # Get last N days
-            for i in range(days):
-                day_date = today - timedelta(days=i)
-                day_str = day_date.isoformat()
-                
-                # Find day record
-                day_record = None
-                for w in water_data:
-                    record_date = w.get("date", "")
-                    if isinstance(record_date, str):
-                        record_date = record_date.split('T')[0] if 'T' in record_date else record_date
-                        record_date = record_date.split(' ')[0] if ' ' in record_date else record_date
-                    
-                    if str(record_date) == day_str:
-                        day_record = w
-                        break
-                
-                if day_record:
-                    water_ml = int(day_record.get("water_ml", 0))
-                    last_7_days.append(WaterRecord(
-                        date=day_date,
-                        water_ml=water_ml
-                    ))
-                else:
-                    last_7_days.append(WaterRecord(
-                        date=day_date,
-                        water_ml=0
-                    ))
-            
-            # Reverse to get chronological order (oldest to newest)
-            last_7_days.reverse()
+                water_ml = int(w.get("water_ml", 0) or 0)
+                water_map[str(record_date)] = water_ml
         
-        return WaterResponse(
-            user_id=user_id,
-            today_water=today_water,
-            last_7_days=last_7_days,
-            total_today=total_today,
-            goal=2000,  # Default goal: 2 liters
-            created_at=datetime.utcnow()
-        )
+        # Get today's water
+        total_today = water_map.get(today_str, 0)
+        
+        # Build history
+        last_7_days = []
+        for i in range(days):
+            day_date = today - timedelta(days=i)
+            day_str = day_date.isoformat()
+            day_water_ml = water_map.get(day_str, 0)
+            
+            last_7_days.append({
+                "date": day_str,
+                "water_ml": day_water_ml
+            })
+        
+        # Reverse to get chronological order (oldest to newest)
+        last_7_days.reverse()
+        
+        # Return simple JSON response
+        response = {
+            "user_id": user_id,
+            "total_today": total_today,
+            "water_ml": total_today,  # Alias for compatibility
+            "last_7_days": last_7_days,
+            "goal": 2000,
+            "success": True
+        }
+        
+        print(f"Water GET response: total_today={total_today}")
+        
+        return response
     
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error fetching water data: {str(e)}")

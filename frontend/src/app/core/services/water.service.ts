@@ -39,13 +39,13 @@ export class WaterService {
    * Get water data for current user
    * @param days Number of days to retrieve (default: 7)
    */
-  getWaterData(days: number = 7): Observable<WaterResponse> {
+  getWaterData(days: number = 7): Observable<any> {
     const user = this.authService.getCurrentUser();
     if (!user) {
       throw new Error('User not authenticated');
     }
 
-    return this.apiService.get<WaterResponse>(`/api/v1/water/${user.id}?days=${days}`);
+    return this.apiService.get<any>(`/api/v1/water/${user.id}?days=${days}`);
   }
 }
 

@@ -41,13 +41,13 @@ export class SleepService {
    * Get sleep data for current user
    * @param days Number of days to retrieve (default: 7)
    */
-  getSleepData(days: number = 7): Observable<SleepResponse> {
+  getSleepData(days: number = 7): Observable<any> {
     const user = this.authService.getCurrentUser();
     if (!user) {
       throw new Error('User not authenticated');
     }
 
-    return this.apiService.get<SleepResponse>(`/api/v1/sleep/${user.id}?days=${days}`);
+    return this.apiService.get<any>(`/api/v1/sleep/${user.id}?days=${days}`);
   }
 }
 

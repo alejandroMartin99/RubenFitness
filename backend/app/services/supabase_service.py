@@ -348,10 +348,18 @@ class SupabaseService:
                     if isinstance(record_date, str):
                         # Extract just the date part if it's a datetime string
                         record_date = record_date.split('T')[0] if 'T' in record_date else record_date
+                    elif hasattr(record_date, 'isoformat'):
+                        record_date = record_date.isoformat()
+                    
+                    sleep_hours = record.get("sleep_hours")
+                    if sleep_hours is None:
+                        sleep_hours = 0.0
+                    else:
+                        sleep_hours = float(sleep_hours)
                     
                     formatted_data.append({
                         "date": record_date,
-                        "hours": float(record.get("sleep_hours", 0))
+                        "hours": sleep_hours
                     })
             
             return formatted_data
@@ -478,10 +486,18 @@ class SupabaseService:
                     record_date = record.get("date")
                     if isinstance(record_date, str):
                         record_date = record_date.split('T')[0] if 'T' in record_date else record_date
+                    elif hasattr(record_date, 'isoformat'):
+                        record_date = record_date.isoformat()
+                    
+                    water_ml = record.get("water_ml")
+                    if water_ml is None:
+                        water_ml = 0
+                    else:
+                        water_ml = int(water_ml)
                     
                     formatted_data.append({
                         "date": record_date,
-                        "water_ml": int(record.get("water_ml", 0) or 0)
+                        "water_ml": water_ml
                     })
             
             return formatted_data
