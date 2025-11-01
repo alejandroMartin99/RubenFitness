@@ -3,6 +3,7 @@ FastAPI Main Application
 Application entry point for the Rubén Fitness Backend API
 """
 
+import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.api.v1 import chat, progress, auth
@@ -16,9 +17,15 @@ app = FastAPI(
 )
 
 # Configure CORS to allow frontend requests
+# In development, use explicit origins; in production, allow all origins
+cors_origins = settings.CORS_ORIGINS
+if os.getenv("ENVIRONMENT") == "production":
+    # In production, allow all origins for easier deployment
+    cors_origins = ["*"]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.CORS_ORIGINS,
+    allow_origins=cors_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

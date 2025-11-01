@@ -20,7 +20,7 @@ class Settings(BaseSettings):
     APP_NAME: str = "Rubén Fitness API"
     DEBUG: bool = False
     
-    # CORS - defaults
+    # CORS - defaults (can be overridden by environment variable)
     CORS_ORIGINS: List[str] = ["http://localhost:4200", "http://localhost:3000"]
     
     # Supabase Configuration

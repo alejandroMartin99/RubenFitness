@@ -45,6 +45,8 @@ npm start
 4. Pega y haz clic en **Run**
 5. Debería decir "Success"
 
+**IMPORTANTE**: Si ya ejecutaste el SQL antes y tienes error de "infinite recursion", vuelve a ejecutar el archivo actualizado.
+
 ### 2. Desactivar Email Confirmation (IMPORTANTE)
 
 **Ver `CONFIGURAR_SUPABASE.md` para instrucciones paso a paso**
@@ -104,7 +106,8 @@ Sin esto, no podrás hacer login después de registrarte ⚠️
 
 **Backend no inicia**: Activa `.venv` y reinstala dependencias  
 **Frontend no compila**: Node.js 18+ y `npm install`  
-**Supabase no conecta**: Verifica `backend/.env` con service_role key
+**Supabase no conecta**: Verifica `backend/.env` con service_role key  
+**Vercel da error 400**: Necesitas deployar el backend en Render (ver `DEPLOY_BACKEND.md`)
 
 ---
 
