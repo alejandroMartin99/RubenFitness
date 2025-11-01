@@ -1,0 +1,90 @@
+<div class="chat-container">
+  <div class="chat-header">
+    <h2>
+      <mat-icon>psychology</mat-icon>
+      AI Assistant - Rubén
+    </h2>
+    <p>Ask me anything about fitness, workouts, or nutrition!</p>
+  </div>
+
+  <div class="chat-messages" #chatContainer>
+    <!-- Welcome message if no messages -->
+    <div class="welcome-message" *ngIf="messages.length === 0">
+      <mat-icon>fitness_center</mat-icon>
+      <h3>¡Hola! Soy Rubén, tu asistente de fitness</h3>
+      <p>Puedo ayudarte con:</p>
+      <ul>
+        <li>✓ Rutinas de entrenamiento personalizadas</li>
+        <li>✓ Consejos de nutrición</li>
+        <li>✓ Técnicas de ejercicios</li>
+        <li>✓ Motivación y hábitos saludables</li>
+      </ul>
+      <p><strong>¿En qué puedo ayudarte hoy?</strong></p>
+    </div>
+
+    <!-- Chat messages -->
+    <div 
+      *ngFor="let message of messages" 
+      class="message"
+      [ngClass]="{
+        'message-user': message.role === 'user',
+        'message-assistant': message.role === 'assistant'
+      }"
+    >
+      <div class="message-content">
+        <div class="message-avatar">
+          <mat-icon *ngIf="message.role === 'user'">person</mat-icon>
+          <mat-icon *ngIf="message.role === 'assistant'">psychology</mat-icon>
+        </div>
+        <div class="message-text">
+          <p>{{ message.content }}</p>
+          <span class="message-time" *ngIf="message.timestamp">
+            {{ message.timestamp | date:'short' }}
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Loading indicator -->
+    <div class="message message-assistant" *ngIf="loading">
+      <div class="message-content">
+        <div class="message-avatar">
+          <mat-icon>psychology</mat-icon>
+        </div>
+        <div class="message-text">
+          <div class="typing-indicator">
+            <span></span>
+            <span></span>
+            <span></span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Chat input -->
+  <div class="chat-input-container">
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Escribe tu mensaje...</mat-label>
+      <textarea 
+        matInput 
+        [(ngModel)]="inputMessage"
+        (keypress)="onKeyPress($event)"
+        [disabled]="loading"
+        rows="2"
+        placeholder="Ej: ¿Qué ejercicios debo hacer para brazos?"
+      ></textarea>
+    </mat-form-field>
+    <button 
+      mat-raised-button 
+      color="primary"
+      (click)="sendMessage()"
+      [disabled]="!inputMessage.trim() || loading"
+      class="send-button"
+    >
+      <mat-icon>send</mat-icon>
+      Enviar
+    </button>
+  </div>
+</div>
+

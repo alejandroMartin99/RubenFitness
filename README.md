@@ -81,16 +81,17 @@ supabaseUrl: 'https://tu-proyecto.supabase.co',
 supabaseKey: 'tu-anon-key'
 ```
 
-### Supabase (Opcional para Desarrollo)
+### Conectar Supabase
 
-Ver guía completa: **[CONNECT_SUPABASE.md](CONNECT_SUPABASE.md)**
+**Pasos**:
+1. Ya tienes proyecto: https://nymrsnhnzcagvwwnkyno.supabase.co
+2. Ejecuta `SUPABASE_SETUP_SQL.txt` en Supabase SQL Editor
+3. Backend ya configurado con credenciales en `.env`
+4. Frontend ya configurado con credenciales en `environment.ts`
 
-**Quick**:
-1. Crea proyecto en [supabase.com](https://supabase.com)
-2. Ejecuta `backend/supabase_schema.sql` en SQL Editor
-3. Copia credenciales a `.env` y `environment.ts`
+**Ver**: **[SUPABASE_CREDENTIALS.md](SUPABASE_CREDENTIALS.md)** para detalle de credenciales
 
-**Nota**: La app funciona sin Supabase usando datos mock.
+**Nota**: Si no ejecutas el SQL, la app funciona en modo mock.
 
 ---
 
@@ -191,24 +192,30 @@ Edita `frontend/src/styles/variables.scss`:
 **Completado (Hito 1-2)**:
 - ✅ Estructura modular
 - ✅ Autenticación y guards
-- ✅ Dashboards diferenciados
-- ✅ Integración IA (Chat)
+- ✅ Dashboards diferenciados (Usuario/Coach)
+- ✅ Integración IA (Chat completo)
 - ✅ Tracking de progreso
-- ✅ API documentada
+- ✅ API documentada con Swagger
+- ✅ Conexión Frontend ↔ Backend ↔ Supabase
 - ✅ Modo mock para desarrollo
+- ✅ Chat component funcional
+- ✅ Progress tracking funcional
 
 **Pendiente**:
-- ⏳ Supabase en producción
-- ⏳ Panel coach avanzado
-- ⏳ Upload de fotos
-- ⏳ Push notifications
-- ⏳ App móvil
+- ⏳ Ejecutar schema SQL en Supabase (ver SUPABASE_SETUP_SQL.txt)
+- ⏳ Panel coach avanzado completo
+- ⏳ Upload de fotos a Supabase Storage
+- ⏳ Push notifications con Firebase
+- ⏳ App móvil React Native
 
 ---
 
 ## 📚 Archivos Importantes
 
-- `backend/supabase_schema.sql` - Schema completo de BD (ejecutar en Supabase)
+- `SUPABASE_SETUP_SQL.txt` - SQL para ejecutar en Supabase (COPIAR Y PEGAR)
+- `SUPABASE_CREDENTIALS.md` - Tus credenciales configuradas
+- `CONNECTION_STATUS.md` - Estado de conexión y troubleshooting
+- `backend/supabase_schema.sql` - Schema completo (referencia)
 - `backend/START_SERVER.md` - Instrucciones de inicio backend
 - `backend/README.md` - Documentación backend
 - `frontend/README.md` - Documentación frontend

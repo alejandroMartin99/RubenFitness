@@ -3,18 +3,23 @@ Application Configuration
 Centralized configuration management using Pydantic Settings
 """
 
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 from typing import List
 
 
 class Settings(BaseSettings):
     """Application settings loaded from environment variables"""
     
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        case_sensitive=True
+    )
+    
     # Application
     APP_NAME: str = "Rubén Fitness API"
     DEBUG: bool = False
     
-    # CORS
+    # CORS - defaults
     CORS_ORIGINS: List[str] = ["http://localhost:4200", "http://localhost:3000"]
     
     # Supabase Configuration
@@ -29,10 +34,6 @@ class Settings(BaseSettings):
     
     # Database (if needed separately)
     DATABASE_URL: str = ""
-    
-    class Config:
-        env_file = ".env"
-        case_sensitive = True
 
 
 # Global settings instance

@@ -64,16 +64,37 @@ export class AuthService {
    */
   login(credentials: LoginCredentials): Observable<User> {
     return new Observable(observer => {
-      // Mock authentication - replace with actual Supabase auth
-      const found = this.users.find(u => u.email === credentials.email && u.password === credentials.password);
-      if (!found) {
-        observer.error('Invalid credentials');
-        return;
-      }
-      localStorage.setItem('currentUser', JSON.stringify(found.user));
-      this.currentUserSubject.next(found.user);
-      observer.next(found.user);
-      observer.complete();
+      // Try backend API first, fallback to mock if backend not available
+      this.apiService.post<any>('/api/v1/auth/login', credentials).subscribe({
+        next: (response) => {
+          const user: User = {
+            id: response.user.id,
+            email: response.user.email,
+            fullName: response.user.full_name,
+            role: response.user.role,
+            fitnessLevel: response.user.fitness_level,
+            age: response.user.age
+          };
+          localStorage.setItem('currentUser', JSON.stringify(user));
+          localStorage.setItem('accessToken', response.access_token);
+          this.currentUserSubject.next(user);
+          observer.next(user);
+          observer.complete();
+        },
+        error: (err) => {
+          console.log('Backend not available, using mock auth');
+          // Fallback to mock
+          const found = this.users.find(u => u.email === credentials.email && u.password === credentials.password);
+          if (!found) {
+            observer.error('Invalid credentials');
+            return;
+          }
+          localStorage.setItem('currentUser', JSON.stringify(found.user));
+          this.currentUserSubject.next(found.user);
+          observer.next(found.user);
+          observer.complete();
+        }
+      });
     });
   }
 
@@ -83,20 +104,46 @@ export class AuthService {
    */
   register(data: RegisterData): Observable<User> {
     return new Observable(observer => {
-      // Mock registration - replace with actual Supabase auth
-      const newUser: User = {
-        id: 'user-' + Date.now(),
+      // Try backend API first, fallback to mock if backend not available
+      this.apiService.post<any>('/api/v1/auth/register', {
         email: data.email,
-        fullName: data.fullName,
+        password: data.password,
+        full_name: data.fullName,
         age: data.age,
-        fitnessLevel: data.fitnessLevel,
-        role: 'user'
-      };
-      
-      localStorage.setItem('currentUser', JSON.stringify(newUser));
-      this.currentUserSubject.next(newUser);
-      observer.next(newUser);
-      observer.complete();
+        fitness_level: data.fitnessLevel
+      }).subscribe({
+        next: (response) => {
+          const newUser: User = {
+            id: response.user.id,
+            email: response.user.email,
+            fullName: response.user.full_name,
+            role: response.user.role,
+            fitnessLevel: response.user.fitness_level,
+            age: response.user.age
+          };
+          localStorage.setItem('currentUser', JSON.stringify(newUser));
+          localStorage.setItem('accessToken', response.access_token);
+          this.currentUserSubject.next(newUser);
+          observer.next(newUser);
+          observer.complete();
+        },
+        error: (err) => {
+          console.log('Backend not available, using mock auth');
+          // Fallback to mock
+          const newUser: User = {
+            id: 'user-' + Date.now(),
+            email: data.email,
+            fullName: data.fullName,
+            age: data.age,
+            fitnessLevel: data.fitnessLevel,
+            role: 'user'
+          };
+          localStorage.setItem('currentUser', JSON.stringify(newUser));
+          this.currentUserSubject.next(newUser);
+          observer.next(newUser);
+          observer.complete();
+        }
+      });
     });
   }
 
@@ -104,7 +151,18 @@ export class AuthService {
    * Log out the current user
    */
   logout(): void {
+    // Try backend logout first
+    this.apiService.post<any>('/api/v1/auth/logout', {}).subscribe({
+      next: () => {
+        console.log('Logged out from backend');
+      },
+      error: () => {
+        console.log('Backend not available');
+      }
+    });
+    
     localStorage.removeItem('currentUser');
+    localStorage.removeItem('accessToken');
     this.currentUserSubject.next(null);
   }
 

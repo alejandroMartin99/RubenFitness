@@ -1,0 +1,99 @@
+<div class="progress-container">
+  <!-- Header -->
+  <div class="progress-header">
+    <h2>
+      <mat-icon>bar_chart</mat-icon>
+      Your Progress
+    </h2>
+    <p>Track your fitness journey and celebrate your achievements</p>
+  </div>
+
+  <!-- Stats Grid -->
+  <div class="stats-grid" *ngIf="summary">
+    <mat-card class="stat-card">
+      <div class="stat-icon total">
+        <mat-icon>fitness_center</mat-icon>
+      </div>
+      <div class="stat-content">
+        <div class="stat-value">{{ summary.totalWorkouts }}</div>
+        <div class="stat-label">Total Workouts</div>
+      </div>
+    </mat-card>
+
+    <mat-card class="stat-card">
+      <div class="stat-icon streak">
+        <mat-icon>local_fire_department</mat-icon>
+      </div>
+      <div class="stat-content">
+        <div class="stat-value">{{ summary.currentStreak }}</div>
+        <div class="stat-label">Day Streak</div>
+      </div>
+    </mat-card>
+
+    <mat-card class="stat-card">
+      <div class="stat-icon goal">
+        <mat-icon>emoji_events</mat-icon>
+      </div>
+      <div class="stat-content">
+        <div class="stat-value">{{ stats?.currentWeek || 0 }}</div>
+        <div class="stat-label">This Week</div>
+      </div>
+    </mat-card>
+
+    <mat-card class="stat-card">
+      <div class="stat-icon completion">
+        <mat-icon>trending_up</mat-icon>
+      </div>
+      <div class="stat-content">
+        <div class="stat-value">{{ stats ? ((stats.currentWeek / stats.weeklyGoal) * 100).toFixed(0) : 0 }}%</div>
+        <div class="stat-label">Goal Progress</div>
+      </div>
+    </mat-card>
+  </div>
+
+  <!-- Recent Workouts -->
+  <div class="recent-workouts" *ngIf="summary">
+    <h3 class="section-title">
+      <mat-icon>history</mat-icon>
+      Recent Workouts
+    </h3>
+
+    <!-- No workouts message -->
+    <mat-card class="empty-state" *ngIf="summary.recentWorkouts.length === 0">
+      <mat-icon>inbox</mat-icon>
+      <h4>No workouts yet</h4>
+      <p>Start tracking your progress by completing your first workout!</p>
+    </mat-card>
+
+    <!-- Workouts list -->
+    <div class="workouts-list" *ngIf="summary.recentWorkouts.length > 0">
+      <mat-card class="workout-item" *ngFor="let workout of summary.recentWorkouts">
+        <mat-card-content>
+          <div class="workout-content">
+            <div class="workout-info">
+              <h4>{{ workout.name }}</h4>
+              <p class="workout-date">
+                <mat-icon>calendar_today</mat-icon>
+                {{ workout.date | date:'fullDate' }}
+              </p>
+              <p class="workout-duration" *ngIf="workout.durationMinutes">
+                <mat-icon>schedule</mat-icon>
+                {{ workout.durationMinutes }} minutes
+              </p>
+            </div>
+            <div class="workout-status">
+              <mat-icon class="success">check_circle</mat-icon>
+            </div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </div>
+  </div>
+
+  <!-- Loading state -->
+  <div class="loading-state" *ngIf="loading">
+    <mat-spinner diameter="50"></mat-spinner>
+    <p>Loading your progress...</p>
+  </div>
+</div>
+
