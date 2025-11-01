@@ -45,15 +45,11 @@ npm start
 4. Pega y haz clic en **Run**
 5. Debería decir "Success"
 
-### 2. Desactivar Email Confirmation (Opcional)
+### 2. Desactivar Email Confirmation (IMPORTANTE)
 
-1. Dashboard > **Authentication** > **Providers** > **Email**
-2. Desmarca **"Confirm email"**
-3. **Save**
+**Ver `CONFIGURAR_SUPABASE.md` para instrucciones paso a paso**
 
-### 3. Configurar Google OAuth (Opcional)
-
-Ver instrucciones en backend/docs/GOOGLE_OAUTH.md
+Sin esto, no podrás hacer login después de registrarte ⚠️
 
 ---
 

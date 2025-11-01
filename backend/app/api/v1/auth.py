@@ -88,7 +88,17 @@ async def login(request: LoginRequest):
         )
     
     except Exception as e:
-        raise HTTPException(status_code=401, detail=f"Login failed: {str(e)}")
+        error_msg = str(e)
+        # Provide user-friendly error messages
+        if "email not confirmed" in error_msg.lower():
+            raise HTTPException(
+                status_code=401, 
+                detail="Email no confirmado. Por favor confirma tu email o desactiva 'Confirm email' en Supabase Dashboard > Authentication > Email"
+            )
+        elif "invalid" in error_msg.lower() and "credentials" in error_msg.lower():
+            raise HTTPException(status_code=401, detail="Credenciales inválidas")
+        else:
+            raise HTTPException(status_code=401, detail=f"Login failed: {error_msg}")
 
 
 async def _mock_login(request: LoginRequest) -> AuthResponse:
