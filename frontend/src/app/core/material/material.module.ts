@@ -8,6 +8,7 @@ import { CommonModule } from '@angular/common';
 
 // Material Modules
 import { MatButtonModule } from '@angular/material/button';
+import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatInputModule } from '@angular/material/input';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatCardModule } from '@angular/material/card';
@@ -38,6 +39,7 @@ import { MatPaginatorModule } from '@angular/material/paginator';
 
 const MaterialModules = [
   MatButtonModule,
+  MatButtonToggleModule,
   MatInputModule,
   MatFormFieldModule,
   MatCardModule,

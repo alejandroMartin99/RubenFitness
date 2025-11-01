@@ -1,90 +1,187 @@
-<div class="chat-container">
+<div class="chat-wrapper">
+  <!-- Header -->
   <div class="chat-header">
-    <h2>
-      <mat-icon>psychology</mat-icon>
-      AI Assistant - Rubén
-    </h2>
-    <p>Ask me anything about fitness, workouts, or nutrition!</p>
-  </div>
-
-  <div class="chat-messages" #chatContainer>
-    <!-- Welcome message if no messages -->
-    <div class="welcome-message" *ngIf="messages.length === 0">
-      <mat-icon>fitness_center</mat-icon>
-      <h3>¡Hola! Soy Rubén, tu asistente de fitness</h3>
-      <p>Puedo ayudarte con:</p>
-      <ul>
-        <li>✓ Rutinas de entrenamiento personalizadas</li>
-        <li>✓ Consejos de nutrición</li>
-        <li>✓ Técnicas de ejercicios</li>
-        <li>✓ Motivación y hábitos saludables</li>
-      </ul>
-      <p><strong>¿En qué puedo ayudarte hoy?</strong></p>
-    </div>
-
-    <!-- Chat messages -->
-    <div 
-      *ngFor="let message of messages" 
-      class="message"
-      [ngClass]="{
-        'message-user': message.role === 'user',
-        'message-assistant': message.role === 'assistant'
-      }"
-    >
-      <div class="message-content">
-        <div class="message-avatar">
-          <mat-icon *ngIf="message.role === 'user'">person</mat-icon>
-          <mat-icon *ngIf="message.role === 'assistant'">psychology</mat-icon>
+    <div class="header-content">
+      <div class="coach-avatar">
+        <img src="https://images.unsplash.com/photo-1571019613454-1cb2f99b84d4?w=400&h=400&fit=crop" 
+             alt="Rubén - Fitness Coach" 
+             class="avatar-image"
+             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+        <div class="avatar-fallback">
+          <mat-icon>fitness_center</mat-icon>
         </div>
-        <div class="message-text">
-          <p>{{ message.content }}</p>
-          <span class="message-time" *ngIf="message.timestamp">
-            {{ message.timestamp | date:'short' }}
-          </span>
+      </div>
+      <div class="header-info">
+        <h1>
+          <mat-icon class="header-icon">psychology</mat-icon>
+          Rubén - Tu Coach Personal
+        </h1>
+        <p class="header-subtitle">Especialista en entrenamiento y nutrición</p>
+        <div class="status-indicator">
+          <span class="status-dot"></span>
+          <span>En línea</span>
         </div>
       </div>
     </div>
+  </div>
 
-    <!-- Loading indicator -->
-    <div class="message message-assistant" *ngIf="loading">
-      <div class="message-content">
-        <div class="message-avatar">
-          <mat-icon>psychology</mat-icon>
-        </div>
-        <div class="message-text">
-          <div class="typing-indicator">
-            <span></span>
-            <span></span>
-            <span></span>
+  <!-- Chat Container -->
+  <div class="chat-container">
+    <!-- Messages Area -->
+    <div class="chat-messages" #chatContainer>
+      
+      <!-- Welcome Screen with Quick Actions -->
+      <div class="welcome-screen" *ngIf="showQuickActions && messages.length === 0">
+        <div class="welcome-content">
+          <div class="welcome-image">
+            <img src="https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=600&h=400&fit=crop" 
+                 alt="Fitness Training"
+                 onerror="this.style.display='none';">
+          </div>
+          <h2 class="welcome-title">¡Hola! 👋</h2>
+          <p class="welcome-text">Soy Rubén, tu asistente personal de fitness. Estoy aquí para ayudarte con todo lo relacionado con entrenamiento y nutrición.</p>
+          
+          <!-- Main Category Selection -->
+          <div class="category-selection" *ngIf="!selectedCategory">
+            <h3 class="section-title">¿En qué área te gustaría ayuda?</h3>
+            <div class="quick-actions-grid">
+              <button 
+                *ngFor="let action of quickActions"
+                class="quick-action-card"
+                [class]="'quick-action-' + action.color"
+                (click)="onQuickActionClick(action)"
+              >
+                <mat-icon class="action-icon">{{ action.icon }}</mat-icon>
+                <span class="action-title">{{ action.title }}</span>
+                <mat-icon class="arrow-icon">arrow_forward</mat-icon>
+              </button>
+            </div>
+          </div>
+
+          <!-- Nutrition Sub-actions -->
+          <div class="sub-actions-panel" *ngIf="selectedCategory === 'nutrition'">
+            <button class="back-button" (click)="backToCategories()">
+              <mat-icon>arrow_back</mat-icon>
+              Volver
+            </button>
+            <h3 class="section-title">Temas de Alimentación</h3>
+            <div class="sub-actions-grid">
+              <button 
+                *ngFor="let action of nutritionActions"
+                class="sub-action-card"
+                (click)="onSubActionClick(action)"
+              >
+                <mat-icon class="sub-action-icon">{{ action.icon }}</mat-icon>
+                <span class="sub-action-title">{{ action.title }}</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Training Sub-actions -->
+          <div class="sub-actions-panel" *ngIf="selectedCategory === 'training'">
+            <button class="back-button" (click)="backToCategories()">
+              <mat-icon>arrow_back</mat-icon>
+              Volver
+            </button>
+            <h3 class="section-title">Temas de Entrenamiento</h3>
+            <div class="sub-actions-grid">
+              <button 
+                *ngFor="let action of trainingActions"
+                class="sub-action-card"
+                (click)="onSubActionClick(action)"
+              >
+                <mat-icon class="sub-action-icon">{{ action.icon }}</mat-icon>
+                <span class="sub-action-title">{{ action.title }}</span>
+              </button>
+            </div>
           </div>
         </div>
       </div>
+
+      <!-- Chat Messages -->
+      <div 
+        *ngFor="let message of messages" 
+        class="message"
+        [ngClass]="{
+          'message-user': message.role === 'user',
+          'message-assistant': message.role === 'assistant'
+        }"
+      >
+        <div class="message-content">
+          <div class="message-avatar">
+            <img 
+              *ngIf="message.role === 'assistant'"
+              src="https://images.unsplash.com/photo-1571019613454-1cb2f99b84d4?w=200&h=200&fit=crop"
+              alt="Rubén"
+              onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+            <div class="avatar-fallback" *ngIf="message.role === 'assistant'">
+              <mat-icon>fitness_center</mat-icon>
+            </div>
+            <mat-icon *ngIf="message.role === 'user'">person</mat-icon>
+          </div>
+          <div class="message-bubble">
+            <div class="message-text" [innerHTML]="formatMessage(message.content)"></div>
+            <span class="message-time" *ngIf="message.timestamp">
+              {{ formatTime(message.timestamp) }}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Loading Indicator -->
+      <div class="message message-assistant" *ngIf="loading">
+        <div class="message-content">
+          <div class="message-avatar">
+            <img 
+              src="https://images.unsplash.com/photo-1571019613454-1cb2f99b84d4?w=200&h=200&fit=crop"
+              alt="Rubén"
+              onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+            <div class="avatar-fallback">
+              <mat-icon>fitness_center</mat-icon>
+            </div>
+          </div>
+          <div class="message-bubble">
+            <div class="typing-indicator">
+              <span></span>
+              <span></span>
+              <span></span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Input Area -->
+    <div class="chat-input-area">
+      <div class="input-container">
+        <mat-form-field appearance="outline" class="message-input">
+          <mat-label>Escribe tu mensaje...</mat-label>
+          <textarea 
+            matInput 
+            [(ngModel)]="inputMessage"
+            (keypress)="onKeyPress($event)"
+            [disabled]="loading"
+            rows="1"
+            placeholder="Ej: ¿Qué ejercicios puedo hacer para brazos?"
+            #messageTextarea
+          ></textarea>
+        </mat-form-field>
+        <button 
+          mat-fab 
+          color="primary"
+          (click)="sendMessage()"
+          [disabled]="!inputMessage.trim() || loading"
+          class="send-button"
+          [attr.aria-label]="'Enviar mensaje'"
+        >
+          <mat-icon>send</mat-icon>
+        </button>
+      </div>
+      <p class="input-hint">
+        <mat-icon>info</mat-icon>
+        Puedes hacer preguntas sobre entrenamiento, nutrición, ejercicios y más
+      </p>
     </div>
   </div>
-
-  <!-- Chat input -->
-  <div class="chat-input-container">
-    <mat-form-field appearance="outline" class="full-width">
-      <mat-label>Escribe tu mensaje...</mat-label>
-      <textarea 
-        matInput 
-        [(ngModel)]="inputMessage"
-        (keypress)="onKeyPress($event)"
-        [disabled]="loading"
-        rows="2"
-        placeholder="Ej: ¿Qué ejercicios debo hacer para brazos?"
-      ></textarea>
-    </mat-form-field>
-    <button 
-      mat-raised-button 
-      color="primary"
-      (click)="sendMessage()"
-      [disabled]="!inputMessage.trim() || loading"
-      class="send-button"
-    >
-      <mat-icon>send</mat-icon>
-      Enviar
-    </button>
-  </div>
 </div>
-
