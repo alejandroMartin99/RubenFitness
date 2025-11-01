@@ -156,12 +156,22 @@ export class ChatComponent implements OnInit, AfterViewChecked {
   loadHistory(): void {
     this.chatService.getHistory().subscribe({
       next: (response) => {
-        this.messages = response.messages || [];
+        if (response && response.messages) {
+          // Convert timestamp strings to Date objects
+          this.messages = response.messages.map((msg: any) => ({
+            ...msg,
+            timestamp: msg.timestamp ? new Date(msg.timestamp) : new Date()
+          }));
+        } else {
+          this.messages = [];
+        }
         this.showQuickActions = this.messages.length === 0;
-        this.scrollToBottom();
+        setTimeout(() => this.scrollToBottom(), 100);
       },
       error: (err) => {
         console.error('Error loading chat history:', err);
+        // Don't show error to user, just start with empty chat
+        this.messages = [];
         this.showQuickActions = true;
       }
     });
@@ -237,7 +247,7 @@ export class ChatComponent implements OnInit, AfterViewChecked {
         const aiMessage: ChatMessage = {
           role: 'assistant',
           content: response.message,
-          timestamp: new Date(response.timestamp),
+          timestamp: response.timestamp ? new Date(response.timestamp) : new Date(),
           userId: this.userId || undefined
         };
         this.messages.push(aiMessage);
@@ -247,10 +257,13 @@ export class ChatComponent implements OnInit, AfterViewChecked {
       error: (err) => {
         console.error('Error sending message:', err);
         this.loading = false;
+        
+        // Show user-friendly error message
         const errorMessage: ChatMessage = {
           role: 'assistant',
-          content: 'Lo siento, hubo un error al procesar tu mensaje. Por favor intenta de nuevo.',
-          timestamp: new Date()
+          content: 'Lo siento, hubo un error al procesar tu mensaje. Por favor intenta de nuevo en un momento.',
+          timestamp: new Date(),
+          userId: this.userId || undefined
         };
         this.messages.push(errorMessage);
         setTimeout(() => this.scrollToBottom(), 100);

@@ -5,6 +5,7 @@ Wrapper for Supabase database operations (users, workouts, progress)
 
 from typing import Optional, List, Dict, Any
 from datetime import datetime
+import re
 from supabase import create_client, Client
 from app.core.config import settings
 from app.models.schemas import UserCreate, UserResponse, ChatMessage
@@ -28,6 +29,14 @@ class SupabaseService:
     def is_connected(self) -> bool:
         """Check if Supabase is connected"""
         return self.supabase is not None
+    
+    def _is_valid_uuid(self, uuid_string: str) -> bool:
+        """Validate UUID format"""
+        uuid_pattern = re.compile(
+            r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$',
+            re.IGNORECASE
+        )
+        return bool(uuid_pattern.match(uuid_string))
     
     # User Operations
     def create_user(self, user_data: UserCreate) -> Optional[Dict[str, Any]]:
@@ -71,17 +80,35 @@ class SupabaseService:
         if not self.is_connected():
             return None
         
+        # Validate UUID format
+        if not self._is_valid_uuid(user_id):
+            print(f"Warning: Invalid user_id format: {user_id}. Skipping database save.")
+            return None
+        
+        # Check if user exists in database before saving
+        user_exists = self.get_user(user_id) is not None
+        if not user_exists:
+            # For mock users, we'll skip saving to avoid foreign key errors
+            # The chat will still work, messages just won't be persisted
+            print(f"Info: User {user_id} not found in database. Chat will work but messages won't be saved.")
+            return None
+        
         try:
+            # Supabase will automatically set created_at with DEFAULT NOW()
             result = self.supabase.table("chat_messages").insert({
                 "user_id": user_id,
                 "role": role,
-                "content": content,
-                "timestamp": datetime.utcnow().isoformat()
+                "content": content
             }).execute()
             
             return result.data[0] if result.data else None
         except Exception as e:
-            print(f"Error saving chat message: {e}")
+            # Check if it's a foreign key constraint error
+            error_str = str(e)
+            if 'foreign key constraint' in error_str.lower() or '23503' in error_str:
+                print(f"Info: User {user_id} not found in database. Skipping message save.")
+            else:
+                print(f"Error saving chat message: {e}")
             return None
     
     def get_chat_history(self, user_id: str, limit: int = 10) -> List[ChatMessage]:
@@ -89,21 +116,57 @@ class SupabaseService:
         if not self.is_connected():
             return []
         
+        # Validate UUID format
+        if not self._is_valid_uuid(user_id):
+            print(f"Warning: Invalid user_id format: {user_id}. Returning empty history.")
+            return []
+        
+        # Check if user exists in database
+        user_exists = self.get_user(user_id) is not None
+        if not user_exists:
+            # For mock users, return empty history
+            return []
+        
         try:
             result = self.supabase.table("chat_messages")\
                 .select("*")\
                 .eq("user_id", user_id)\
-                .order("timestamp", desc=True)\
+                .order("created_at", desc=True)\
                 .limit(limit)\
                 .execute()
             
-            messages = [
-                ChatMessage(
-                    role=msg["role"],
-                    content=msg["content"],
-                    timestamp=datetime.fromisoformat(msg["timestamp"])
-                ) for msg in reversed(result.data)
-            ] if result.data else []
+            messages = []
+            if result.data:
+                for msg in reversed(result.data):
+                    # Handle created_at field (could be ISO string or None)
+                    timestamp = None
+                    if msg.get("created_at"):
+                        try:
+                            if isinstance(msg["created_at"], str):
+                                # Handle different ISO formats from Supabase
+                                date_str = msg["created_at"]
+                                # Replace Z with +00:00 for UTC
+                                if date_str.endswith('Z'):
+                                    date_str = date_str.replace('Z', '+00:00')
+                                # Parse ISO format
+                                timestamp = datetime.fromisoformat(date_str)
+                            elif isinstance(msg["created_at"], datetime):
+                                timestamp = msg["created_at"]
+                            else:
+                                # Fallback to current time
+                                timestamp = datetime.utcnow()
+                        except (ValueError, AttributeError) as e:
+                            print(f"Error parsing timestamp: {e}")
+                            timestamp = datetime.utcnow()
+                    else:
+                        # If no created_at, use current time
+                        timestamp = datetime.utcnow()
+                    
+                    messages.append(ChatMessage(
+                        role=msg.get("role", "user"),
+                        content=msg.get("content", ""),
+                        timestamp=timestamp
+                    ))
             
             return messages
         except Exception as e:

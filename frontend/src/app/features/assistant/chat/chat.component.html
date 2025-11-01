@@ -27,129 +27,146 @@
 
   <!-- Chat Container -->
   <div class="chat-container">
-    <!-- Messages Area -->
-    <div class="chat-messages" #chatContainer>
-      
-      <!-- Welcome Screen with Quick Actions -->
-      <div class="welcome-screen" *ngIf="showQuickActions && messages.length === 0">
-        <div class="welcome-content">
-          <div class="welcome-image">
-            <img src="https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=600&h=400&fit=crop" 
-                 alt="Fitness Training"
-                 onerror="this.style.display='none';">
+    <div class="chat-layout">
+      <!-- Left Column - Coach Image -->
+      <div class="chat-left-column" *ngIf="showQuickActions && messages.length === 0">
+        <div class="coach-image-container">
+          <img src="https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=600&h=400&fit=crop" 
+               alt="Rubén - Fitness Coach"
+               class="coach-image"
+               onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+          <div class="image-fallback">
+            <mat-icon>fitness_center</mat-icon>
           </div>
-          <h2 class="welcome-title">¡Hola! 👋</h2>
-          <p class="welcome-text">Soy Rubén, tu asistente personal de fitness. Estoy aquí para ayudarte con todo lo relacionado con entrenamiento y nutrición.</p>
+          <div class="image-overlay">
+            <h3>Rubén</h3>
+            <p>Tu Coach Personal</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Column - Content -->
+      <div class="chat-right-column">
+        <!-- Messages Area -->
+        <div class="chat-messages" #chatContainer>
           
-          <!-- Main Category Selection -->
-          <div class="category-selection" *ngIf="!selectedCategory">
-            <h3 class="section-title">¿En qué área te gustaría ayuda?</h3>
-            <div class="quick-actions-grid">
-              <button 
-                *ngFor="let action of quickActions"
-                class="quick-action-card"
-                [class]="'quick-action-' + action.color"
-                (click)="onQuickActionClick(action)"
-              >
-                <mat-icon class="action-icon">{{ action.icon }}</mat-icon>
-                <span class="action-title">{{ action.title }}</span>
-                <mat-icon class="arrow-icon">arrow_forward</mat-icon>
-              </button>
+          <!-- Welcome Screen with Quick Actions -->
+          <div class="welcome-screen" *ngIf="showQuickActions && messages.length === 0">
+            <div class="welcome-content">
+              <h2 class="welcome-title">¡Hola! 👋</h2>
+              <p class="welcome-text">Soy Rubén, tu asistente personal de fitness. Estoy aquí para ayudarte con entrenamiento y nutrición.</p>
+              
+              <!-- Main Category Selection -->
+              <div class="category-selection" *ngIf="!selectedCategory">
+                <h3 class="section-title">¿En qué área te gustaría ayuda?</h3>
+                <div class="quick-actions-grid">
+                  <button 
+                    *ngFor="let action of quickActions"
+                    class="quick-action-card"
+                    [class]="'quick-action-' + action.color"
+                    (click)="onQuickActionClick(action)"
+                  >
+                    <mat-icon class="action-icon">{{ action.icon }}</mat-icon>
+                    <span class="action-title">{{ action.title }}</span>
+                    <mat-icon class="arrow-icon">arrow_forward</mat-icon>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Nutrition Sub-actions -->
+              <div class="sub-actions-panel" *ngIf="selectedCategory === 'nutrition'">
+                <button class="back-button" (click)="backToCategories()">
+                  <mat-icon>arrow_back</mat-icon>
+                  Volver
+                </button>
+                <h3 class="section-title">Temas de Alimentación</h3>
+                <div class="sub-actions-grid">
+                  <button 
+                    *ngFor="let action of nutritionActions"
+                    class="sub-action-card"
+                    (click)="onSubActionClick(action)"
+                  >
+                    <mat-icon class="sub-action-icon">{{ action.icon }}</mat-icon>
+                    <span class="sub-action-title">{{ action.title }}</span>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Training Sub-actions -->
+              <div class="sub-actions-panel" *ngIf="selectedCategory === 'training'">
+                <button class="back-button" (click)="backToCategories()">
+                  <mat-icon>arrow_back</mat-icon>
+                  Volver
+                </button>
+                <h3 class="section-title">Temas de Entrenamiento</h3>
+                <div class="sub-actions-grid">
+                  <button 
+                    *ngFor="let action of trainingActions"
+                    class="sub-action-card"
+                    (click)="onSubActionClick(action)"
+                  >
+                    <mat-icon class="sub-action-icon">{{ action.icon }}</mat-icon>
+                    <span class="sub-action-title">{{ action.title }}</span>
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
 
-          <!-- Nutrition Sub-actions -->
-          <div class="sub-actions-panel" *ngIf="selectedCategory === 'nutrition'">
-            <button class="back-button" (click)="backToCategories()">
-              <mat-icon>arrow_back</mat-icon>
-              Volver
-            </button>
-            <h3 class="section-title">Temas de Alimentación</h3>
-            <div class="sub-actions-grid">
-              <button 
-                *ngFor="let action of nutritionActions"
-                class="sub-action-card"
-                (click)="onSubActionClick(action)"
-              >
-                <mat-icon class="sub-action-icon">{{ action.icon }}</mat-icon>
-                <span class="sub-action-title">{{ action.title }}</span>
-              </button>
+          <!-- Chat Messages -->
+          <div 
+            *ngFor="let message of messages" 
+            class="message"
+            [ngClass]="{
+              'message-user': message.role === 'user',
+              'message-assistant': message.role === 'assistant'
+            }"
+          >
+            <div class="message-content">
+              <div class="message-avatar">
+                <img 
+                  *ngIf="message.role === 'assistant'"
+                  src="https://images.unsplash.com/photo-1571019613454-1cb2f99b84d4?w=200&h=200&fit=crop"
+                  alt="Rubén"
+                  onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                <div class="avatar-fallback" *ngIf="message.role === 'assistant'">
+                  <mat-icon>fitness_center</mat-icon>
+                </div>
+                <mat-icon *ngIf="message.role === 'user'">person</mat-icon>
+              </div>
+              <div class="message-bubble">
+                <div class="message-text" [innerHTML]="formatMessage(message.content)"></div>
+                <span class="message-time" *ngIf="message.timestamp">
+                  {{ formatTime(message.timestamp) }}
+                </span>
+              </div>
             </div>
           </div>
 
-          <!-- Training Sub-actions -->
-          <div class="sub-actions-panel" *ngIf="selectedCategory === 'training'">
-            <button class="back-button" (click)="backToCategories()">
-              <mat-icon>arrow_back</mat-icon>
-              Volver
-            </button>
-            <h3 class="section-title">Temas de Entrenamiento</h3>
-            <div class="sub-actions-grid">
-              <button 
-                *ngFor="let action of trainingActions"
-                class="sub-action-card"
-                (click)="onSubActionClick(action)"
-              >
-                <mat-icon class="sub-action-icon">{{ action.icon }}</mat-icon>
-                <span class="sub-action-title">{{ action.title }}</span>
-              </button>
+          <!-- Loading Indicator -->
+          <div class="message message-assistant" *ngIf="loading">
+            <div class="message-content">
+              <div class="message-avatar">
+                <img 
+                  src="https://images.unsplash.com/photo-1571019613454-1cb2f99b84d4?w=200&h=200&fit=crop"
+                  alt="Rubén"
+                  onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                <div class="avatar-fallback">
+                  <mat-icon>fitness_center</mat-icon>
+                </div>
+              </div>
+              <div class="message-bubble">
+                <div class="typing-indicator">
+                  <span></span>
+                  <span></span>
+                  <span></span>
+                </div>
+              </div>
             </div>
           </div>
+
         </div>
       </div>
-
-      <!-- Chat Messages -->
-      <div 
-        *ngFor="let message of messages" 
-        class="message"
-        [ngClass]="{
-          'message-user': message.role === 'user',
-          'message-assistant': message.role === 'assistant'
-        }"
-      >
-        <div class="message-content">
-          <div class="message-avatar">
-            <img 
-              *ngIf="message.role === 'assistant'"
-              src="https://images.unsplash.com/photo-1571019613454-1cb2f99b84d4?w=200&h=200&fit=crop"
-              alt="Rubén"
-              onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-            <div class="avatar-fallback" *ngIf="message.role === 'assistant'">
-              <mat-icon>fitness_center</mat-icon>
-            </div>
-            <mat-icon *ngIf="message.role === 'user'">person</mat-icon>
-          </div>
-          <div class="message-bubble">
-            <div class="message-text" [innerHTML]="formatMessage(message.content)"></div>
-            <span class="message-time" *ngIf="message.timestamp">
-              {{ formatTime(message.timestamp) }}
-            </span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Loading Indicator -->
-      <div class="message message-assistant" *ngIf="loading">
-        <div class="message-content">
-          <div class="message-avatar">
-            <img 
-              src="https://images.unsplash.com/photo-1571019613454-1cb2f99b84d4?w=200&h=200&fit=crop"
-              alt="Rubén"
-              onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-            <div class="avatar-fallback">
-              <mat-icon>fitness_center</mat-icon>
-            </div>
-          </div>
-          <div class="message-bubble">
-            <div class="typing-indicator">
-              <span></span>
-              <span></span>
-              <span></span>
-            </div>
-          </div>
-        </div>
-      </div>
-
     </div>
 
     <!-- Input Area -->

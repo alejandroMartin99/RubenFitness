@@ -50,18 +50,24 @@ async def chat(request: ChatRequest):
             user_context=user_context
         )
         
-        # Save messages to database
-        supabase_service.save_chat_message(
-            user_id=request.user_id,
-            role="user",
-            content=request.message
-        )
+        # Save messages to database (non-blocking)
+        try:
+            supabase_service.save_chat_message(
+                user_id=request.user_id,
+                role="user",
+                content=request.message
+            )
+        except Exception as e:
+            print(f"Warning: Could not save user message: {e}")
         
-        supabase_service.save_chat_message(
-            user_id=request.user_id,
-            role="assistant",
-            content=assistant_response
-        )
+        try:
+            supabase_service.save_chat_message(
+                user_id=request.user_id,
+                role="assistant",
+                content=assistant_response
+            )
+        except Exception as e:
+            print(f"Warning: Could not save assistant message: {e}")
         
         return ChatResponse(
             message=assistant_response,

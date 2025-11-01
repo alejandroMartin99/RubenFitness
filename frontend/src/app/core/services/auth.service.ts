@@ -5,6 +5,7 @@
 
 import { Injectable } from '@angular/core';
 import { Observable, BehaviorSubject } from 'rxjs';
+import { v4 as uuidv4 } from 'uuid';
 import { User, LoginCredentials, RegisterData } from '../models/user.model';
 import { ApiService } from './api.service';
 import { SupabaseService } from './supabase.service';
@@ -18,12 +19,13 @@ export class AuthService {
   public currentUser$ = this.currentUserSubject.asObservable();
 
   /** Mock users for development (simple in-memory auth) */
+  // Using valid UUIDs for compatibility with Supabase
   private readonly users: Array<{ email: string; password: string; user: User }> = [
     {
       email: 'admin@ruben.fitness',
       password: 'admin',
       user: {
-        id: 'admin-1',
+        id: '00000000-0000-0000-0000-000000000001', // Valid UUID for admin
         email: 'admin@ruben.fitness',
         fullName: 'Admin',
         role: 'admin',
@@ -34,7 +36,7 @@ export class AuthService {
       email: 'tester@ruben.fitness',
       password: 'tester',
       user: {
-        id: 'tester-1',
+        id: '00000000-0000-0000-0000-000000000002', // Valid UUID for tester
         email: 'tester@ruben.fitness',
         fullName: 'Tester',
         role: 'user',
@@ -159,9 +161,9 @@ export class AuthService {
         },
         error: (err) => {
           console.log('Backend not available, using mock auth');
-          // Fallback to mock
+          // Fallback to mock - generate valid UUID
           const newUser: User = {
-            id: 'user-' + Date.now(),
+            id: uuidv4(), // Generate valid UUID for Supabase compatibility
             email: data.email,
             fullName: data.fullName,
             age: data.age,
