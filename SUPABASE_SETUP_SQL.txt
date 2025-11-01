@@ -1,8 +1,8 @@
 -- =====================================================
--- EJECUTAR ESTO EN SUPABASE SQL EDITOR
+-- Rubén Fitness - Supabase Database Schema
 -- =====================================================
--- Copia TODO este contenido y pégalo en SQL Editor
--- Click "Run" y verifica que dice "Success"
+-- This file contains the complete database schema for the Rubén Fitness application
+-- Execute this in your Supabase SQL Editor
 
 -- =====================================================
 -- 1. EXTENSIONS
@@ -12,15 +12,34 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 -- =====================================================
 -- 2. CUSTOM TYPES
 -- =====================================================
-CREATE TYPE fitness_level AS ENUM ('beginner', 'intermediate', 'advanced');
-CREATE TYPE user_role AS ENUM ('admin', 'user', 'coach');
-CREATE TYPE workout_difficulty AS ENUM ('easy', 'medium', 'hard');
-CREATE TYPE message_role AS ENUM ('user', 'assistant', 'system');
+DO $$ BEGIN
+  CREATE TYPE fitness_level AS ENUM ('beginner', 'intermediate', 'advanced');
+EXCEPTION
+  WHEN duplicate_object THEN null;
+END $$;
+
+DO $$ BEGIN
+  CREATE TYPE user_role AS ENUM ('admin', 'user', 'coach');
+EXCEPTION
+  WHEN duplicate_object THEN null;
+END $$;
+
+DO $$ BEGIN
+  CREATE TYPE workout_difficulty AS ENUM ('easy', 'medium', 'hard');
+EXCEPTION
+  WHEN duplicate_object THEN null;
+END $$;
+
+DO $$ BEGIN
+  CREATE TYPE message_role AS ENUM ('user', 'assistant', 'system');
+EXCEPTION
+  WHEN duplicate_object THEN null;
+END $$;
 
 -- =====================================================
--- 3. USERS TABLE
+-- 3. USERS TABLE (extends auth.users)
 -- =====================================================
-CREATE TABLE public.users (
+CREATE TABLE IF NOT EXISTS public.users (
   id UUID REFERENCES auth.users(id) ON DELETE CASCADE PRIMARY KEY,
   email TEXT UNIQUE NOT NULL,
   full_name TEXT,
@@ -36,7 +55,7 @@ CREATE TABLE public.users (
 -- =====================================================
 -- 4. WORKOUTS TABLE
 -- =====================================================
-CREATE TABLE public.workouts (
+CREATE TABLE IF NOT EXISTS public.workouts (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   user_id UUID REFERENCES public.users(id) ON DELETE CASCADE,
   name TEXT NOT NULL,
@@ -52,7 +71,7 @@ CREATE TABLE public.workouts (
 -- =====================================================
 -- 5. EXERCISES TABLE
 -- =====================================================
-CREATE TABLE public.exercises (
+CREATE TABLE IF NOT EXISTS public.exercises (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   workout_id UUID REFERENCES public.workouts(id) ON DELETE CASCADE,
   name TEXT NOT NULL,
@@ -68,7 +87,7 @@ CREATE TABLE public.exercises (
 -- =====================================================
 -- 6. PROGRESS TABLE
 -- =====================================================
-CREATE TABLE public.progress (
+CREATE TABLE IF NOT EXISTS public.progress (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   user_id UUID REFERENCES public.users(id) ON DELETE CASCADE,
   workout_id UUID REFERENCES public.workouts(id) ON DELETE SET NULL,
@@ -83,7 +102,7 @@ CREATE TABLE public.progress (
 -- =====================================================
 -- 7. CHAT MESSAGES TABLE
 -- =====================================================
-CREATE TABLE public.chat_messages (
+CREATE TABLE IF NOT EXISTS public.chat_messages (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   user_id UUID REFERENCES public.users(id) ON DELETE CASCADE,
   role message_role NOT NULL,
@@ -96,7 +115,7 @@ CREATE TABLE public.chat_messages (
 -- =====================================================
 -- 8. HABITS TABLE
 -- =====================================================
-CREATE TABLE public.habits (
+CREATE TABLE IF NOT EXISTS public.habits (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   user_id UUID REFERENCES public.users(id) ON DELETE CASCADE,
   name TEXT NOT NULL,
@@ -109,7 +128,7 @@ CREATE TABLE public.habits (
 -- =====================================================
 -- 9. HABIT LOGS TABLE
 -- =====================================================
-CREATE TABLE public.habit_logs (
+CREATE TABLE IF NOT EXISTS public.habit_logs (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   habit_id UUID REFERENCES public.habits(id) ON DELETE CASCADE,
   user_id UUID REFERENCES public.users(id) ON DELETE CASCADE,
@@ -123,7 +142,7 @@ CREATE TABLE public.habit_logs (
 -- =====================================================
 -- 10. COACH CLIENTS TABLE
 -- =====================================================
-CREATE TABLE public.coach_clients (
+CREATE TABLE IF NOT EXISTS public.coach_clients (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   coach_id UUID REFERENCES public.users(id) ON DELETE CASCADE,
   client_id UUID REFERENCES public.users(id) ON DELETE CASCADE,
@@ -136,15 +155,15 @@ CREATE TABLE public.coach_clients (
 -- =====================================================
 -- 11. INDEXES
 -- =====================================================
-CREATE INDEX idx_users_email ON public.users(email);
-CREATE INDEX idx_users_role ON public.users(role);
-CREATE INDEX idx_workouts_user_id ON public.workouts(user_id);
-CREATE INDEX idx_exercises_workout_id ON public.exercises(workout_id);
-CREATE INDEX idx_progress_user_id ON public.progress(user_id);
-CREATE INDEX idx_chat_messages_user_id ON public.chat_messages(user_id);
-CREATE INDEX idx_habits_user_id ON public.habits(user_id);
-CREATE INDEX idx_habit_logs_user_id ON public.habit_logs(user_id);
-CREATE INDEX idx_coach_clients_coach_id ON public.coach_clients(coach_id);
+CREATE INDEX IF NOT EXISTS idx_users_email ON public.users(email);
+CREATE INDEX IF NOT EXISTS idx_users_role ON public.users(role);
+CREATE INDEX IF NOT EXISTS idx_workouts_user_id ON public.workouts(user_id);
+CREATE INDEX IF NOT EXISTS idx_exercises_workout_id ON public.exercises(workout_id);
+CREATE INDEX IF NOT EXISTS idx_progress_user_id ON public.progress(user_id);
+CREATE INDEX IF NOT EXISTS idx_chat_messages_user_id ON public.chat_messages(user_id);
+CREATE INDEX IF NOT EXISTS idx_habits_user_id ON public.habits(user_id);
+CREATE INDEX IF NOT EXISTS idx_habit_logs_user_id ON public.habit_logs(user_id);
+CREATE INDEX IF NOT EXISTS idx_coach_clients_coach_id ON public.coach_clients(coach_id);
 
 -- =====================================================
 -- 12. ROW LEVEL SECURITY
@@ -161,41 +180,58 @@ ALTER TABLE public.coach_clients ENABLE ROW LEVEL SECURITY;
 -- =====================================================
 -- 13. RLS POLICIES - USERS
 -- =====================================================
+DROP POLICY IF EXISTS "Users can view own data" ON public.users;
 CREATE POLICY "Users can view own data" ON public.users FOR SELECT USING (auth.uid() = id);
+
+DROP POLICY IF EXISTS "Users can update own data" ON public.users;
 CREATE POLICY "Users can update own data" ON public.users FOR UPDATE USING (auth.uid() = id);
+
+DROP POLICY IF EXISTS "Users can insert own data" ON public.users;
 CREATE POLICY "Users can insert own data" ON public.users FOR INSERT WITH CHECK (auth.uid() = id);
+
+DROP POLICY IF EXISTS "Admins can view all users" ON public.users;
 CREATE POLICY "Admins can view all users" ON public.users FOR SELECT USING (EXISTS (SELECT 1 FROM public.users WHERE id = auth.uid() AND role = 'admin'));
 
 -- =====================================================
 -- 14. RLS POLICIES - WORKOUTS
 -- =====================================================
+DROP POLICY IF EXISTS "Users can manage own workouts" ON public.workouts;
 CREATE POLICY "Users can manage own workouts" ON public.workouts FOR ALL USING (auth.uid() = user_id);
 
 -- =====================================================
 -- 15. RLS POLICIES - EXERCISES
 -- =====================================================
+DROP POLICY IF EXISTS "Users can view own exercises" ON public.exercises;
 CREATE POLICY "Users can view own exercises" ON public.exercises FOR SELECT USING (EXISTS (SELECT 1 FROM public.workouts WHERE id = public.exercises.workout_id AND user_id = auth.uid()));
 
 -- =====================================================
 -- 16. RLS POLICIES - PROGRESS
 -- =====================================================
+DROP POLICY IF EXISTS "Users can manage own progress" ON public.progress;
 CREATE POLICY "Users can manage own progress" ON public.progress FOR ALL USING (auth.uid() = user_id);
 
 -- =====================================================
 -- 17. RLS POLICIES - CHAT MESSAGES
 -- =====================================================
+DROP POLICY IF EXISTS "Users can manage own messages" ON public.chat_messages;
 CREATE POLICY "Users can manage own messages" ON public.chat_messages FOR ALL USING (auth.uid() = user_id);
 
 -- =====================================================
 -- 18. RLS POLICIES - HABITS
 -- =====================================================
+DROP POLICY IF EXISTS "Users can manage own habits" ON public.habits;
 CREATE POLICY "Users can manage own habits" ON public.habits FOR ALL USING (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "Users can manage own habit logs" ON public.habit_logs;
 CREATE POLICY "Users can manage own habit logs" ON public.habit_logs FOR ALL USING (auth.uid() = user_id);
 
 -- =====================================================
 -- 19. RLS POLICIES - COACH CLIENTS
 -- =====================================================
+DROP POLICY IF EXISTS "Coaches can view their clients" ON public.coach_clients;
 CREATE POLICY "Coaches can view their clients" ON public.coach_clients FOR SELECT USING (auth.uid() = coach_id);
+
+DROP POLICY IF EXISTS "Coaches can manage their clients" ON public.coach_clients;
 CREATE POLICY "Coaches can manage their clients" ON public.coach_clients FOR ALL USING (auth.uid() = coach_id);
 
 -- =====================================================
@@ -209,8 +245,13 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS update_users_updated_at ON public.users;
 CREATE TRIGGER update_users_updated_at BEFORE UPDATE ON public.users FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+DROP TRIGGER IF EXISTS update_workouts_updated_at ON public.workouts;
 CREATE TRIGGER update_workouts_updated_at BEFORE UPDATE ON public.workouts FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+DROP TRIGGER IF EXISTS update_habits_updated_at ON public.habits;
 CREATE TRIGGER update_habits_updated_at BEFORE UPDATE ON public.habits FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 -- =====================================================
@@ -218,4 +259,3 @@ CREATE TRIGGER update_habits_updated_at BEFORE UPDATE ON public.habits FOR EACH 
 -- =====================================================
 -- Verifica que se crearon todas las tablas:
 -- SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' ORDER BY table_name;
-

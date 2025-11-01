@@ -1,8 +1,8 @@
 # Frontend - Rubén Fitness
 
-Angular 18 con dashboards diferenciados para usuarios y coaches.
+Angular 18 con dashboards diferenciados.
 
-## 🚀 Inicio Rápido
+## 🚀 Inicio
 
 ```bash
 npm install
@@ -13,15 +13,9 @@ npm start
 
 **Login**: `tester@ruben.fitness` / `tester` o `admin@ruben.fitness` / `admin`
 
-## 🎨 Personalizar Colores
+## 🎨 Personalizar
 
 Edita `src/styles/variables.scss`
-
-## 📦 Build
-
-```bash
-npm run build
-```
 
 ## 🛠️ Stack
 

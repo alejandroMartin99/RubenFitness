@@ -64,7 +64,13 @@ export class RegisterComponent {
       error: (err) => {
         this.loading = false;
         console.error('Registration error:', err);
-        alert('Registration failed. Please try again.');
+        
+        // Show specific error message
+        let errorMessage = 'Error al registrar. Por favor intenta de nuevo.';
+        if (err.error?.detail) {
+          errorMessage = err.error.detail;
+        }
+        alert(errorMessage);
       }
     });
   }

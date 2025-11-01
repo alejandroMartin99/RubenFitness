@@ -1,42 +1,33 @@
 # Backend API - Rubén Fitness
 
-FastAPI backend con Swagger, autenticación, chat IA y tracking de progreso.
+FastAPI con Supabase y OpenAI.
 
-## 🚀 Inicio Rápido
+## 🚀 Inicio
 
 ```bash
-# Crear entorno virtual
+cd backend
 python -m venv .venv
 .venv\Scripts\activate        # Windows
 source .venv/bin/activate     # Linux/Mac
 
-# Instalar dependencias
 pip install -r requirements.txt
-
-# Iniciar servidor
 uvicorn app.main:app --reload --port 8000
 ```
 
 ✅ API: http://localhost:8000  
 📚 Swagger: http://localhost:8000/docs
 
-## 🔧 Configuración
+## ⚙️ Configuración
 
-Copia `.env.example` a `.env` y agrega tus credenciales:
-
+**Backend** (`backend/.env`):
 ```env
-SUPABASE_URL=https://tu-proyecto.supabase.co
+SUPABASE_URL=https://nymrsnhnzcagvwwnkyno.supabase.co
 SUPABASE_KEY=tu-service-role-key
-OPENAI_API_KEY=tu-openai-key
-CORS_ORIGINS=http://localhost:4200
+OPENAI_API_KEY=
 ```
 
 **Nota**: Funciona sin credenciales en modo mock.
 
-## 📊 Schema de Base de Datos
-
-Ejecuta `supabase_schema.sql` en Supabase para crear todas las tablas.
-
 ## 📝 Endpoints
 
-Ver documentación completa en http://localhost:8000/docs
+Ver documentación en http://localhost:8000/docs
