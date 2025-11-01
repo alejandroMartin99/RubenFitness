@@ -4,7 +4,7 @@ Wrapper for Supabase database operations (users, workouts, progress)
 """
 
 from typing import Optional, List, Dict, Any
-from datetime import datetime
+from datetime import datetime, date, timedelta
 import re
 from supabase import create_client, Client
 from app.core.config import settings
@@ -252,6 +252,247 @@ class SupabaseService:
                 }
             ]
         }
+    
+    # Sleep Operations
+    def save_sleep_data(
+        self,
+        user_id: str,
+        sleep_date: date,
+        hours: float,
+        minutes: int = 0
+    ) -> Optional[Dict[str, Any]]:
+        """Save sleep data to the database"""
+        if not self.is_connected():
+            return None
+        
+        # Validate UUID format
+        if not self._is_valid_uuid(user_id):
+            print(f"Warning: Invalid user_id format: {user_id}. Skipping database save.")
+            return None
+        
+        # Check if user exists
+        user_exists = self.get_user(user_id) is not None
+        if not user_exists:
+            print(f"Info: User {user_id} not found in database. Sleep data won't be saved.")
+            return None
+        
+        try:
+            # Calculate total hours (hours + minutes/60)
+            total_hours = hours + (minutes / 60.0)
+            
+            # Use upsert to update if record exists for this date
+            result = self.supabase.table("daily_health_data").upsert({
+                "user_id": user_id,
+                "date": sleep_date.isoformat(),
+                "sleep_hours": total_hours,
+                "updated_at": datetime.utcnow().isoformat()
+            }, on_conflict="user_id,date").execute()
+            
+            return result.data[0] if result.data else None
+        except Exception as e:
+            # Check if table doesn't exist, create a simple storage approach
+            error_str = str(e)
+            if 'does not exist' in error_str or '42703' in error_str:
+                print(f"Info: daily_health_data table not found. Using alternative storage.")
+                # Try to use progress table with metadata
+                try:
+                    result = self.supabase.table("progress").insert({
+                        "user_id": user_id,
+                        "workout_id": "sleep_tracking",
+                        "date": datetime.combine(sleep_date, datetime.min.time()),
+                        "duration_minutes": int(total_hours * 60),
+                        "notes": f"Sleep: {total_hours:.2f}h"
+                    }).execute()
+                    return result.data[0] if result.data else None
+                except Exception as e2:
+                    print(f"Error saving sleep data: {e2}")
+                    return None
+            else:
+                print(f"Error saving sleep data: {e}")
+                return None
+    
+    def get_sleep_data(self, user_id: str, days: int = 7) -> List[Dict[str, Any]]:
+        """Get user's sleep data for the last N days"""
+        if not self.is_connected():
+            return []
+        
+        # Validate UUID format
+        if not self._is_valid_uuid(user_id):
+            print(f"Warning: Invalid user_id format: {user_id}. Returning empty sleep data.")
+            return []
+        
+        # Check if user exists
+        user_exists = self.get_user(user_id) is not None
+        if not user_exists:
+            return []
+        
+        try:
+            # Try to get from daily_health_data table
+            end_date = date.today()
+            start_date = end_date - timedelta(days=days-1)
+            
+            result = self.supabase.table("daily_health_data")\
+                .select("*")\
+                .eq("user_id", user_id)\
+                .gte("date", start_date.isoformat())\
+                .lte("date", end_date.isoformat())\
+                .order("date", desc=True)\
+                .execute()
+            
+            # Format the data to match expected structure
+            formatted_data = []
+            if result.data:
+                for record in result.data:
+                    # Get the date - handle both string and date types
+                    record_date = record.get("date")
+                    if isinstance(record_date, str):
+                        # Extract just the date part if it's a datetime string
+                        record_date = record_date.split('T')[0] if 'T' in record_date else record_date
+                    
+                    formatted_data.append({
+                        "date": record_date,
+                        "hours": float(record.get("sleep_hours", 0))
+                    })
+            
+            return formatted_data
+        except Exception as e:
+            # If table doesn't exist, try alternative approach
+            error_str = str(e)
+            if 'does not exist' in error_str or '42703' in error_str:
+                # Try to get from progress table metadata
+                try:
+                    result = self.supabase.table("progress")\
+                        .select("*")\
+                        .eq("user_id", user_id)\
+                        .eq("workout_id", "sleep_tracking")\
+                        .order("workout_date", desc=True)\
+                        .limit(days)\
+                        .execute()
+                    
+                    sleep_data = []
+                    if result.data:
+                        for record in result.data:
+                            date_str = record.get("workout_date") or record.get("date")
+                            duration = record.get("duration_minutes", 0)
+                            hours = duration / 60.0
+                            
+                            sleep_data.append({
+                                "date": date_str,
+                                "hours": hours
+                            })
+                    
+                    return sleep_data
+                except Exception as e2:
+                    print(f"Error getting sleep data: {e2}")
+                    return []
+            else:
+                print(f"Error getting sleep data: {e}")
+                return []
+    
+    # Water Operations
+    def save_water_data(
+        self,
+        user_id: str,
+        water_date: date,
+        water_ml: int
+    ) -> Optional[Dict[str, Any]]:
+        """Save water data to the database"""
+        if not self.is_connected():
+            return None
+        
+        # Validate UUID format
+        if not self._is_valid_uuid(user_id):
+            print(f"Warning: Invalid user_id format: {user_id}. Skipping database save.")
+            return None
+        
+        # Check if user exists
+        user_exists = self.get_user(user_id) is not None
+        if not user_exists:
+            print(f"Info: User {user_id} not found in database. Water data won't be saved.")
+            return None
+        
+        try:
+            # Use upsert to update if record exists for this date
+            # Get existing water for today if exists
+            existing = self.supabase.table("daily_health_data")\
+                .select("water_ml")\
+                .eq("user_id", user_id)\
+                .eq("date", water_date.isoformat())\
+                .execute()
+            
+            current_water = 0
+            if existing.data and len(existing.data) > 0:
+                current_water = existing.data[0].get("water_ml", 0) or 0
+            
+            # Add new water to existing amount
+            new_total = current_water + water_ml
+            
+            result = self.supabase.table("daily_health_data").upsert({
+                "user_id": user_id,
+                "date": water_date.isoformat(),
+                "water_ml": new_total,
+                "updated_at": datetime.utcnow().isoformat()
+            }, on_conflict="user_id,date").execute()
+            
+            return result.data[0] if result.data else None
+        except Exception as e:
+            error_str = str(e)
+            if 'does not exist' in error_str or '42703' in error_str:
+                print(f"Info: daily_health_data table not found. Water data won't be saved.")
+                return None
+            else:
+                print(f"Error saving water data: {e}")
+                return None
+    
+    def get_water_data(self, user_id: str, days: int = 7) -> List[Dict[str, Any]]:
+        """Get user's water data for the last N days"""
+        if not self.is_connected():
+            return []
+        
+        # Validate UUID format
+        if not self._is_valid_uuid(user_id):
+            print(f"Warning: Invalid user_id format: {user_id}. Returning empty water data.")
+            return []
+        
+        # Check if user exists
+        user_exists = self.get_user(user_id) is not None
+        if not user_exists:
+            return []
+        
+        try:
+            end_date = date.today()
+            start_date = end_date - timedelta(days=days-1)
+            
+            result = self.supabase.table("daily_health_data")\
+                .select("*")\
+                .eq("user_id", user_id)\
+                .gte("date", start_date.isoformat())\
+                .lte("date", end_date.isoformat())\
+                .order("date", desc=True)\
+                .execute()
+            
+            # Format the data to match expected structure
+            formatted_data = []
+            if result.data:
+                for record in result.data:
+                    record_date = record.get("date")
+                    if isinstance(record_date, str):
+                        record_date = record_date.split('T')[0] if 'T' in record_date else record_date
+                    
+                    formatted_data.append({
+                        "date": record_date,
+                        "water_ml": int(record.get("water_ml", 0) or 0)
+                    })
+            
+            return formatted_data
+        except Exception as e:
+            error_str = str(e)
+            if 'does not exist' in error_str or '42703' in error_str:
+                print(f"Info: daily_health_data table not found. Returning empty water data.")
+                return []
+            else:
+                print(f"Error getting water data: {e}")
+                return []
 
 
 # Global instance

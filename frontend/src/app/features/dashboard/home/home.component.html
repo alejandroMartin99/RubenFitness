@@ -95,16 +95,68 @@
         </div>
       </div>
 
-      <div class="indicator-card">
-        <div class="indicator-icon sleep">
-          <mat-icon>bedtime</mat-icon>
+      <!-- Sleep Tracking Card -->
+      <div class="sleep-card-expanded">
+        <div class="sleep-header">
+          <div class="sleep-icon-wrapper">
+            <mat-icon class="sleep-icon">bedtime</mat-icon>
+          </div>
+          <div class="sleep-stats-header">
+            <div class="sleep-value">{{ formatSleepDisplay(todaySleepHours, todaySleepMinutes) }}</div>
+            <div class="sleep-label">Sueño hoy</div>
+          </div>
         </div>
-        <div class="indicator-content">
-          <div class="indicator-value">7h 32m</div>
-          <div class="indicator-label">Sleep</div>
-          <div class="indicator-progress">
-            <div class="progress-bar">
-              <div class="progress-fill" style="width: 94%"></div>
+        
+        <!-- Simple Input Controls -->
+        <div class="sleep-input-compact">
+          <button mat-icon-button class="sleep-btn minus-btn" (click)="adjustSleep('hours', -1)" [disabled]="loadingSleep || todaySleepHours <= 0">
+            <mat-icon>remove</mat-icon>
+          </button>
+          
+          <div class="sleep-time-display-compact">
+            <span class="time-number">{{ todaySleepHours }}</span>
+            <span class="time-sep">h</span>
+            <span class="time-number">{{ todaySleepMinutes.toString().padStart(2, '0') }}</span>
+            <span class="time-sep">m</span>
+          </div>
+          
+          <button mat-icon-button class="sleep-btn plus-btn" (click)="adjustSleep('hours', 1)" [disabled]="loadingSleep || todaySleepHours >= 24">
+            <mat-icon>add</mat-icon>
+          </button>
+        </div>
+        
+        <!-- Minutes Quick Adjust -->
+        <div class="sleep-minutes-controls">
+          <button mat-stroked-button class="minute-btn" (click)="adjustSleep('minutes', -30)" [disabled]="loadingSleep">
+            -30m
+          </button>
+          <button mat-stroked-button class="minute-btn" (click)="adjustSleep('minutes', -15)" [disabled]="loadingSleep">
+            -15m
+          </button>
+          <button mat-stroked-button class="minute-btn" (click)="adjustSleep('minutes', 15)" [disabled]="loadingSleep">
+            +15m
+          </button>
+          <button mat-stroked-button class="minute-btn" (click)="adjustSleep('minutes', 30)" [disabled]="loadingSleep">
+            +30m
+          </button>
+        </div>
+        
+        <!-- Save Button -->
+        <button mat-raised-button color="primary" class="save-sleep-btn-compact" (click)="saveSleep()" [disabled]="loadingSleep || (todaySleepHours === 0 && todaySleepMinutes === 0)">
+          <mat-icon>save</mat-icon>
+          Guardar
+        </button>
+        
+        <!-- Sleep History Chart -->
+        <div class="sleep-history-compact">
+          <div class="history-header-compact">
+            <span class="history-label-compact">Últimos 7 días</span>
+            <span class="history-average-compact" *ngIf="averageSleep > 0">{{ formatSleepHours(averageSleep) }} avg</span>
+          </div>
+          <div class="sleep-bars-compact">
+            <div *ngFor="let day of sleepHistory; let i = index" class="sleep-bar-compact">
+              <div class="bar-compact" [style.height.px]="getSleepBarHeight(day.hours)" [class.has-data]="day.hours > 0"></div>
+              <span class="bar-label-compact">{{ i === sleepHistory.length - 1 ? 'Hoy' : (sleepHistory.length - 1 - i) }}</span>
             </div>
           </div>
         </div>

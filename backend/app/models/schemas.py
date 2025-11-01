@@ -5,7 +5,7 @@ Data validation and serialization models for API requests/responses
 
 from pydantic import BaseModel, Field
 from typing import Optional, List, Dict, Any
-from datetime import datetime
+from datetime import datetime, date
 
 
 # User Models
@@ -77,6 +77,55 @@ class ProgressResponse(BaseModel):
     total_workouts: int
     current_streak: int
     recent_workouts: List[WorkoutRecord]
+    created_at: datetime
+
+
+# Sleep Models
+class SleepRecord(BaseModel):
+    """Individual sleep record"""
+    date: date
+    hours: float
+    minutes: Optional[int] = None
+
+
+class SleepRequest(BaseModel):
+    """Sleep tracking request"""
+    user_id: str
+    date: date
+    hours: float = Field(..., ge=0, le=24, description="Hours of sleep (0-24)")
+    minutes: Optional[int] = Field(None, ge=0, le=59, description="Additional minutes (0-59)")
+
+
+class SleepResponse(BaseModel):
+    """Sleep tracking response"""
+    user_id: str
+    today_sleep: Optional[SleepRecord] = None
+    last_7_days: List[SleepRecord] = []
+    average_sleep: Optional[float] = None
+    created_at: datetime
+
+
+# Water Models
+class WaterRecord(BaseModel):
+    """Individual water record"""
+    date: date
+    water_ml: int
+
+
+class WaterRequest(BaseModel):
+    """Water tracking request"""
+    user_id: str
+    date: date
+    water_ml: int = Field(..., ge=0, description="Water in milliliters")
+
+
+class WaterResponse(BaseModel):
+    """Water tracking response"""
+    user_id: str
+    today_water: Optional[WaterRecord] = None
+    last_7_days: List[WaterRecord] = []
+    total_today: int = 0
+    goal: int = 2000
     created_at: datetime
 
 
