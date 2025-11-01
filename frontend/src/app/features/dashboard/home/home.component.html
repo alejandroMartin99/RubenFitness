@@ -56,26 +56,31 @@
 
       <!-- Water Tracking Card -->
       <div class="water-card-expanded">
-        <div class="water-header">
-          <div class="water-icon-wrapper">
+        <!-- Compact Header Top Right -->
+        <div class="water-header-compact-top">
+          <div class="water-icon-wrapper-small">
             <mat-icon class="water-icon">water_drop</mat-icon>
           </div>
-          <div class="water-stats-header">
-            <div class="water-value">{{ (waterDrunk / 1000).toFixed(1) }}L</div>
-            <div class="water-label">de {{ (waterGoal / 1000).toFixed(1) }}L</div>
-            <div class="water-progress-text">{{ Math.round(waterPercentage) }}%</div>
-          </div>
+          <div class="water-value-small">{{ (waterDrunk / 1000).toFixed(1) }}L</div>
+          <div class="water-goal-small">/ {{ (waterGoal / 1000).toFixed(1) }}L</div>
         </div>
         
-        <!-- Progress Bar -->
-        <div class="water-progress-bar">
-          <div class="progress-track">
-            <div class="progress-fill-water" [style.width.%]="waterPercentage" [class.completed]="isGoalCompleted()"></div>
+        <!-- Water History Chart -->
+        <div class="water-history-compact">
+          <div class="history-header-compact">
+            <span class="history-label-compact">Últimos 7 días</span>
+            <span class="history-average-compact" *ngIf="getAverageWater() > 0">{{ (getAverageWater() / 1000).toFixed(1) }}L avg</span>
+          </div>
+          <div class="water-bars-compact">
+            <div *ngFor="let day of waterHistory; let i = index" class="water-bar-compact">
+              <div class="bar-compact" [style.height.px]="getWaterBarHeight(day.water_ml)" [class.has-data]="day.water_ml > 0"></div>
+              <span class="bar-label-compact">{{ i === waterHistory.length - 1 ? 'Hoy' : (waterHistory.length - 1 - i) }}</span>
+            </div>
           </div>
         </div>
         
         <!-- Add Water Button -->
-        <button mat-raised-button color="primary" class="add-water-btn" (click)="addWater()">
+        <button mat-raised-button color="primary" class="add-water-btn-compact" (click)="addWater()">
           <mat-icon>add</mat-icon>
           Añadir 200ml
         </button>
@@ -88,23 +93,17 @@
             [class.filled]="waterGlasses >= mark"
           ></div>
         </div>
-        
-        <div class="water-footer">
-          <span *ngIf="!isGoalCompleted()">{{ getRemainingWater() }}ml restantes</span>
-          <span *ngIf="isGoalCompleted()" class="completed-text">¡Meta! 🎉</span>
-        </div>
       </div>
 
       <!-- Sleep Tracking Card -->
       <div class="sleep-card-expanded">
-        <div class="sleep-header">
-          <div class="sleep-icon-wrapper">
+        <!-- Compact Header Top Right -->
+        <div class="sleep-header-compact-top">
+          <div class="sleep-icon-wrapper-small">
             <mat-icon class="sleep-icon">bedtime</mat-icon>
           </div>
-          <div class="sleep-stats-header">
-            <div class="sleep-value">{{ formatSleepDisplay(todaySleepHours, todaySleepMinutes) }}</div>
-            <div class="sleep-label">Sueño hoy</div>
-          </div>
+          <div class="sleep-value-small">{{ formatSleepDisplay(todaySleepHours, todaySleepMinutes) }}</div>
+          <div class="sleep-label-small">Sueño hoy</div>
         </div>
         
         <!-- Simple Input Controls -->

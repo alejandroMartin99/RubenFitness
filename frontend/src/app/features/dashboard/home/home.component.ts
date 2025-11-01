@@ -18,6 +18,7 @@ export class HomeComponent implements OnInit {
   waterDrunk: number = 0;
   waterPercentage: number = 0;
   waterGlasses: number = 0; // Number of 200ml glasses
+  waterHistory: any[] = [];
   
   private readonly motivationalMessages = {
     empty: '¡Empecemos! Tu primera copa te está esperando 💧',
@@ -63,9 +64,11 @@ export class HomeComponent implements OnInit {
         // Update state
         this.waterDrunk = waterAmount;
         this.waterGlasses = Math.floor(this.waterDrunk / 200);
+        this.waterHistory = response.last_7_days || [];
         this.calculateProgress();
         
         console.log('✅ Water updated:', this.waterDrunk, 'ml,', this.waterGlasses, 'glasses');
+        console.log('💧 Water history:', this.waterHistory);
       },
       error: (err) => {
         console.error('❌ Error loading water:', err);
@@ -250,6 +253,20 @@ export class HomeComponent implements OnInit {
     // Max height is 100px, and max sleep is 12 hours
     const maxSleep = 12;
     return Math.min((hours / maxSleep) * 100, 100);
+  }
+
+  getWaterBarHeight(waterMl: number): number {
+    // Max height is 100px, and max water is goal (2000ml)
+    const maxHeight = 100;
+    const percentage = (waterMl / this.waterGoal);
+    return Math.min(percentage * maxHeight, maxHeight);
+  }
+
+  getAverageWater(): number {
+    if (!this.waterHistory || this.waterHistory.length === 0) return 0;
+    const total = this.waterHistory.reduce((sum, day) => sum + (day.water_ml || 0), 0);
+    const count = this.waterHistory.filter(day => (day.water_ml || 0) > 0).length;
+    return count > 0 ? total / count : 0;
   }
   
   // Expose Math for template
