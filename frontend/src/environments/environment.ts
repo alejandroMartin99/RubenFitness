@@ -1,15 +1,25 @@
 /**
  * Environment Configuration
  * Development environment settings
+ * 
+ * ⚠️  Este archivo se genera automáticamente desde .env
+ * ⚠️  NO editar manualmente - los cambios se perderán
  */
 
 export const environment = {
   production: false,
+  
+  // API Configuration
   apiUrl: 'http://localhost:8000',
+  
+  // Supabase Configuration
   supabaseUrl: 'https://nymrsnhnzcagvwwnkyno.supabase.co',
-  supabaseKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im55bXJzbmhuemNhZ3Z3d25reW5vIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjE5MzI3NjYsImV4cCI6MjA3NzUwODc2Nn0.bn8GGSHK82KCTsEQIdjpPuTMJ8BcHokdqdCoBS5KCf0',
+  supabaseKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im55bXJzbmhuemNhZ3Z3d25reW5vIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2MTkzMjc2NiwiZXhwIjoyMDc3NTA4NzY2fQ.ged_tdZwochk2HsYKlrIr2_ZLNERaclBrTvYzrXNrxs',
+  
+  // OpenAI Configuration (solo para referencia, la API key está en el backend)
+  // Nota: La clave de OpenAI NO debe estar en el frontend por seguridad
   openaiApiKey: '',
-  firebaseConfig: { /* opcional */ }
+  
+  // Firebase Configuration (opcional)
+  firebaseConfig: {}
 };
-
-
