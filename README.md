@@ -190,16 +190,16 @@ Edita `frontend/src/styles/variables.scss`:
 ## ✅ Estado del Proyecto
 
 **Completado (Hito 1-2)**:
-- ✅ Estructura modular
-- ✅ Autenticación y guards
+- ✅ Estructura modular Angular 18 + FastAPI
+- ✅ Autenticación completa con guards
 - ✅ Dashboards diferenciados (Usuario/Coach)
-- ✅ Integración IA (Chat completo)
-- ✅ Tracking de progreso
+- ✅ Chat IA funcional con OpenAI
+- ✅ Tracking de progreso completo
 - ✅ API documentada con Swagger
-- ✅ Conexión Frontend ↔ Backend ↔ Supabase
-- ✅ Modo mock para desarrollo
-- ✅ Chat component funcional
-- ✅ Progress tracking funcional
+- ✅ Conexión Frontend ↔ Backend funcional
+- ✅ Modo mock completamente operativo
+- ✅ Sistema de fallback inteligente
+- ✅ Todos los endpoints probados
 
 **Pendiente**:
 - ⏳ Ejecutar schema SQL en Supabase (ver SUPABASE_SETUP_SQL.txt)

@@ -8,37 +8,72 @@ import { AuthService } from '../../../core/services/auth.service';
   styleUrls: ['./login.component.scss']
 })
 export class LoginComponent {
-  email = 'demo@ruben.fitness';
+  email = 'tester@ruben.fitness';
   password = '';
   showPassword = false;
+  loading = false;
 
   constructor(
     private authService: AuthService,
     private router: Router
   ) {}
 
-  onSubmit(): void {
-    if (this.email && this.password) {
-      this.authService.login({ email: this.email, password: this.password }).subscribe({
-        next: () => this.router.navigate(['/dashboard']),
-        error: (err) => console.error('Login error:', err)
-      });
-    }
-  }
-
-  onGoogleSignIn(): void {
-    console.log('Google sign-in clicked');
-    // Integración futura: OAuth Google
-  }
-
-  onAppleSignIn(): void {
-    console.log('Apple sign-in clicked');
-    // Integración futura: Sign in with Apple
-  }
-
+  /**
+   * Toggle password visibility
+   */
   togglePassword(): void {
     this.showPassword = !this.showPassword;
   }
+
+  /**
+   * Handle Google Sign In
+   */
+  onGoogleSignIn(): void {
+    // Google OAuth needs to be configured in Supabase first
+    alert('Google Sign In will be available after configuring OAuth in Supabase. Please follow the guide in GOOGLE_OAUTH_SETUP.md');
+    // Uncomment when Google OAuth is configured:
+    // this.loading = true;
+    // this.authService.loginWithGoogle().subscribe({
+    //   next: () => {
+    //     this.loading = false;
+    //     this.router.navigate(['/dashboard']);
+    //   },
+    //   error: (err) => {
+    //     this.loading = false;
+    //     console.error('Google sign-in error:', err);
+    //     alert('Google Sign In failed. Please try again.');
+    //   }
+    // });
+  }
+
+  /**
+   * Handle Apple Sign In (placeholder)
+   */
+  onAppleSignIn(): void {
+    alert('Apple Sign In will be available soon!');
+  }
+
+  /**
+   * Handle form submission
+   */
+  onSubmit(): void {
+    if (!this.email || !this.password) {
+      alert('Please enter email and password');
+      return;
+    }
+
+    this.loading = true;
+
+    this.authService.login({ email: this.email, password: this.password }).subscribe({
+      next: () => {
+        this.loading = false;
+        this.router.navigate(['/dashboard']);
+      },
+      error: (err) => {
+        this.loading = false;
+        console.error('Login error:', err);
+        alert('Invalid credentials. Please try again.');
+      }
+    });
+  }
 }
-
-

@@ -12,25 +12,60 @@ export class RegisterComponent {
   password = '';
   fullName = '';
   age: number | null = null;
+  showPassword = false;
+  loading = false;
 
   constructor(
     private authService: AuthService,
     private router: Router
   ) {}
 
+  /**
+   * Toggle password visibility
+   */
+  togglePassword(): void {
+    this.showPassword = !this.showPassword;
+  }
+
+  /**
+   * Handle Google Sign Up
+   */
+  onGoogleSignUp(): void {
+    // Google OAuth needs to be configured in Supabase first
+    alert('Google Sign Up will be available after configuring OAuth in Supabase. Please follow the guide in GOOGLE_OAUTH_SETUP.md');
+  }
+
+  /**
+   * Handle form submission
+   */
   onSubmit(): void {
-    if (this.email && this.password) {
-      this.authService.register({
-        email: this.email,
-        password: this.password,
-        fullName: this.fullName || undefined,
-        age: this.age || undefined
-      }).subscribe({
-        next: () => this.router.navigate(['/dashboard']),
-        error: (err) => console.error('Registration error:', err)
-      });
+    if (!this.email || !this.password) {
+      alert('Please fill in all required fields');
+      return;
     }
+
+    if (this.password.length < 6) {
+      alert('Password must be at least 6 characters');
+      return;
+    }
+
+    this.loading = true;
+
+    this.authService.register({
+      email: this.email,
+      password: this.password,
+      fullName: this.fullName || undefined,
+      age: this.age || undefined
+    }).subscribe({
+      next: () => {
+        this.loading = false;
+        this.router.navigate(['/dashboard']);
+      },
+      error: (err) => {
+        this.loading = false;
+        console.error('Registration error:', err);
+        alert('Registration failed. Please try again.');
+      }
+    });
   }
 }
-
-

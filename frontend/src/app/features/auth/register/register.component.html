@@ -1,42 +1,111 @@
 <div class="register-container">
   <mat-card class="register-card">
     <mat-card-header>
-      <mat-card-title>Create Account</mat-card-title>
-      <mat-card-subtitle>Join Rubén Fitness today</mat-card-subtitle>
+      <div class="logo-icon">
+        <mat-icon>fitness_center</mat-icon>
+      </div>
+      <mat-card-title>Create Your Account</mat-card-title>
+      <mat-card-subtitle>Start your fitness journey with Rubén</mat-card-subtitle>
     </mat-card-header>
     
     <mat-card-content>
-      <form (ngSubmit)="onSubmit()">
-        <mat-form-field appearance="outline" class="full-width">
-          <mat-label>Full Name</mat-label>
-          <input matInput [(ngModel)]="fullName" name="fullName">
-        </mat-form-field>
+      <!-- Social Login Buttons -->
+      <div class="social-login">
+        <button type="button" class="btn-social google" (click)="onGoogleSignUp()">
+          <svg width="20" height="20" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+            <path fill="#FFC107" d="M43.611 20.083H42V20H24v8h11.303C33.625 31.91 29.223 35 24 35c-6.627 0-12-5.373-12-12s5.373-12 12-12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.943 5.053 29.73 3 24 3 12.955 3 4 11.955 4 23s8.955 20 20 20 20-8.955 20-20c0-1.341-.138-2.651-.389-3.917z"/>
+            <path fill="#FF3D00" d="M6.306 14.691l6.571 4.819C14.357 16.252 18.822 13 24 13c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.943 5.053 29.73 3 24 3 16.318 3 9.626 7.337 6.306 14.691z"/>
+            <path fill="#4CAF50" d="M24 43c5.166 0 9.861-1.977 13.409-5.192l-6.191-5.238C29.122 34.091 26.671 35 24 35c-5.202 0-9.593-3.071-11.287-7.438l-6.52 5.025C9.488 39.556 16.227 43 24 43z"/>
+            <path fill="#1976D2" d="M43.611 20.083H42V20H24v8h11.303c-1.086 3.827-4.487 6.91-8.303 6.91-5.202 0-9.593-3.071-11.287-7.438l-6.52 5.025C9.488 39.556 16.227 43 24 43c11.045 0 20-8.955 20-20 0-1.341-.138-2.651-.389-3.917z"/>
+          </svg>
+          Sign up with Google
+        </button>
+      </div>
 
-        <mat-form-field appearance="outline" class="full-width">
-          <mat-label>Email</mat-label>
-          <input matInput type="email" [(ngModel)]="email" name="email" required>
-        </mat-form-field>
+      <div class="divider"><span>or</span></div>
 
-        <mat-form-field appearance="outline" class="full-width">
-          <mat-label>Age</mat-label>
-          <input matInput type="number" [(ngModel)]="age" name="age">
-        </mat-form-field>
+      <!-- Registration Form -->
+      <form (ngSubmit)="onSubmit()" class="form-custom">
+        <div class="field">
+          <label for="fullName">Full Name</label>
+          <input 
+            id="fullName" 
+            type="text" 
+            [(ngModel)]="fullName" 
+            name="fullName"
+            placeholder="John Doe"
+            autocomplete="name"
+          />
+        </div>
 
-        <mat-form-field appearance="outline" class="full-width">
-          <mat-label>Password</mat-label>
-          <input matInput type="password" [(ngModel)]="password" name="password" required>
-        </mat-form-field>
+        <div class="field">
+          <label for="email">Email</label>
+          <input 
+            id="email" 
+            type="email" 
+            [(ngModel)]="email" 
+            name="email" 
+            placeholder="john@example.com"
+            required 
+            autocomplete="email"
+          />
+        </div>
 
-        <button mat-raised-button color="primary" type="submit" class="full-width">
-          Sign Up
+        <div class="field">
+          <label for="age">Age</label>
+          <input 
+            id="age" 
+            type="number" 
+            [(ngModel)]="age" 
+            name="age"
+            placeholder="25"
+            min="13"
+            max="100"
+          />
+        </div>
+
+        <div class="field password-field">
+          <label for="password">Password</label>
+          <div class="password-wrapper">
+            <input 
+              id="password" 
+              [type]="showPassword ? 'text' : 'password'" 
+              [(ngModel)]="password" 
+              name="password" 
+              placeholder="••••••••" 
+              required 
+              autocomplete="new-password"
+              minlength="6"
+            />
+            <button 
+              type="button" 
+              class="toggle-visibility" 
+              (click)="togglePassword()" 
+              aria-label="Toggle password visibility"
+            >
+              <mat-icon>{{ showPassword ? 'visibility_off' : 'visibility' }}</mat-icon>
+            </button>
+          </div>
+        </div>
+
+        <button 
+          mat-raised-button 
+          color="primary" 
+          type="submit" 
+          class="full-width submit-btn"
+          [disabled]="loading"
+        >
+          <mat-spinner diameter="20" *ngIf="loading"></mat-spinner>
+          <span *ngIf="!loading">Create Account</span>
         </button>
       </form>
     </mat-card-content>
 
     <mat-card-footer>
-      <p class="text-center">Already have an account? <a routerLink="/auth/login">Sign in</a></p>
+      <p class="text-center">
+        Already have an account? 
+        <a routerLink="/auth/login" class="link">Sign in</a>
+      </p>
     </mat-card-footer>
   </mat-card>
 </div>
-
-

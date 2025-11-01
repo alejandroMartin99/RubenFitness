@@ -7,6 +7,7 @@ import { Injectable } from '@angular/core';
 import { Observable, BehaviorSubject } from 'rxjs';
 import { User, LoginCredentials, RegisterData } from '../models/user.model';
 import { ApiService } from './api.service';
+import { SupabaseService } from './supabase.service';
 
 @Injectable({
   providedIn: 'root'
@@ -42,9 +43,38 @@ export class AuthService {
     }
   ];
 
-  constructor(private apiService: ApiService) {
+  constructor(
+    private apiService: ApiService,
+    private supabaseService: SupabaseService
+  ) {
     // Check if user is already logged in (check localStorage, session, etc.)
     this.checkAuthStatus();
+    // Listen to Supabase auth changes
+    this.listenToAuthChanges();
+  }
+
+  /**
+   * Listen to Supabase authentication state changes
+   */
+  private listenToAuthChanges(): void {
+    this.supabaseService.getClient().auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_IN' && session?.user) {
+        const user: User = {
+          id: session.user.id,
+          email: session.user.email || '',
+          fullName: session.user.user_metadata?.['full_name'] || '',
+          role: session.user.user_metadata?.['role'] || 'user',
+          fitnessLevel: session.user.user_metadata?.['fitness_level'] || 'beginner'
+        };
+        localStorage.setItem('currentUser', JSON.stringify(user));
+        localStorage.setItem('accessToken', session.access_token);
+        this.currentUserSubject.next(user);
+      } else if (event === 'SIGNED_OUT') {
+        this.currentUserSubject.next(null);
+        localStorage.removeItem('currentUser');
+        localStorage.removeItem('accessToken');
+      }
+    });
   }
 
   /**
@@ -189,6 +219,27 @@ export class AuthService {
   hasRole(roles: string[]): boolean {
     const role = this.currentUserSubject.value?.role;
     return role ? roles.includes(role) : false;
+  }
+
+  /**
+   * Login with Google OAuth
+   */
+  loginWithGoogle(): Observable<User> {
+    return new Observable(observer => {
+      // Use Supabase Google OAuth
+      this.supabaseService.signInWithGoogle().subscribe({
+        next: (result) => {
+          console.log('Google OAuth result:', result);
+          // Supabase OAuth redirects to Google, so we don't get user data here
+          // The user will be redirected back after authentication
+          observer.complete();
+        },
+        error: (err) => {
+          console.error('Google OAuth error:', err);
+          observer.error(err);
+        }
+      });
+    });
   }
 }
 
