@@ -24,8 +24,8 @@ class Settings(BaseSettings):
     CORS_ORIGINS: List[str] = ["http://localhost:4200", "http://localhost:3000"]
     
     # Supabase Configuration
-    SUPABASE_URL: str = ""
-    SUPABASE_KEY: str = ""
+    SUPABASE_URL: str = "https://nymrsnhnzcagvwwnkyno.supabase.co"
+    SUPABASE_KEY: str = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im55bXJzbmhuemNhZ3Z3d25reW5vIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2MTkzMjc2NiwiZXhwIjoyMDc3NTA4NzY2fQ.ged_tdZwochk2HsYKlrIr2_ZLNERaclBrTvYzrXNrxs"
     
     # OpenAI Configuration
     OPENAI_API_KEY: str = ""

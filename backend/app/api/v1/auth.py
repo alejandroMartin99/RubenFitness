@@ -5,10 +5,16 @@ Handles user authentication with Supabase Auth
 
 from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional, Dict, Any
 from app.services.supabase_service import supabase_service
 
 router = APIRouter()
+
+# Mock users storage (in-memory for development)
+_mock_users_storage: Dict[str, Dict[str, Any]] = {
+    "admin@ruben.fitness": {"password": "admin", "role": "admin", "full_name": "Admin", "fitness_level": "advanced"},
+    "tester@ruben.fitness": {"password": "tester", "role": "user", "full_name": "Tester", "fitness_level": "intermediate"}
+}
 
 
 class LoginRequest(BaseModel):
@@ -87,13 +93,7 @@ async def login(request: LoginRequest):
 
 async def _mock_login(request: LoginRequest) -> AuthResponse:
     """Mock login for development when Supabase is not connected"""
-    # Mock users
-    mock_users = {
-        "admin@ruben.fitness": {"password": "admin", "role": "admin", "full_name": "Admin"},
-        "tester@ruben.fitness": {"password": "tester", "role": "user", "full_name": "Tester"}
-    }
-    
-    user = mock_users.get(request.email)
+    user = _mock_users_storage.get(request.email)
     if not user or user["password"] != request.password:
         raise HTTPException(status_code=401, detail="Invalid credentials")
     
@@ -104,7 +104,7 @@ async def _mock_login(request: LoginRequest) -> AuthResponse:
             "email": request.email,
             "full_name": user["full_name"],
             "role": user["role"],
-            "fitness_level": "intermediate"
+            "fitness_level": user.get("fitness_level", "intermediate")
         },
         success=True
     )
@@ -169,6 +169,18 @@ async def register(request: RegisterRequest):
 
 async def _mock_register(request: RegisterRequest) -> AuthResponse:
     """Mock registration for development"""
+    # Check if user already exists
+    if request.email in _mock_users_storage:
+        raise HTTPException(status_code=400, detail="User already exists")
+    
+    # Add user to mock storage
+    _mock_users_storage[request.email] = {
+        "password": request.password,
+        "role": "user",
+        "full_name": request.full_name,
+        "fitness_level": request.fitness_level or "beginner"
+    }
+    
     return AuthResponse(
         access_token="mock_token_" + request.email,
         user={
