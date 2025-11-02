@@ -55,17 +55,24 @@
       </div>
 
       <!-- Water Tracking Card -->
-      <div class="water-card-expanded">
-        <!-- Compact Header Top Right -->
-        <div class="water-header-compact-top">
-          <div class="water-icon-wrapper-small">
-            <mat-icon class="water-icon">water_drop</mat-icon>
+      <div class="water-card-expanded" [class.completed]="isGoalCompleted()">
+        <!-- Header Top Row -->
+        <div class="water-header-row">
+          <!-- Motivational Message Left -->
+          <div class="water-motivational-message-left">
+            {{ getMotivationalMessage() }}
           </div>
-          <div class="water-value-small">{{ (waterDrunk / 1000).toFixed(1) }}L</div>
-          <div class="water-goal-small">/ {{ (waterGoal / 1000).toFixed(1) }}L</div>
+          <!-- Compact Header Top Right -->
+          <div class="water-header-compact-top">
+            <div class="water-icon-wrapper-small">
+              <mat-icon class="water-icon">water_drop</mat-icon>
+            </div>
+            <div class="water-value-small">{{ (waterDrunk / 1000).toFixed(1) }}L</div>
+            <div class="water-goal-small">/ {{ (waterGoal / 1000).toFixed(1) }}L</div>
+          </div>
         </div>
         
-        <!-- Water History Chart -->
+        <!-- Water History Chart (Bars) -->
         <div class="water-history-compact">
           <div class="history-header-compact">
             <span class="history-label-compact">Últimos 7 días</span>

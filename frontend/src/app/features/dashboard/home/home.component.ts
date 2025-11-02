@@ -268,6 +268,27 @@ export class HomeComponent implements OnInit {
     const count = this.waterHistory.filter(day => (day.water_ml || 0) > 0).length;
     return count > 0 ? total / count : 0;
   }
+
+  getWaterLinePoints(): string {
+    if (!this.waterHistory || this.waterHistory.length === 0) return '';
+    
+    const points: string[] = [];
+    const maxDays = this.waterHistory.length;
+    
+    this.waterHistory.forEach((day, index) => {
+      const x = maxDays > 1 ? (index / (maxDays - 1)) * 100 : 50;
+      const heightPercentage = Math.min((day.water_ml || 0) / this.waterGoal, 1);
+      const y = 100 - (heightPercentage * 100);
+      points.push(`${x},${y}`);
+    });
+    
+    return points.join(' ');
+  }
+
+  getWaterLineY(waterMl: number): number {
+    const heightPercentage = Math.min(waterMl / this.waterGoal, 1);
+    return 100 - (heightPercentage * 100);
+  }
   
   // Expose Math for template
   Math = Math;

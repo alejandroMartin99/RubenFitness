@@ -525,14 +525,42 @@
     border-color: var(--color-border-glow);
     box-shadow: var(--shadow-glow);
   }
+
+  &.completed {
+    border-color: #10b981;
+    
+    &:hover {
+      border-color: #10b981;
+      box-shadow: 0 4px 20px rgba(16, 185, 129, 0.3);
+      background: linear-gradient(135deg, rgba(16, 185, 129, 0.05) 0%, rgba(5, 150, 105, 0.05) 100%);
+    }
+  }
   
+  .water-header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 0.5rem;
+    flex-shrink: 0;
+    margin-bottom: 0.5rem;
+  }
+
+  .water-motivational-message-left {
+    font-size: 0.7rem;
+    color: var(--color-text-secondary);
+    font-weight: 500;
+    flex: 1;
+    text-align: left;
+    line-height: 1.3;
+    min-width: 0;
+  }
+
   .water-header-compact-top {
     display: flex;
     align-items: center;
     justify-content: flex-end;
     gap: 0.5rem;
     flex-shrink: 0;
-    margin-bottom: 0.5rem;
     
     .water-icon-wrapper-small {
       width: 32px;
@@ -634,6 +662,7 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
+      flex-shrink: 0;
       
       .history-label-compact {
         font-size: 0.7rem;
