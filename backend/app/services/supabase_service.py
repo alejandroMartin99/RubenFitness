@@ -509,6 +509,96 @@ class SupabaseService:
             else:
                 print(f"Error getting water data: {e}")
                 return []
+    # Workout Operations
+    def save_workout_day(
+        self,
+        user_id: str,
+        workout_date: date
+    ) -> Optional[Dict[str, Any]]:
+        """Save workout day to the database"""
+        if not self.is_connected():
+            return None
+        
+        # Validate UUID format
+        if not self._is_valid_uuid(user_id):
+            print(f"Warning: Invalid user_id format: {user_id}. Skipping database save.")
+            return None
+        
+        # Check if user exists
+        user_exists = self.get_user(user_id) is not None
+        if not user_exists:
+            print(f"Info: User {user_id} not found in database. Workout day won't be saved.")
+            return None
+        
+        try:
+            # Use upsert to avoid duplicates
+            result = self.supabase.table("workout_days").upsert({
+                "user_id": user_id,
+                "date": workout_date.isoformat(),
+                "updated_at": datetime.utcnow().isoformat()
+            }, on_conflict="user_id,date").execute()
+            
+            return result.data[0] if result.data else None
+        except Exception as e:
+            error_str = str(e)
+            if 'does not exist' in error_str or '42703' in error_str:
+                print(f"Info: workout_days table not found. Workout day won't be saved.")
+                return None
+            else:
+                print(f"Error saving workout day: {e}")
+                return None
+    
+    def get_workout_days(self, user_id: str, year: int, month: int) -> List[date]:
+        """Get user's workout days for a specific month"""
+        if not self.is_connected():
+            return []
+        
+        # Validate UUID format
+        if not self._is_valid_uuid(user_id):
+            print(f"Warning: Invalid user_id format: {user_id}. Returning empty workout days.")
+            return []
+        
+        # Check if user exists
+        user_exists = self.get_user(user_id) is not None
+        if not user_exists:
+            return []
+        
+        try:
+            # Calculate date range for the month
+            first_day = date(year, month, 1)
+            if month == 12:
+                last_day = date(year + 1, 1, 1) - timedelta(days=1)
+            else:
+                last_day = date(year, month + 1, 1) - timedelta(days=1)
+            
+            result = self.supabase.table("workout_days")\
+                .select("date")\
+                .eq("user_id", user_id)\
+                .gte("date", first_day.isoformat())\
+                .lte("date", last_day.isoformat())\
+                .execute()
+            
+            # Extract dates and convert to date objects
+            workout_dates = []
+            if result.data:
+                for record in result.data:
+                    record_date = record.get("date")
+                    if isinstance(record_date, str):
+                        record_date = record_date.split('T')[0] if 'T' in record_date else record_date
+                        try:
+                            workout_dates.append(date.fromisoformat(record_date))
+                        except:
+                            pass
+            
+            return workout_dates
+        except Exception as e:
+            error_str = str(e)
+            if 'does not exist' in error_str or '42703' in error_str:
+                print(f"Info: workout_days table not found. Returning empty workout days.")
+                return []
+            else:
+                print(f"Error getting workout days: {e}")
+                return []
 
 
 # Global instance

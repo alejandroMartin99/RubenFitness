@@ -1,54 +1,54 @@
 """
-Pydantic Schemas
-Data validation and serialization models for API requests/responses
+Pydantic Models for API Requests and Responses
+Defines data structures for all API endpoints
 """
 
 from pydantic import BaseModel, Field
-from typing import Optional, List, Dict, Any
+from typing import Optional, List
 from datetime import datetime, date
 
 
 # User Models
-class UserBase(BaseModel):
-    """Base user model"""
+class UserCreate(BaseModel):
+    """User creation request"""
     email: str
-    full_name: Optional[str] = None
-    age: Optional[int] = None
-    fitness_level: Optional[str] = None  # beginner, intermediate, advanced
-
-
-class UserCreate(UserBase):
-    """User creation model"""
+    full_name: str
     password: str
+    role: Optional[str] = "user"
+    fitness_level: Optional[str] = None
+    age: Optional[int] = None
 
 
-class UserResponse(UserBase):
+class UserResponse(BaseModel):
     """User response model"""
     id: str
+    email: str
+    full_name: str
+    role: str
+    fitness_level: Optional[str] = None
+    age: Optional[int] = None
     created_at: datetime
-    
-    class Config:
-        from_attributes = True
 
 
 # Chat Models
 class ChatMessage(BaseModel):
-    """Individual chat message"""
+    """Chat message model"""
+    user_id: str
+    message: str
     role: str  # 'user' or 'assistant'
-    content: str
-    timestamp: Optional[datetime] = None
+    created_at: datetime
 
 
 class ChatRequest(BaseModel):
-    """Chat API request model"""
-    user_id: str = Field(..., description="User identifier")
-    message: str = Field(..., description="User's message to the AI assistant")
-    context: Optional[Dict[str, Any]] = Field(None, description="Additional context")
+    """Chat request model"""
+    user_id: str
+    message: str
+    context: Optional[dict] = None
 
 
 class ChatResponse(BaseModel):
-    """Chat API response model"""
-    message: str = Field(..., description="AI assistant response")
+    """Chat response model"""
+    message: str
     user_id: str
     timestamp: datetime
 
@@ -129,11 +129,25 @@ class WaterResponse(BaseModel):
     created_at: datetime
 
 
+# Workout Models
+class WorkoutRequest(BaseModel):
+    """Workout day tracking request"""
+    user_id: str
+    date: date
+
+
+class WorkoutResponse(BaseModel):
+    """Workout days response"""
+    user_id: str
+    workout_days: List[str] = []  # List of dates (YYYY-MM-DD) that have workouts
+    month: int
+    year: int
+    success: bool
+
+
 # Health Status
 class HealthStatus(BaseModel):
     """Health check response"""
     status: str
     database: str
     openai: str
-
-

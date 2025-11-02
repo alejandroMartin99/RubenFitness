@@ -39,20 +39,8 @@
   <div class="progress-indicators">
     <h2 class="section-title">Today's Progress</h2>
     <div class="indicators-grid">
-      <div class="indicator-card">
-        <div class="indicator-icon steps">
-          <mat-icon>directions_walk</mat-icon>
-        </div>
-        <div class="indicator-content">
-          <div class="indicator-value">8,234</div>
-          <div class="indicator-label">Steps</div>
-          <div class="indicator-progress">
-            <div class="progress-bar">
-              <div class="progress-fill" style="width: 82%"></div>
-            </div>
-          </div>
-        </div>
-      </div>
+      <!-- Workout Calendar Compact -->
+      <app-workout-calendar-compact [user]="user"></app-workout-calendar-compact>
 
       <!-- Water Tracking Card -->
       <app-water-tracking [user]="user"></app-water-tracking>

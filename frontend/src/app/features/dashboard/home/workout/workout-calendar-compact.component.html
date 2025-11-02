@@ -1,0 +1,41 @@
+<div class="workout-calendar-compact-card" [class.completed]="todayWorkoutCompleted">
+  <!-- Month Navigation Header -->
+  <div class="calendar-navigation">
+    <button mat-icon-button class="nav-btn" (click)="previousMonth()">
+      <
+    </button>
+    <span class="month-year-display">{{ getMonthName() }}</span>
+    <button mat-icon-button class="nav-btn" (click)="nextMonth()" [disabled]="isCurrentMonth()">
+      >
+    </button>
+  </div>
+
+  <!-- Full Month Calendar Grid -->
+  <div class="month-calendar-grid">
+    <!-- Weekday Headers -->
+    <div class="weekday-header-compact">
+      <div class="weekday-compact" *ngFor="let day of ['D', 'L', 'M', 'X', 'J', 'V', 'S']">{{ day }}</div>
+    </div>
+    
+    <!-- Calendar Days Grid -->
+    <div class="calendar-days-grid-compact">
+      <div 
+        *ngFor="let calendarDay of calendarDays" 
+        class="calendar-day-compact"
+        [class.empty]="calendarDay.day === null"
+        [class.today]="calendarDay.isToday"
+        [class.has-workout]="calendarDay.hasWorkout"
+        [class.other-month]="calendarDay.isOtherMonth"
+        [title]="calendarDay.day ? (calendarDay.dayName + ' ' + calendarDay.day) : ''"
+        (click)="markDayAsWorkout(calendarDay)"
+        [class.clickable]="calendarDay.day !== null && !calendarDay.hasWorkout && !loading && !isFutureDate(calendarDay.date)"
+      >
+        <div class="day-number-compact" *ngIf="calendarDay.day !== null">
+          {{ calendarDay.day }}
+        </div>
+        <div class="workout-check-compact" *ngIf="calendarDay.hasWorkout"></div>
+      </div>
+    </div>
+  </div>
+</div>
+

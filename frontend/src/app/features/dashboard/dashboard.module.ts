@@ -5,6 +5,7 @@ import { RouterModule, Routes } from '@angular/router';
 import { HomeComponent } from './home/home.component';
 import { WaterTrackingComponent } from './home/water/water-tracking.component';
 import { SleepTrackingComponent } from './home/sleep/sleep-tracking.component';
+import { WorkoutCalendarCompactComponent } from './home/workout/workout-calendar-compact.component';
 import { MaterialModule } from '../../core/material/material.module';
 
 const routes: Routes = [
@@ -15,7 +16,8 @@ const routes: Routes = [
   declarations: [
     HomeComponent,
     WaterTrackingComponent,
-    SleepTrackingComponent
+    SleepTrackingComponent,
+    WorkoutCalendarCompactComponent
   ],
   imports: [
     CommonModule,

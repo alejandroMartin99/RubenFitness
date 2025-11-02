@@ -6,7 +6,7 @@ Application entry point for the Rubén Fitness Backend API
 import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.api.v1 import chat, progress, auth, sleep, water
+from app.api.v1 import chat, progress, auth, sleep, water, workout
 from app.core.config import settings
 
 # Initialize FastAPI app
@@ -37,6 +37,7 @@ app.include_router(chat.router, prefix="/api/v1", tags=["Chat"])
 app.include_router(progress.router, prefix="/api/v1", tags=["Progress"])
 app.include_router(sleep.router, prefix="/api/v1", tags=["Sleep"])
 app.include_router(water.router, prefix="/api/v1", tags=["Water"])
+app.include_router(workout.router, prefix="/api/v1", tags=["Workout"])
 
 
 @app.get("/")
