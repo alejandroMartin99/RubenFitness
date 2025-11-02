@@ -26,6 +26,7 @@
         [class.today]="calendarDay.isToday"
         [class.has-workout]="calendarDay.hasWorkout"
         [class.other-month]="calendarDay.isOtherMonth"
+        [class.future]="isFutureDate(calendarDay.date)"
         [title]="calendarDay.day ? (calendarDay.dayName + ' ' + calendarDay.day) : ''"
         (click)="markDayAsWorkout(calendarDay)"
         [class.clickable]="calendarDay.day !== null && !calendarDay.hasWorkout && !loading && !isFutureDate(calendarDay.date)"

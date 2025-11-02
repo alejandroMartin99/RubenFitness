@@ -8,22 +8,12 @@
   gap: 0.75rem;
   transition: all 0.3s ease;
   height: 280px;
+  min-height: 280px;
+  max-height: 280px;
   overflow: hidden;
-  
-  &:hover {
-    transform: translateY(-4px);
-    border-color: var(--color-border-glow);
-    box-shadow: var(--shadow-glow);
-  }
 
   &.completed {
     border-color: #10b981;
-    
-    &:hover {
-      border-color: #10b981;
-      box-shadow: 0 4px 20px rgba(16, 185, 129, 0.3);
-      background: linear-gradient(135deg, rgba(16, 185, 129, 0.05) 0%, rgba(5, 150, 105, 0.05) 100%);
-    }
   }
 
   .calendar-navigation {
@@ -82,6 +72,7 @@
     flex-direction: column;
     gap: 0.2rem;
     min-height: 0;
+    max-height: 100%;
     overflow: hidden;
     margin-top: 0;
     
@@ -105,20 +96,23 @@
     .calendar-days-grid-compact {
       display: grid;
       grid-template-columns: repeat(7, 1fr);
+      grid-template-rows: repeat(5, 1fr);
       gap: 0.15rem;
       flex: 1;
       min-height: 0;
-      align-content: start;
+      height: 100%;
+      align-items: stretch;
       
       .calendar-day-compact {
-        aspect-ratio: 1;
+        width: 100%;
+        height: 100%;
+        min-height: 0;
         position: relative;
         display: flex;
         align-items: center;
         justify-content: center;
         border-radius: var(--radius-sm);
         transition: all 0.3s ease;
-        min-height: 0;
         
         &.empty {
           pointer-events: none;
@@ -146,6 +140,17 @@
           
           &.clickable {
             opacity: 0.6;
+          }
+        }
+        
+        &.future {
+          .day-number-compact {
+            color: var(--color-text-light);
+            opacity: 0.5;
+          }
+          
+          &.clickable {
+            cursor: not-allowed;
           }
         }
         
