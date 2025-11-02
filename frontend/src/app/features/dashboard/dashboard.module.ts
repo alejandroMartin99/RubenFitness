@@ -3,6 +3,8 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule, Routes } from '@angular/router';
 import { HomeComponent } from './home/home.component';
+import { WaterTrackingComponent } from './home/water/water-tracking.component';
+import { SleepTrackingComponent } from './home/sleep/sleep-tracking.component';
 import { MaterialModule } from '../../core/material/material.module';
 
 const routes: Routes = [
@@ -10,7 +12,11 @@ const routes: Routes = [
 ];
 
 @NgModule({
-  declarations: [HomeComponent],
+  declarations: [
+    HomeComponent,
+    WaterTrackingComponent,
+    SleepTrackingComponent
+  ],
   imports: [
     CommonModule,
     FormsModule,
