@@ -260,6 +260,7 @@ class SupabaseService:
                 "height_cm": data.height_cm,
                 "weight_kg": data.weight_kg,
                 "goal": data.goal,
+                "training_frequency": data.training_frequency,
                 "activity_level": data.activity_level,
                 # habits breakdown
                 "diet": data.diet,

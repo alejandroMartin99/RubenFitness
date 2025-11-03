@@ -9,6 +9,7 @@ export interface UserProfile {
   heightCm?: number;
   weightKg?: number;
   goal?: string; // e.g., lose weight, gain muscle
+  trainingFrequency?: 'lt2' | '2-3' | '4+' | '';
   activityLevel?: 'low' | 'medium' | 'high';
   // Habits breakdown
   diet?: string;
@@ -70,13 +71,13 @@ export class ProfileService {
       height_cm: profile.heightCm,
       weight_kg: profile.weightKg,
       goal: profile.goal,
+      training_frequency: profile.trainingFrequency,
       activity_level: profile.activityLevel,
       // new fields
       diet: profile.diet,
       sleep_hours_target: profile.sleepHoursTarget,
       water_goal_ml: profile.waterGoalMl,
       injuries: join(profile.injuries),
-      allergies: join(profile.allergies),
       medication: profile.medication,
       training_experience: profile.trainingExperience,
       equipment: join(profile.equipment),

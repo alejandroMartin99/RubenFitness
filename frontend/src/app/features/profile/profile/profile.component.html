@@ -15,183 +15,235 @@
       </label>
     </div>
 
-    <div class="grid">
-      <div class="field">
-        <label>Nombre completo</label>
-        <input type="text" formControlName="fullName" placeholder="Tu nombre" />
-      </div>
+    <mat-accordion class="form-accordion">
+      <!-- Sección: Datos Personales -->
+      <mat-expansion-panel [(expanded)]="panelStates.personal" [disabled]="false" [class.completed]="personalValid">
+        <mat-expansion-panel-header>
+          <mat-panel-title>
+            <span class="panel-title-content">
+              <span>Datos Personales</span>
+              <mat-icon class="check-icon" *ngIf="personalValid">check_circle</mat-icon>
+            </span>
+          </mat-panel-title>
+        </mat-expansion-panel-header>
+        <fieldset class="grid">
+        <div class="field">
+          <label>Nombre completo</label>
+          <input type="text" formControlName="fullName" placeholder="Tu nombre" />
+        </div>
 
-      <div class="field">
-        <label>Género</label>
-        <select formControlName="gender">
-          <option [ngValue]="null">Prefiero no decir</option>
-          <option *ngFor="let g of genders" [ngValue]="g.value">{{ g.label }}</option>
-        </select>
-      </div>
+        <div class="field">
+          <label>Género</label>
+          <mat-form-field appearance="outline">
+            <mat-select formControlName="gender" required>
+              <mat-option [value]="null">Seleccionar</mat-option>
+              <mat-option *ngFor="let g of genders" [value]="g.value">{{ g.label }}</mat-option>
+            </mat-select>
+          </mat-form-field>
+        </div>
 
-      <div class="field">
-        <label>Fecha de nacimiento</label>
-        <input type="date" formControlName="birthDate" />
-      </div>
+        <div class="field">
+          <label>Fecha de nacimiento</label>
+          <input type="date" formControlName="birthDate" />
+        </div>
 
-      <div class="field">
-        <label>Altura (cm)</label>
-        <input type="number" formControlName="heightCm" placeholder="170" />
-      </div>
+        <div class="field">
+          <label>Altura (cm)</label>
+          <input type="number" formControlName="heightCm" placeholder="170" />
+        </div>
 
-      <div class="field">
-        <label>Peso (kg)</label>
-        <input type="number" formControlName="weightKg" placeholder="70" />
-      </div>
+        <div class="field">
+          <label>Peso (kg)</label>
+          <input type="number" formControlName="weightKg" placeholder="70" />
+        </div>
+      </fieldset>
+      </mat-expansion-panel>
 
-      <div class="field">
-        <label>Nivel de actividad</label>
-        <mat-form-field appearance="outline">
-          <mat-select formControlName="activityLevel">
-            <mat-option [value]="null">Seleccionar</mat-option>
-            <mat-option *ngFor="let a of activityLevels" [value]="a.value">{{ a.label }}</mat-option>
-          </mat-select>
-        </mat-form-field>
-      </div>
+      <!-- Sección: Hábitos -->
+      <mat-expansion-panel [(expanded)]="panelStates.habits" [disabled]="!personalValid" [class.completed]="habitsValid">
+        <mat-expansion-panel-header>
+          <mat-panel-title>
+            <span class="panel-title-content">
+              <span>Hábitos</span>
+              <mat-icon class="check-icon" *ngIf="habitsValid">check_circle</mat-icon>
+            </span>
+          </mat-panel-title>
+        </mat-expansion-panel-header>
+        <div class="hint" *ngIf="!personalValid">Completa primero Datos Personales.</div>
+        <fieldset class="grid" [disabled]="!personalValid">
+        <div class="field full">
+          <label>Objetivo</label>
+          <mat-form-field appearance="outline">
+            <mat-select formControlName="goal" required>
+              <mat-option value="">Seleccionar</mat-option>
+              <mat-option *ngFor="let g of goals" [value]="g.value">{{ g.label }}</mat-option>
+            </mat-select>
+          </mat-form-field>
+        </div>
 
-      <div class="field full">
-        <label>Objetivo</label>
-        <mat-form-field appearance="outline">
-          <mat-select formControlName="goal">
-            <mat-option value="">Seleccionar</mat-option>
-            <mat-option *ngFor="let g of goals" [value]="g.value">{{ g.label }}</mat-option>
-          </mat-select>
-        </mat-form-field>
-      </div>
+        <div class="field">
+          <label>Nivel de actividad</label>
+          <mat-form-field appearance="outline">
+            <mat-select formControlName="activityLevel" required>
+              <mat-option [value]="null">Seleccionar</mat-option>
+              <mat-option *ngFor="let a of activityLevels" [value]="a.value">{{ a.label }}</mat-option>
+            </mat-select>
+          </mat-form-field>
+        </div>
 
-      <!-- Hábitos desglosados (4 por fila) -->
-      <div class="field">
-        <label>Dieta</label>
-        <mat-form-field appearance="outline">
-          <mat-select formControlName="diet">
-            <mat-option value="">Seleccionar</mat-option>
-            <mat-option *ngFor="let d of dietOptions" [value]="d">{{ d }}</mat-option>
-          </mat-select>
-        </mat-form-field>
-      </div>
-      <div class="field">
-        <label>Sueño objetivo (h)</label>
-        <mat-form-field appearance="outline">
-          <mat-select formControlName="sleepHoursTarget">
-            <mat-option [value]="null">Seleccionar</mat-option>
-            <mat-option *ngFor="let s of sleepOptions" [value]="s">{{ s }}</mat-option>
-          </mat-select>
-        </mat-form-field>
-      </div>
-      <div class="field">
-        <label>Agua objetivo (ml)</label>
-        <mat-form-field appearance="outline">
-          <mat-select formControlName="waterGoalMl">
-            <mat-option [value]="null">Seleccionar</mat-option>
-            <mat-option *ngFor="let w of waterOptions" [value]="w">{{ w }}</mat-option>
-          </mat-select>
-        </mat-form-field>
-      </div>
-      <div class="field">
-        <label>Nivel de estrés</label>
-        <mat-form-field appearance="outline">
-          <mat-select formControlName="stressLevel">
-            <mat-option value="">Seleccionar</mat-option>
-            <mat-option *ngFor="let s of stressOptions" [value]="s">{{ s }}</mat-option>
-          </mat-select>
-        </mat-form-field>
-      </div>
+        <div class="field">
+          <label>Preferencia de dieta</label>
+          <mat-form-field appearance="outline">
+            <mat-select formControlName="diet" required>
+              <mat-option value="">Seleccionar</mat-option>
+              <mat-option *ngFor="let d of dietOptions" [value]="d">{{ d }}</mat-option>
+            </mat-select>
+          </mat-form-field>
+        </div>
 
-      <div class="field">
-        <label>Experiencia</label>
-        <mat-form-field appearance="outline">
-          <mat-select formControlName="trainingExperience">
-            <mat-option value="">Seleccionar</mat-option>
-            <mat-option *ngFor="let e of experienceOptions" [value]="e">{{ e }}</mat-option>
-          </mat-select>
-        </mat-form-field>
-      </div>
-      <div class="field">
-        <label>Equipo</label>
-        <mat-form-field appearance="outline">
-          <mat-select formControlName="equipment" multiple>
-            <mat-option *ngFor="let e of equipmentOptions" [value]="e">{{ e }}</mat-option>
-          </mat-select>
-        </mat-form-field>
-      </div>
-      <div class="field">
-        <label>Días disponibles</label>
-        <mat-form-field appearance="outline">
-          <mat-select formControlName="availabilityDays" multiple>
-            <mat-option *ngFor="let d of dayOptions" [value]="d">{{ d }}</mat-option>
-          </mat-select>
-        </mat-form-field>
-      </div>
-      <div class="field">
-        <label>Franjas horarias</label>
-        <mat-form-field appearance="outline">
-          <mat-select formControlName="availabilityHours" multiple>
-            <mat-option *ngFor="let h of hourOptions" [value]="h">{{ h }}</mat-option>
-          </mat-select>
-        </mat-form-field>
-      </div>
+        <div class="field">
+          <label>Sueño objetivo (h)</label>
+          <mat-form-field appearance="outline">
+            <mat-select formControlName="sleepHoursTarget" required>
+              <mat-option [value]="null">Seleccionar</mat-option>
+              <mat-option *ngFor="let s of sleepOptions" [value]="s">{{ s }}</mat-option>
+            </mat-select>
+          </mat-form-field>
+        </div>
 
-      <div class="field">
-        <label>Preferencia nutrición</label>
-        <mat-form-field appearance="outline">
-          <mat-select formControlName="nutritionPreference">
-            <mat-option value="">Seleccionar</mat-option>
-            <mat-option *ngFor="let n of nutritionOptions" [value]="n">{{ n }}</mat-option>
-          </mat-select>
-        </mat-form-field>
-      </div>
-      <div class="field">
-        <label>Lesiones</label>
-        <mat-form-field appearance="outline">
-          <mat-select formControlName="injuries" multiple>
-            <mat-option *ngFor="let i of injuryOptions" [value]="i">{{ i }}</mat-option>
-          </mat-select>
-        </mat-form-field>
-      </div>
-      <div class="field">
-        <label>Alergias</label>
-        <mat-form-field appearance="outline">
-          <mat-select formControlName="allergies" multiple>
-            <mat-option *ngFor="let a of allergyOptions" [value]="a">{{ a }}</mat-option>
-          </mat-select>
-        </mat-form-field>
-      </div>
-      <div class="field">
-        <label>Medicación</label>
-        <input type="text" formControlName="medication" placeholder="" />
-      </div>
+        <div class="field">
+          <label>Agua objetivo (ml)</label>
+          <mat-form-field appearance="outline">
+            <mat-select formControlName="waterGoalMl" required>
+              <mat-option [value]="null">Seleccionar</mat-option>
+              <mat-option *ngFor="let w of waterOptions" [value]="w">{{ w }}</mat-option>
+            </mat-select>
+          </mat-form-field>
+        </div>
 
-      <div class="field">
-        <label>Fumador</label>
-        <mat-form-field appearance="outline">
-          <mat-select formControlName="smoking">
-            <mat-option [value]="false">No</mat-option>
-            <mat-option [value]="true">Sí</mat-option>
-          </mat-select>
-        </mat-form-field>
-      </div>
-      <div class="field">
-        <label>Alcohol</label>
-        <mat-form-field appearance="outline">
-          <mat-select formControlName="alcohol">
-            <mat-option [value]="false">No</mat-option>
-            <mat-option [value]="true">Sí</mat-option>
-          </mat-select>
-        </mat-form-field>
-      </div>
-      <div class="field full">
-        <label>Notas</label>
-        <textarea rows="3" formControlName="notes" placeholder="Observaciones relevantes"></textarea>
-      </div>
+        <div class="field">
+          <label>Nivel de estrés</label>
+          <mat-form-field appearance="outline">
+            <mat-select formControlName="stressLevel" required>
+              <mat-option value="">Seleccionar</mat-option>
+              <mat-option *ngFor="let s of stressOptions" [value]="s">{{ s }}</mat-option>
+            </mat-select>
+          </mat-form-field>
+        </div>
 
-      
-    </div>
+        <div class="field">
+          <label>Preferencia nutrición</label>
+          <mat-form-field appearance="outline">
+            <mat-select formControlName="nutritionPreference" required>
+              <mat-option value="">Seleccionar</mat-option>
+              <mat-option *ngFor="let n of nutritionOptions" [value]="n">{{ n }}</mat-option>
+            </mat-select>
+          </mat-form-field>
+        </div>
 
-    <button class="submit-btn" type="submit">Guardar</button>
+        <div class="field">
+          <label>Lesiones</label>
+          <mat-form-field appearance="outline">
+            <mat-select formControlName="injuries" multiple>
+              <mat-option *ngFor="let i of injuryOptions" [value]="i">{{ i }}</mat-option>
+            </mat-select>
+          </mat-form-field>
+        </div>
+
+        <div class="field">
+          <label>Medicación</label>
+          <input type="text" formControlName="medication" placeholder="" />
+        </div>
+
+        <div class="field">
+          <label>Fumador</label>
+          <mat-form-field appearance="outline">
+            <mat-select formControlName="smoking" required>
+              <mat-option [value]="false">No</mat-option>
+              <mat-option [value]="true">Sí</mat-option>
+            </mat-select>
+          </mat-form-field>
+        </div>
+
+        <div class="field">
+          <label>Alcohol</label>
+          <mat-form-field appearance="outline">
+            <mat-select formControlName="alcohol" required>
+              <mat-option [value]="false">No</mat-option>
+              <mat-option [value]="true">Sí</mat-option>
+            </mat-select>
+          </mat-form-field>
+        </div>
+
+        <div class="field full">
+          <label>Notas</label>
+          <textarea rows="3" formControlName="notes" placeholder="Observaciones relevantes"></textarea>
+        </div>
+      </fieldset>
+      </mat-expansion-panel>
+
+      <!-- Sección: Entrenamientos -->
+      <mat-expansion-panel [(expanded)]="panelStates.training" [disabled]="!habitsValid" [class.completed]="form.valid">
+        <mat-expansion-panel-header>
+          <mat-panel-title>
+            <span class="panel-title-content">
+              <span>Entrenamientos</span>
+              <mat-icon class="check-icon" *ngIf="form.valid">check_circle</mat-icon>
+            </span>
+          </mat-panel-title>
+        </mat-expansion-panel-header>
+        <div class="hint" *ngIf="!habitsValid">Completa primero Hábitos.</div>
+        <fieldset class="grid" [disabled]="!habitsValid">
+        <div class="field">
+          <label>Experiencia</label>
+          <mat-form-field appearance="outline">
+            <mat-select formControlName="trainingExperience" required>
+              <mat-option value="">Seleccionar</mat-option>
+              <mat-option *ngFor="let e of experienceOptions" [value]="e">{{ e }}</mat-option>
+            </mat-select>
+          </mat-form-field>
+        </div>
+
+        <div class="field">
+          <label>Entrenamientos/semana</label>
+          <mat-form-field appearance="outline">
+            <mat-select formControlName="trainingFrequency" required>
+              <mat-option value="">Seleccionar</mat-option>
+              <mat-option *ngFor="let f of trainingFrequencyOptions" [value]="f.value">{{ f.label }}</mat-option>
+            </mat-select>
+          </mat-form-field>
+        </div>
+
+        <div class="field">
+          <label>Equipo</label>
+          <mat-form-field appearance="outline">
+            <mat-select formControlName="equipment" multiple required>
+              <mat-option *ngFor="let e of equipmentOptions" [value]="e">{{ e }}</mat-option>
+            </mat-select>
+          </mat-form-field>
+        </div>
+
+        <div class="field">
+          <label>Días disponibles</label>
+          <mat-form-field appearance="outline">
+            <mat-select formControlName="availabilityDays" multiple required>
+              <mat-option *ngFor="let d of dayOptions" [value]="d">{{ d }}</mat-option>
+            </mat-select>
+          </mat-form-field>
+        </div>
+
+        <div class="field">
+          <label>Franjas horarias</label>
+          <mat-form-field appearance="outline">
+            <mat-select formControlName="availabilityHours" multiple required>
+              <mat-option *ngFor="let h of hourOptions" [value]="h">{{ h }}</mat-option>
+            </mat-select>
+          </mat-form-field>
+        </div>
+      </fieldset>
+      </mat-expansion-panel>
+    </mat-accordion>
+
+    <button class="submit-btn" type="submit" [disabled]="form.invalid">Guardar</button>
   </form>
 </div>

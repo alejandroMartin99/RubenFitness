@@ -149,6 +149,33 @@ body {
   --mdc-theme-primary: var(--color-primary);
 }
 
+/* Global fix: ensure mat-select panels/options are readable in dark theme */
+.mat-mdc-select-value-text,
+.mat-mdc-select-arrow {
+  color: #fff !important;
+}
+
+.mat-mdc-select-panel {
+  background: var(--color-surface) !important;
+  color: #fff !important;
+  --mdc-theme-text-primary-on-background: #fff;
+  --mdc-theme-text-secondary-on-background: #fff;
+}
+
+.mat-mdc-option,
+.mat-mdc-option .mdc-list-item__primary-text {
+  color: #fff !important;
+}
+
+.mat-mdc-option.mdc-list-item--selected .mdc-list-item__primary-text,
+.mat-mdc-select .mat-mdc-select-value-text span {
+  color: #FFD54F !important;
+}
+
+.mat-mdc-option.mdc-list-item--disabled .mdc-list-item__primary-text {
+  color: rgba(255,255,255,0.5) !important;
+}
+
 /* Responsive Typography */
 h1, h2, h3, h4, h5, h6 {
   font-weight: 700;

@@ -179,6 +179,7 @@ class ProfileRequest(BaseModel):
     height_cm: Optional[int] = None
     weight_kg: Optional[int] = None
     goal: Optional[str] = None
+    training_frequency: Optional[str] = None
     activity_level: Optional[str] = None
     # Habits breakdown
     diet: Optional[str] = None
@@ -207,6 +208,7 @@ class ProfileResponse(BaseModel):
     height_cm: Optional[int] = None
     weight_kg: Optional[int] = None
     goal: Optional[str] = None
+    training_frequency: Optional[str] = None
     activity_level: Optional[str] = None
     diet: Optional[str] = None
     sleep_hours_target: Optional[int] = None

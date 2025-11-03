@@ -6,6 +6,7 @@ CREATE TABLE IF NOT EXISTS public.user_profiles (
   height_cm INT,
   weight_kg INT,
   goal TEXT,
+  training_frequency TEXT,
   activity_level TEXT,
   habits TEXT,
   photo_url TEXT,
@@ -57,5 +58,6 @@ ALTER TABLE public.user_profiles ADD COLUMN IF NOT EXISTS nutrition_preference T
 ALTER TABLE public.user_profiles ADD COLUMN IF NOT EXISTS smoking BOOLEAN;
 ALTER TABLE public.user_profiles ADD COLUMN IF NOT EXISTS alcohol BOOLEAN;
 ALTER TABLE public.user_profiles ADD COLUMN IF NOT EXISTS notes TEXT;
+ALTER TABLE public.user_profiles ADD COLUMN IF NOT EXISTS training_frequency TEXT;
 
 

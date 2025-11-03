@@ -6,6 +6,48 @@
 
 .profile-form { display: grid; gap: 16px; }
 
+.form-accordion {
+  width: 100%;
+  margin-bottom: 2rem;
+}
+
+.panel-title-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  gap: 8px;
+}
+
+.check-icon {
+  color: #4caf50 !important;
+  font-size: 20px;
+  width: 20px;
+  height: 20px;
+}
+
+:host ::ng-deep .mat-expansion-panel.completed {
+  border-left: 4px solid #4caf50;
+}
+
+:host ::ng-deep .mat-expansion-panel.completed .mat-expansion-panel-header {
+  background-color: rgba(76, 175, 80, 0.1) !important;
+}
+
+:host ::ng-deep .mat-expansion-panel-header {
+  padding: 1rem 1.5rem;
+}
+
+:host ::ng-deep .mat-expansion-panel-body {
+  padding: 1.5rem;
+}
+
+.hint {
+  margin-top: -8px;
+  margin-bottom: 8px;
+  color: var(--color-text-secondary);
+}
+
 .photo-section {
   display: flex;
   align-items: center;
@@ -153,6 +195,62 @@
   &:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(139, 92, 246, 0.6); }
   &:active { transform: translateY(0); }
   &:disabled { opacity: 0.6; cursor: not-allowed; }
+}
+
+/* Ensure mat-select uses white text for options and yellow for selected */
+:host ::ng-deep .mat-mdc-select-value-text {
+  color: #fff !important;
+}
+
+:host ::ng-deep .mat-mdc-select-arrow {
+  color: #fff !important;
+}
+
+:host ::ng-deep .mat-mdc-select-panel {
+  background: var(--color-surface) !important;
+  color: #fff !important;
+  /* Ensure MDC list tokens render white text */
+  --mdc-theme-text-primary-on-background: #fff;
+  --mdc-theme-text-secondary-on-background: #fff;
+}
+
+:host ::ng-deep .mat-mdc-option .mdc-list-item__primary-text {
+  color: #fff !important;
+}
+
+/* Some themes apply color on the option container instead of child */
+:host ::ng-deep .mat-mdc-option {
+  color: #fff !important;
+}
+
+/* selected option in dropdown */
+:host ::ng-deep .mat-mdc-option.mdc-list-item--selected .mdc-list-item__primary-text {
+  color: #FFD54F !important; /* yellow */
+}
+
+:host ::ng-deep .mat-mdc-option.mdc-list-item--activated .mdc-list-item__primary-text {
+  color: #FFD54F !important;
+}
+
+/* Disabled option */
+:host ::ng-deep .mat-mdc-option.mdc-list-item--disabled .mdc-list-item__primary-text {
+  color: rgba(255,255,255,0.5) !important;
+}
+
+/* when the value is selected and displayed in the trigger */
+:host ::ng-deep .mat-mdc-select .mat-mdc-select-value-text span {
+  color: #FFD54F !important;
+}
+
+/* Placeholder text in trigger */
+:host ::ng-deep .mat-mdc-select-placeholder {
+  color: #fff !important;
+  opacity: 0.8;
+}
+
+/* Ensure icons inside options inherit white */
+:host ::ng-deep .mat-mdc-option mat-icon {
+  color: #fff !important;
 }
 
 /* Fresh, dashboard-aligned styling */
