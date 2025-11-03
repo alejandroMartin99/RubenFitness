@@ -1,0 +1,68 @@
+<div class="profile-container">
+  <h2>Perfil</h2>
+
+  <form [formGroup]="form" (ngSubmit)="save()" class="profile-form form-custom">
+    <div class="photo-section">
+      <div class="photo-preview" *ngIf="photoPreview; else placeholder">
+        <img [src]="photoPreview" alt="Foto de perfil" />
+      </div>
+      <ng-template #placeholder>
+        <div class="photo-placeholder">Sin foto</div>
+      </ng-template>
+      <label class="upload-btn">
+        Subir foto
+        <input type="file" accept="image/*" (change)="onPhotoSelected($event)" hidden />
+      </label>
+    </div>
+
+    <div class="grid">
+      <div class="field">
+        <label>Nombre completo</label>
+        <input type="text" formControlName="fullName" placeholder="Tu nombre" />
+      </div>
+
+      <div class="field">
+        <label>Género</label>
+        <select formControlName="gender">
+          <option [ngValue]="null">Prefiero no decir</option>
+          <option *ngFor="let g of genders" [ngValue]="g.value">{{ g.label }}</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label>Fecha de nacimiento</label>
+        <input type="date" formControlName="birthDate" />
+      </div>
+
+      <div class="field">
+        <label>Altura (cm)</label>
+        <input type="number" formControlName="heightCm" placeholder="170" />
+      </div>
+
+      <div class="field">
+        <label>Peso (kg)</label>
+        <input type="number" formControlName="weightKg" placeholder="70" />
+      </div>
+
+      <div class="field">
+        <label>Nivel de actividad</label>
+        <select formControlName="activityLevel">
+          <option [ngValue]="null">Seleccionar</option>
+          <option *ngFor="let a of activityLevels" [ngValue]="a.value">{{ a.label }}</option>
+        </select>
+      </div>
+
+      <div class="field full">
+        <label>Objetivo</label>
+        <input type="text" formControlName="goal" placeholder="Perder grasa, ganar músculo, etc." />
+      </div>
+
+      <div class="field full">
+        <label>Hábitos</label>
+        <textarea rows="3" formControlName="habits" placeholder="Dieta, rutinas, restricciones..."></textarea>
+      </div>
+    </div>
+
+    <button class="submit-btn" type="submit">Guardar</button>
+  </form>
+</div>
