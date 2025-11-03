@@ -40,6 +40,11 @@ const routes: Routes = [
     data: { roles: ['admin'] }
   },
   {
+    path: 'profile',
+    loadChildren: () => import('./features/profile/profile.module').then(m => m.ProfileModule),
+    canActivate: [AuthGuard]
+  },
+  {
     path: '**',
     redirectTo: 'dashboard'
   }

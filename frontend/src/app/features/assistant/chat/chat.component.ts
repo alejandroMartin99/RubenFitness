@@ -177,38 +177,7 @@ export class ChatComponent implements OnInit, AfterViewChecked {
     });
   }
 
-  /**
-   * Build recent chats list grouped by day (YYYY-MM-DD)
-   */
-  private buildRecentChats(): void {
-    const map = new Map<string, ChatMessage[]>();
-    for (const msg of this.allHistory) {
-      const d = msg.timestamp instanceof Date ? msg.timestamp : new Date(msg.timestamp as any);
-      const key = d.toISOString().split('T')[0];
-      if (!map.has(key)) map.set(key, []);
-      map.get(key)!.push(msg);
-    }
-    const entries = Array.from(map.entries())
-      .sort((a, b) => (a[0] < b[0] ? 1 : -1)) // latest first
-      .slice(0, 20);
-    this.recentChats = entries.map(([date, msgs]) => {
-      // Preview from last user or assistant message
-      const last = msgs[msgs.length - 1];
-      const preview = (last?.content || '').slice(0, 60);
-      const label = this.formatRecentLabel(date);
-      return { id: date, date, label, preview, count: msgs.length };
-    });
-  }
-
-  private formatRecentLabel(dateStr: string): string {
-    const d = new Date(dateStr + 'T00:00:00');
-    const today = new Date();
-    const todayStr = today.toISOString().split('T')[0];
-    const y = new Date(today.getTime() - 86400000).toISOString().split('T')[0];
-    if (dateStr === todayStr) return 'Hoy';
-    if (dateStr === y) return 'Ayer';
-    return d.toLocaleDateString('es-ES', { weekday: 'short', day: '2-digit', month: 'short' });
-  }
+  // (removed legacy recentChats helpers)
 
   startNewChat(): void {
     this.selectedChatId = 'new';
@@ -392,6 +361,11 @@ export class ChatComponent implements OnInit, AfterViewChecked {
     const map = new Map<string, ChatMessage>();
     [...a, ...b].forEach(m => map.set(key(m), m));
     return Array.from(map.values()).sort((m1, m2) => (m1.timestamp as Date).getTime() - (m2.timestamp as Date).getTime());
+  }
+
+  private generateSessionTitle(firstMessage: string): string {
+    const clean = (firstMessage || '').replace(/\s+/g, ' ').trim();
+    return clean ? clean.slice(0, 40) : 'Nuevo chat';
   }
 
   /**

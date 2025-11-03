@@ -3,7 +3,8 @@
  * Root component that contains the application shell
  */
 
-import { Component } from '@angular/core';
+import { Component, ViewChild } from '@angular/core';
+import { MatSidenav } from '@angular/material/sidenav';
 import { AuthService } from './core/services/auth.service';
 import { Router } from '@angular/router';
 
@@ -14,6 +15,7 @@ import { Router } from '@angular/router';
 })
 export class AppComponent {
   title = 'Rubén Fitness';
+  @ViewChild('appSidenav') appSidenav!: MatSidenav;
   
   constructor(
     public authService: AuthService,
