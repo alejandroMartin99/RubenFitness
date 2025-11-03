@@ -8,7 +8,7 @@ from datetime import datetime, date, timedelta
 import re
 from supabase import create_client, Client
 from app.core.config import settings
-from app.models.schemas import UserCreate, UserResponse, ChatMessage
+from app.models.schemas import UserCreate, UserResponse, ChatMessage, ProfileRequest
 
 
 class SupabaseService:
@@ -244,6 +244,44 @@ class SupabaseService:
     def list_messages_by_conversation(self, conversation_id: str, limit: int = 200) -> List[Dict[str, Any]]:
         if not self.is_connected():
             return []
+
+    # Profile Operations
+    def upsert_profile(self, data: ProfileRequest) -> Optional[Dict[str, Any]]:
+        if not self.is_connected():
+            return None
+        if not self._is_valid_uuid(data.user_id):
+            return None
+        try:
+            payload = {
+                "user_id": data.user_id,
+                "full_name": data.full_name,
+                "gender": data.gender,
+                "birth_date": data.birth_date.isoformat() if data.birth_date else None,
+                "height_cm": data.height_cm,
+                "weight_kg": data.weight_kg,
+                "goal": data.goal,
+                "activity_level": data.activity_level,
+                "habits": data.habits,
+                "photo_url": data.photo_url,
+                "updated_at": datetime.utcnow().isoformat()
+            }
+            result = self.supabase.table("user_profiles").upsert(payload, on_conflict="user_id").execute()
+            return result.data[0] if result.data else None
+        except Exception as e:
+            print(f"Error upserting profile: {e}")
+            return None
+
+    def get_profile(self, user_id: str) -> Optional[Dict[str, Any]]:
+        if not self.is_connected():
+            return None
+        if not self._is_valid_uuid(user_id):
+            return None
+        try:
+            result = self.supabase.table("user_profiles").select("*").eq("user_id", user_id).single().execute()
+            return result.data if result.data else None
+        except Exception as e:
+            print(f"Error getting profile: {e}")
+            return None
         if not self._is_valid_uuid(conversation_id):
             return []
         try:

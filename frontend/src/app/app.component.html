@@ -38,8 +38,11 @@
       <span class="user-info">
         {{ authService.getCurrentUser()?.fullName || authService.getCurrentUser()?.email }}
       </span>
-      <button mat-icon-button [matMenuTriggerFor]="userMenu">
-        <mat-icon>account_circle</mat-icon>
+      <button mat-icon-button [matMenuTriggerFor]="userMenu" class="avatar-button">
+        <img *ngIf="profilePhoto; else defaultAvatar" [src]="profilePhoto" alt="avatar" class="avatar-img" />
+        <ng-template #defaultAvatar>
+          <mat-icon>account_circle</mat-icon>
+        </ng-template>
       </button>
       <mat-menu #userMenu="matMenu">
         <button mat-menu-item routerLink="/profile">

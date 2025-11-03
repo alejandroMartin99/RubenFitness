@@ -36,6 +36,7 @@ import { MatExpansionModule } from '@angular/material/expansion';
 import { MatTableModule } from '@angular/material/table';
 import { MatSortModule } from '@angular/material/sort';
 import { MatPaginatorModule } from '@angular/material/paginator';
+import { MatStepperModule } from '@angular/material/stepper';
 
 const MaterialModules = [
   MatButtonModule,
@@ -67,6 +68,7 @@ const MaterialModules = [
   MatTableModule,
   MatSortModule,
   MatPaginatorModule,
+  MatStepperModule,
 ];
 
 @NgModule({

@@ -169,3 +169,30 @@ class ConversationResponse(BaseModel):
 
 class ConversationsListResponse(BaseModel):
     conversations: List[ConversationResponse]
+
+# Profile
+class ProfileRequest(BaseModel):
+    user_id: str
+    full_name: Optional[str] = None
+    gender: Optional[str] = None
+    birth_date: Optional[date] = None
+    height_cm: Optional[int] = None
+    weight_kg: Optional[int] = None
+    goal: Optional[str] = None
+    activity_level: Optional[str] = None
+    habits: Optional[str] = None
+    photo_url: Optional[str] = None
+
+class ProfileResponse(BaseModel):
+    user_id: str
+    full_name: Optional[str] = None
+    gender: Optional[str] = None
+    birth_date: Optional[date] = None
+    height_cm: Optional[int] = None
+    weight_kg: Optional[int] = None
+    goal: Optional[str] = None
+    activity_level: Optional[str] = None
+    habits: Optional[str] = None
+    photo_url: Optional[str] = None
+    created_at: datetime
+    updated_at: datetime
