@@ -81,7 +81,6 @@ export class ProfileService {
       medication: profile.medication,
       training_experience: profile.trainingExperience,
       equipment: join(profile.equipment),
-      availability_days: join(profile.availabilityDays),
       availability_hours: join(profile.availabilityHours),
       stress_level: profile.stressLevel,
       nutrition_preference: profile.nutritionPreference,

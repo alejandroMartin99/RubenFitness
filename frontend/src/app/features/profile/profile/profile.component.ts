@@ -66,7 +66,6 @@ export class ProfileComponent implements OnInit {
       medication: [''],
       trainingExperience: ['', [Validators.required]],
       equipment: [[], [this.arrayRequired]],
-      availabilityDays: [[], [this.arrayRequired]],
       availabilityHours: [[], [this.arrayRequired]],
       stressLevel: ['', [Validators.required]],
       nutritionPreference: ['', [Validators.required]],

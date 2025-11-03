@@ -224,15 +224,6 @@
         </div>
 
         <div class="field">
-          <label>Días disponibles</label>
-          <mat-form-field appearance="outline">
-            <mat-select formControlName="availabilityDays" multiple required>
-              <mat-option *ngFor="let d of dayOptions" [value]="d">{{ d }}</mat-option>
-            </mat-select>
-          </mat-form-field>
-        </div>
-
-        <div class="field">
           <label>Franjas horarias</label>
           <mat-form-field appearance="outline">
             <mat-select formControlName="availabilityHours" multiple required>
