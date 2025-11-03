@@ -180,6 +180,22 @@ class ProfileRequest(BaseModel):
     weight_kg: Optional[int] = None
     goal: Optional[str] = None
     activity_level: Optional[str] = None
+    # Habits breakdown
+    diet: Optional[str] = None
+    sleep_hours_target: Optional[int] = None
+    water_goal_ml: Optional[int] = None
+    injuries: Optional[str] = None
+    allergies: Optional[str] = None
+    medication: Optional[str] = None
+    training_experience: Optional[str] = None
+    equipment: Optional[str] = None
+    availability_days: Optional[str] = None
+    availability_hours: Optional[str] = None
+    stress_level: Optional[str] = None
+    nutrition_preference: Optional[str] = None
+    smoking: Optional[bool] = None
+    alcohol: Optional[bool] = None
+    notes: Optional[str] = None
     habits: Optional[str] = None
     photo_url: Optional[str] = None
 
@@ -192,6 +208,21 @@ class ProfileResponse(BaseModel):
     weight_kg: Optional[int] = None
     goal: Optional[str] = None
     activity_level: Optional[str] = None
+    diet: Optional[str] = None
+    sleep_hours_target: Optional[int] = None
+    water_goal_ml: Optional[int] = None
+    injuries: Optional[str] = None
+    allergies: Optional[str] = None
+    medication: Optional[str] = None
+    training_experience: Optional[str] = None
+    equipment: Optional[str] = None
+    availability_days: Optional[str] = None
+    availability_hours: Optional[str] = None
+    stress_level: Optional[str] = None
+    nutrition_preference: Optional[str] = None
+    smoking: Optional[bool] = None
+    alcohol: Optional[bool] = None
+    notes: Optional[str] = None
     habits: Optional[str] = None
     photo_url: Optional[str] = None
     created_at: datetime

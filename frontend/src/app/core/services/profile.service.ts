@@ -10,6 +10,22 @@ export interface UserProfile {
   weightKg?: number;
   goal?: string; // e.g., lose weight, gain muscle
   activityLevel?: 'low' | 'medium' | 'high';
+  // Habits breakdown
+  diet?: string;
+  sleepHoursTarget?: number;
+  waterGoalMl?: number;
+  injuries?: string;
+  allergies?: string;
+  medication?: string;
+  trainingExperience?: string;
+  equipment?: string;
+  availabilityDays?: string;
+  availabilityHours?: string;
+  stressLevel?: string;
+  nutritionPreference?: string;
+  smoking?: boolean;
+  alcohol?: boolean;
+  notes?: string;
   habits?: string;
   photoUrl?: string; // data URL or remote URL
   complexion?: 'ectomorph' | 'mesomorph' | 'endomorph';
@@ -45,6 +61,7 @@ export class ProfileService {
   saveProfileToBackend(profile: UserProfile): void {
     const uid = this.authService.getCurrentUser()?.id;
     if (!uid) return;
+    const join = (v: any) => Array.isArray(v) ? v.join(',') : v ?? null;
     this.api.post<any>('/api/v1/profile', {
       user_id: uid,
       full_name: profile.fullName,
@@ -54,6 +71,22 @@ export class ProfileService {
       weight_kg: profile.weightKg,
       goal: profile.goal,
       activity_level: profile.activityLevel,
+      // new fields
+      diet: profile.diet,
+      sleep_hours_target: profile.sleepHoursTarget,
+      water_goal_ml: profile.waterGoalMl,
+      injuries: join(profile.injuries),
+      allergies: join(profile.allergies),
+      medication: profile.medication,
+      training_experience: profile.trainingExperience,
+      equipment: join(profile.equipment),
+      availability_days: join(profile.availabilityDays),
+      availability_hours: join(profile.availabilityHours),
+      stress_level: profile.stressLevel,
+      nutrition_preference: profile.nutritionPreference,
+      smoking: profile.smoking,
+      alcohol: profile.alcohol,
+      notes: profile.notes,
       habits: profile.habits,
       photo_url: profile.photoUrl
     }).subscribe({ next: () => {}, error: () => {} });

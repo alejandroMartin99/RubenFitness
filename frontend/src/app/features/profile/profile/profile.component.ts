@@ -23,6 +23,25 @@ export class ProfileComponent implements OnInit {
     { value: 'high', label: 'Alta' }
   ];
 
+  goals = [
+    { value: 'fat_loss', label: 'Perder grasa' },
+    { value: 'muscle_gain', label: 'Ganar músculo' },
+    { value: 'performance', label: 'Rendimiento' },
+    { value: 'health', label: 'Salud' }
+  ];
+
+  dietOptions = ['balanceada', 'keto', 'vegana', 'vegetariana', 'mediterránea'];
+  sleepOptions = [6, 7, 8, 9];
+  waterOptions = [1500, 2000, 2500, 3000];
+  stressOptions = ['low', 'medium', 'high'];
+  experienceOptions = ['beginner', 'intermediate', 'advanced'];
+  equipmentOptions = ['gym', 'mancuernas', 'barra', 'bandas', 'peso corporal'];
+  dayOptions = ['L', 'M', 'X', 'J', 'V', 'S', 'D'];
+  hourOptions = ['mañana', 'tarde', 'noche'];
+  nutritionOptions = ['balanceada', 'vegana', 'vegetariana', 'keto'];
+  injuryOptions = ['espalda', 'rodilla', 'hombro', 'tobillo'];
+  allergyOptions = ['gluten', 'lactosa', 'frutos secos', 'polen'];
+
   constructor(private fb: FormBuilder, private profileService: ProfileService) {
     this.form = this.fb.group({
       fullName: ['', [Validators.maxLength(100)]],
@@ -32,6 +51,22 @@ export class ProfileComponent implements OnInit {
       weightKg: [null],
       goal: ['', [Validators.maxLength(200)]],
       activityLevel: [null],
+      // Habits breakdown
+      diet: [''],
+      sleepHoursTarget: [null],
+      waterGoalMl: [null],
+      injuries: [[]],
+      allergies: [[]],
+      medication: [''],
+      trainingExperience: [''],
+      equipment: [[]],
+      availabilityDays: [[]],
+      availabilityHours: [[]],
+      stressLevel: [''],
+      nutritionPreference: [''],
+      smoking: [false],
+      alcohol: [false],
+      notes: [''],
       habits: ['', [Validators.maxLength(500)]],
       photoUrl: [null]
     });
@@ -63,5 +98,25 @@ export class ProfileComponent implements OnInit {
     const profile: UserProfile = this.form.value as UserProfile;
     this.profileService.saveProfile(profile);
     this.profileService.saveProfileToBackend(profile);
+  }
+
+  isSelectedArray(controlName: string, value: string): boolean {
+    const arr = this.form.get(controlName)?.value as string[] | undefined;
+    return Array.isArray(arr) ? arr.includes(value) : false;
+  }
+
+  toggleOption(controlName: string, value: string): void {
+    const control = this.form.get(controlName);
+    if (!control) return;
+    const current = (control.value as string[]) || [];
+    const exists = current.includes(value);
+    const next = exists ? current.filter(v => v !== value) : [...current, value];
+    control.setValue(next);
+  }
+
+  selectSingle(controlName: string, value: any): void {
+    const control = this.form.get(controlName);
+    if (!control) return;
+    control.setValue(value);
   }
 }
