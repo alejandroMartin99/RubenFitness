@@ -71,10 +71,11 @@ class SupabaseService:
     
     # Chat Operations
     def save_chat_message(
-        self, 
-        user_id: str, 
-        role: str, 
-        content: str
+        self,
+        user_id: str,
+        role: str,
+        content: str,
+        conversation_id: Optional[str] = None
     ) -> Optional[Dict[str, Any]]:
         """Save a chat message to the database"""
         if not self.is_connected():
@@ -95,11 +96,14 @@ class SupabaseService:
         
         try:
             # Supabase will automatically set created_at with DEFAULT NOW()
-            result = self.supabase.table("chat_messages").insert({
+            payload = {
                 "user_id": user_id,
                 "role": role,
                 "content": content
-            }).execute()
+            }
+            if conversation_id and self._is_valid_uuid(conversation_id):
+                payload["conversation_id"] = conversation_id
+            result = self.supabase.table("chat_messages").insert(payload).execute()
             
             return result.data[0] if result.data else None
         except Exception as e:
@@ -171,6 +175,87 @@ class SupabaseService:
             return messages
         except Exception as e:
             print(f"Error getting chat history: {e}")
+            return []
+
+    # Conversation (sessions) Operations
+    def create_conversation(self, user_id: str, title: Optional[str] = None) -> Optional[Dict[str, Any]]:
+        if not self.is_connected():
+            return None
+        if not self._is_valid_uuid(user_id):
+            return None
+        if not self.get_user(user_id):
+            return None
+        try:
+            result = self.supabase.table("chat_conversations").insert({
+                "user_id": user_id,
+                "title": title or "Nuevo chat",
+                "updated_at": datetime.utcnow().isoformat()
+            }).execute()
+            return result.data[0] if result.data else None
+        except Exception as e:
+            print(f"Error creating conversation: {e}")
+            return None
+
+    def list_conversations(self, user_id: str) -> List[Dict[str, Any]]:
+        if not self.is_connected():
+            return []
+        if not self._is_valid_uuid(user_id):
+            return []
+        if not self.get_user(user_id):
+            return []
+        try:
+            result = self.supabase.table("chat_conversations")\
+                .select("*")\
+                .eq("user_id", user_id)\
+                .order("updated_at", desc=True)\
+                .execute()
+            return result.data or []
+        except Exception as e:
+            print(f"Error listing conversations: {e}")
+            return []
+
+    def rename_conversation(self, conversation_id: str, title: str) -> bool:
+        if not self.is_connected():
+            return False
+        if not self._is_valid_uuid(conversation_id):
+            return False
+        try:
+            self.supabase.table("chat_conversations").update({
+                "title": title,
+                "updated_at": datetime.utcnow().isoformat()
+            }).eq("id", conversation_id).execute()
+            return True
+        except Exception as e:
+            print(f"Error renaming conversation: {e}")
+            return False
+
+    def delete_conversation(self, conversation_id: str) -> bool:
+        if not self.is_connected():
+            return False
+        if not self._is_valid_uuid(conversation_id):
+            return False
+        try:
+            self.supabase.table("chat_conversations").delete().eq("id", conversation_id).execute()
+            return True
+        except Exception as e:
+            print(f"Error deleting conversation: {e}")
+            return False
+
+    def list_messages_by_conversation(self, conversation_id: str, limit: int = 200) -> List[Dict[str, Any]]:
+        if not self.is_connected():
+            return []
+        if not self._is_valid_uuid(conversation_id):
+            return []
+        try:
+            result = self.supabase.table("chat_messages")\
+                .select("*")\
+                .eq("conversation_id", conversation_id)\
+                .order("created_at", desc=True)\
+                .limit(limit)\
+                .execute()
+            return list(reversed(result.data or []))
+        except Exception as e:
+            print(f"Error listing messages by conversation: {e}")
             return []
     
     # Progress Operations

@@ -151,3 +151,21 @@ class HealthStatus(BaseModel):
     status: str
     database: str
     openai: str
+
+# Chat Conversations (sessions)
+class ConversationCreateRequest(BaseModel):
+    user_id: str
+    title: Optional[str] = None
+
+class ConversationUpdateRequest(BaseModel):
+    title: str
+
+class ConversationResponse(BaseModel):
+    id: str
+    user_id: str
+    title: str
+    created_at: datetime
+    updated_at: datetime
+
+class ConversationsListResponse(BaseModel):
+    conversations: List[ConversationResponse]

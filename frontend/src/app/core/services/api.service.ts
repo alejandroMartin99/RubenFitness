@@ -44,6 +44,15 @@ export class ApiService {
   }
 
   /**
+   * Generic PATCH request
+   * @param endpoint API endpoint
+   * @param data Request body
+   */
+  patch<T>(endpoint: string, data: any): Observable<T> {
+    return this.http.patch<T>(`${this.apiUrl}${endpoint}`, data);
+  }
+
+  /**
    * Generic DELETE request
    * @param endpoint API endpoint
    */

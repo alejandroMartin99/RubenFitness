@@ -28,22 +28,41 @@
   <!-- Chat Container -->
   <div class="chat-container">
     <div class="chat-layout">
-      <!-- Left Column - Coach Image -->
-      <div class="chat-left-column" *ngIf="showQuickActions && messages.length === 0">
-        <div class="coach-image-container">
-          <img src="https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=600&h=400&fit=crop" 
-               alt="Rubén - Fitness Coach"
-               class="coach-image"
-               onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-          <div class="image-fallback">
-            <mat-icon>fitness_center</mat-icon>
-          </div>
-          <div class="image-overlay">
-            <h3>Rubén</h3>
-            <p>Tu Coach Personal</p>
-          </div>
+      <!-- Left Sidebar - Recent Chats -->
+      <aside class="chat-sidebar">
+        <div class="sidebar-header">
+          <div class="sidebar-title">Conversaciones</div>
+          <button mat-stroked-button class="new-chat-btn" (click)="startNewChat()" [disabled]="loading">
+            <mat-icon>add</mat-icon>
+            Nuevo chat
+          </button>
         </div>
-      </div>
+        <div class="sidebar-list">
+          <button 
+            class="sidebar-item"
+            [class.active]="selectedChatId === 'new'"
+            (click)="startNewChat()"
+          >
+            <mat-icon>chat_bubble_outline</mat-icon>
+            <div class="item-text">
+              <div class="item-title">Nuevo chat</div>
+              <div class="item-sub">Empieza una conversación</div>
+            </div>
+          </button>
+          <button 
+            class="sidebar-item"
+            *ngFor="let chat of sessions"
+            [class.active]="selectedChatId === chat.id"
+            (click)="openChat(chat.id)"
+          >
+            <mat-icon>history</mat-icon>
+            <div class="item-text">
+              <div class="item-title">{{ chat.title }}</div>
+              <div class="item-sub">{{ chat.updatedAt | date:'short' }}</div>
+            </div>
+          </button>
+        </div>
+      </aside>
 
       <!-- Right Column - Content -->
       <div class="chat-right-column">

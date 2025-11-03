@@ -28,11 +28,16 @@ export class ChatComponent implements OnInit, AfterViewChecked {
   @ViewChild('chatContainer') chatContainer!: ElementRef;
 
   messages: ChatMessage[] = [];
+  allHistory: ChatMessage[] = [];
   inputMessage = '';
   loading = false;
   userId: string | null = null;
   showQuickActions = true;
   selectedCategory: 'nutrition' | 'training' | null = null;
+
+  // Sidebar conversations (backend)
+  sessions: { id: string; title: string; createdAt: string; updatedAt: string }[] = [];
+  selectedChatId: string | 'new' = 'new';
 
   // Quick Actions - Main Categories
   quickActions: QuickAction[] = [
@@ -142,7 +147,7 @@ export class ChatComponent implements OnInit, AfterViewChecked {
   ngOnInit(): void {
     this.userId = this.authService.getCurrentUser()?.id || null;
     if (this.userId) {
-      this.loadHistory();
+      this.loadSessions();
     }
   }
 
@@ -153,24 +158,80 @@ export class ChatComponent implements OnInit, AfterViewChecked {
   /**
    * Load chat history
    */
-  loadHistory(): void {
-    this.chatService.getHistory().subscribe({
-      next: (response) => {
-        if (response && response.messages) {
-          // Convert timestamp strings to Date objects
-          this.messages = response.messages.map((msg: any) => ({
-            ...msg,
-            timestamp: msg.timestamp ? new Date(msg.timestamp) : new Date()
-          }));
-        } else {
-          this.messages = [];
-        }
-        this.showQuickActions = this.messages.length === 0;
-        setTimeout(() => this.scrollToBottom(), 100);
+  loadSessions(): void {
+    this.chatService.listConversations().subscribe({
+      next: (res: any) => {
+        const list = res?.conversations || [];
+        this.sessions = list.map((c: any) => ({
+          id: c.id,
+          title: c.title,
+          createdAt: c.created_at || c.createdAt,
+          updatedAt: c.updated_at || c.updatedAt
+        }));
+        this.startNewChat();
       },
-      error: (err) => {
-        console.error('Error loading chat history:', err);
-        // Don't show error to user, just start with empty chat
+      error: () => {
+        this.sessions = [];
+        this.startNewChat();
+      }
+    });
+  }
+
+  /**
+   * Build recent chats list grouped by day (YYYY-MM-DD)
+   */
+  private buildRecentChats(): void {
+    const map = new Map<string, ChatMessage[]>();
+    for (const msg of this.allHistory) {
+      const d = msg.timestamp instanceof Date ? msg.timestamp : new Date(msg.timestamp as any);
+      const key = d.toISOString().split('T')[0];
+      if (!map.has(key)) map.set(key, []);
+      map.get(key)!.push(msg);
+    }
+    const entries = Array.from(map.entries())
+      .sort((a, b) => (a[0] < b[0] ? 1 : -1)) // latest first
+      .slice(0, 20);
+    this.recentChats = entries.map(([date, msgs]) => {
+      // Preview from last user or assistant message
+      const last = msgs[msgs.length - 1];
+      const preview = (last?.content || '').slice(0, 60);
+      const label = this.formatRecentLabel(date);
+      return { id: date, date, label, preview, count: msgs.length };
+    });
+  }
+
+  private formatRecentLabel(dateStr: string): string {
+    const d = new Date(dateStr + 'T00:00:00');
+    const today = new Date();
+    const todayStr = today.toISOString().split('T')[0];
+    const y = new Date(today.getTime() - 86400000).toISOString().split('T')[0];
+    if (dateStr === todayStr) return 'Hoy';
+    if (dateStr === y) return 'Ayer';
+    return d.toLocaleDateString('es-ES', { weekday: 'short', day: '2-digit', month: 'short' });
+  }
+
+  startNewChat(): void {
+    this.selectedChatId = 'new';
+    this.messages = [];
+    this.showQuickActions = true;
+    this.selectedCategory = null;
+  }
+
+  openChat(chatId: string): void {
+    this.selectedChatId = chatId;
+    this.chatService.listMessagesByConversation(chatId).subscribe({
+      next: (res: any) => {
+        const msgs = res?.messages || [];
+        this.messages = msgs.map((m: any) => ({
+          role: m.role,
+          content: m.content,
+          timestamp: m.timestamp ? new Date(m.timestamp) : new Date(),
+          userId: this.userId || undefined
+        }));
+        this.showQuickActions = this.messages.length === 0;
+        setTimeout(() => this.scrollToBottom(), 50);
+      },
+      error: () => {
         this.messages = [];
         this.showQuickActions = true;
       }
@@ -238,11 +299,17 @@ export class ChatComponent implements OnInit, AfterViewChecked {
     this.loading = true;
     this.showQuickActions = false;
     this.selectedCategory = null;
+    // Persist to local right away (optimistic)
+    this.appendToLocalHistory(userMessage);
 
     // Scroll to bottom after adding user message
     setTimeout(() => this.scrollToBottom(), 100);
 
-    this.chatService.sendMessage(messageToSend).subscribe({
+    const context: any = {};
+    if (this.selectedChatId && this.selectedChatId !== 'new') {
+      context.session_id = this.selectedChatId;
+    }
+    this.chatService.sendMessage(messageToSend, context).subscribe({
       next: (response) => {
         const aiMessage: ChatMessage = {
           role: 'assistant',
@@ -251,6 +318,24 @@ export class ChatComponent implements OnInit, AfterViewChecked {
           userId: this.userId || undefined
         };
         this.messages.push(aiMessage);
+        // Also push into allHistory for the current day bucket so it shows in sidebar
+        try {
+          if (this.selectedChatId === 'new') {
+            const title = this.generateSessionTitle(userMessage.content);
+            this.chatService.createConversation(title).subscribe({
+              next: (conv: any) => {
+                this.sessions = [{
+                  id: conv.id,
+                  title: conv.title,
+                  createdAt: conv.created_at,
+                  updatedAt: conv.updated_at
+                }, ...this.sessions];
+                this.selectedChatId = conv.id;
+              },
+              error: () => {}
+            });
+          }
+        } catch {}
         this.loading = false;
         setTimeout(() => this.scrollToBottom(), 100);
       },
@@ -266,9 +351,47 @@ export class ChatComponent implements OnInit, AfterViewChecked {
           userId: this.userId || undefined
         };
         this.messages.push(errorMessage);
+        this.appendToLocalHistory(errorMessage);
         setTimeout(() => this.scrollToBottom(), 100);
       }
     });
+  }
+
+  /** Local storage fallback to persist chat when backend cannot save (e.g., mock users) */
+  private localKey(): string {
+    const uid = this.userId || 'guest';
+    return `rf_chat_history_${uid}`;
+  }
+
+  private loadLocalHistory(): ChatMessage[] {
+    try {
+      const raw = localStorage.getItem(this.localKey());
+      if (!raw) return [];
+      const arr = JSON.parse(raw) as any[];
+      return arr.map(m => ({ ...m, timestamp: m.timestamp ? new Date(m.timestamp) : new Date() }));
+    } catch {
+      return [];
+    }
+  }
+
+  private saveLocalHistory(history: ChatMessage[]): void {
+    try {
+      const serializable = history.map(m => ({ ...m, timestamp: (m.timestamp as Date).toISOString() }));
+      localStorage.setItem(this.localKey(), JSON.stringify(serializable));
+    } catch {}
+  }
+
+  private appendToLocalHistory(message: ChatMessage): void {
+    const current = this.loadLocalHistory();
+    current.push({ ...message, timestamp: message.timestamp as Date });
+    this.saveLocalHistory(current);
+  }
+
+  private mergeHistories(a: ChatMessage[], b: ChatMessage[]): ChatMessage[] {
+    const key = (m: ChatMessage) => `${(m.timestamp as Date).toISOString()}|${m.role}|${m.content}`;
+    const map = new Map<string, ChatMessage>();
+    [...a, ...b].forEach(m => map.set(key(m), m));
+    return Array.from(map.values()).sort((m1, m2) => (m1.timestamp as Date).getTime() - (m2.timestamp as Date).getTime());
   }
 
   /**
