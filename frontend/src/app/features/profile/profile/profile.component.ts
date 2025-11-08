@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { AbstractControl, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ProfileService, UserProfile } from '../../../core/services/profile.service';
 
 @Component({
@@ -43,7 +43,6 @@ export class ProfileComponent implements OnInit {
   stressOptions = ['low', 'medium', 'high'];
   experienceOptions = ['beginner', 'intermediate', 'advanced'];
   equipmentOptions = ['gym', 'mancuernas', 'barra', 'bandas', 'peso corporal'];
-  dayOptions = ['L', 'M', 'X', 'J', 'V', 'S', 'D'];
   hourOptions = ['mañana', 'tarde', 'noche'];
   nutritionOptions = ['balanceada', 'vegana', 'vegetariana', 'keto'];
   injuryOptions = ['ninguna', 'espalda', 'rodilla', 'hombro', 'tobillo', 'muñeca', 'codo', 'cuello', 'cadera', 'tendinitis'];
@@ -55,22 +54,22 @@ export class ProfileComponent implements OnInit {
       birthDate: [null],
       heightCm: [null],
       weightKg: [null],
-      goal: ['', [Validators.required, Validators.maxLength(200)]],
-      trainingFrequency: ['', [Validators.required]],
+      goal: [null, [Validators.required, Validators.maxLength(200)]],
+      trainingFrequency: [null, [Validators.required]],
       activityLevel: [null, [Validators.required]],
       // Habits breakdown
-      diet: ['', [Validators.required]],
+      diet: [null, [Validators.required]],
       sleepHoursTarget: [null, [Validators.required]],
       waterGoalMl: [null, [Validators.required]],
       injuries: [[]],
       medication: [''],
-      trainingExperience: ['', [Validators.required]],
+      trainingExperience: [null, [Validators.required]],
       equipment: [[], [this.arrayRequired]],
       availabilityHours: [[], [this.arrayRequired]],
-      stressLevel: ['', [Validators.required]],
-      nutritionPreference: ['', [Validators.required]],
-      smoking: [false],
-      alcohol: [false],
+      stressLevel: [null, [Validators.required]],
+      nutritionPreference: [null, [Validators.required]],
+      smoking: [null, [this.nonNullValidator]],
+      alcohol: [null, [this.nonNullValidator]],
       notes: [''],
       habits: ['', [Validators.maxLength(500)]],
       photoUrl: [null]
@@ -91,7 +90,9 @@ export class ProfileComponent implements OnInit {
   }
 
   save(): void {
-    if (this.form.invalid) return;
+    if (this.form.invalid) {
+      this.form.markAllAsTouched();
+    }
     const profile: UserProfile = this.form.value as UserProfile;
     this.profileService.saveProfile(profile);
     this.profileService.saveProfileToBackend(profile);
@@ -100,6 +101,10 @@ export class ProfileComponent implements OnInit {
   private arrayRequired(control: any) {
     const value = control.value as any[];
     return Array.isArray(value) && value.length > 0 ? null : { required: true };
+  }
+
+  private nonNullValidator(control: AbstractControl) {
+    return control.value === null || control.value === undefined ? { required: true } : null;
   }
 
   // no-op helpers removed; using mat-select for all options
@@ -135,6 +140,15 @@ export class ProfileComponent implements OnInit {
     ]);
   }
 
+  get trainingValid(): boolean {
+    return this.areControlsValid([
+      'trainingExperience',
+      'trainingFrequency',
+      'equipment',
+      'availabilityHours'
+    ]);
+  }
+
   ngOnInit(): void {
     const existing = this.profileService.getProfile();
     if (existing) {
@@ -154,6 +168,11 @@ export class ProfileComponent implements OnInit {
         setTimeout(() => {
           this.panelStates.habits = false;
           this.panelStates.training = true;
+        }, 500);
+      }
+      if (this.trainingValid && this.panelStates.training) {
+        setTimeout(() => {
+          this.panelStates.training = false;
         }, 500);
       }
     });
