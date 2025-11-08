@@ -50,17 +50,24 @@ Una vez deployado, Render te dará una URL como:
 https://ruben-fitness-backend.onrender.com
 ```
 
-### 6. Actualizar Frontend
+### 6. Configurar variables en Vercel (Frontend)
 
-Edita `frontend/src/environments/environment.prod.ts` y cambia:
+El frontend genera `environment*.ts` automáticamente durante el build leyendo variables de entorno. Configúralas en Vercel:
 
-```typescript
-apiUrl: 'https://ruben-fitness-backend.onrender.com',
+1. Entra a **Settings → Environment Variables** del proyecto de Vercel.
+2. Añade (Production y Preview):
+
 ```
+API_URL=https://ruben-fitness-backend.onrender.com      # URL pública del backend en Render
+SUPABASE_URL=https://nymrsnhnzcagvwwnkyno.supabase.co   # URL del proyecto Supabase
+SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im55bXJzbmhuemNhZ3Z3d25reW5vIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjE5MzI3NjYsImV4cCI6MjA3NzUwODc2Nn0.bn8GGSHK82KCTsEQIdjpPuTMJ8BcHokdqdCoBS5KCf0
+```
+
+El script `scripts/generate-env.js` las usará en el `prebuild`/`prestart` para generar `environment.ts` y `environment.prod.ts` sin editar archivos manualmente.
 
 ### 7. Redeploy Frontend en Vercel
 
-Haz un nuevo commit y push a GitHub para redepleyar el frontend con la nueva configuración
+Haz un nuevo commit y push a GitHub para redepleyar el frontend con esta configuración.
 
 ---
 
