@@ -1,0 +1,104 @@
+<div class="achievements-container">
+  <!-- Achievements Section -->
+  <div class="achievements-section">
+    <div class="section-header">
+      <h3>
+        <mat-icon>emoji_events</mat-icon>
+        Achievements
+      </h3>
+      <p>Unlock achievements as you progress on your fitness journey</p>
+    </div>
+
+    <!-- Loading State -->
+    <div class="loading-state" *ngIf="loading">
+      <mat-spinner diameter="50"></mat-spinner>
+      <p>Loading achievements...</p>
+    </div>
+
+    <!-- Achievements Grid -->
+    <div class="achievements-grid" *ngIf="!loading && achievements.length > 0">
+      <mat-card 
+        class="achievement-card" 
+        *ngFor="let achievement of achievements"
+        [style.border-color]="getAchievementColor(achievement.type)">
+        <mat-card-content>
+          <div class="achievement-icon" [style.background-color]="getAchievementColor(achievement.type) + '20'">
+            <mat-icon [style.color]="getAchievementColor(achievement.type)">
+              {{ getAchievementIcon(achievement.type) }}
+            </mat-icon>
+          </div>
+          <div class="achievement-content">
+            <div class="achievement-header">
+              <h4>{{ achievement.title }}</h4>
+              <button mat-icon-button (click)="openShareDialog(achievement)" matTooltip="Share achievement">
+                <mat-icon>share</mat-icon>
+              </button>
+            </div>
+            <p>{{ achievement.description }}</p>
+            <div class="achievement-date">
+              Unlocked: {{ achievement.unlockedAt | date:'shortDate' }}
+            </div>
+            <!-- Progress Bar -->
+            <div class="progress-bar" *ngIf="hasProgress(achievement)">
+              <div class="progress-fill" [style.width.%]="getProgressPercentage(achievement)"></div>
+              <span class="progress-text">
+                {{ achievement.progress }} / {{ achievement.target }}
+              </span>
+            </div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </div>
+
+    <!-- Empty State -->
+    <div class="empty-state" *ngIf="!loading && achievements.length === 0">
+      <mat-icon>emoji_events</mat-icon>
+      <h4>No achievements yet</h4>
+      <p>Complete workouts to unlock your first achievement!</p>
+    </div>
+  </div>
+
+  <!-- Share Dialog -->
+  <div class="share-dialog-overlay" *ngIf="showShareDialog" (click)="closeShareDialog()">
+    <mat-card class="share-dialog" (click)="$event.stopPropagation()" *ngIf="selectedAchievement">
+      <mat-card-header>
+        <mat-card-title>Share Achievement</mat-card-title>
+        <button mat-icon-button (click)="closeShareDialog()">
+          <mat-icon>close</mat-icon>
+        </button>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="share-preview">
+          <div class="achievement-preview">
+            <div class="achievement-icon-preview" [style.background-color]="getAchievementColor(selectedAchievement.type) + '20'">
+              <mat-icon [style.color]="getAchievementColor(selectedAchievement.type)">
+                {{ getAchievementIcon(selectedAchievement.type) }}
+              </mat-icon>
+            </div>
+            <h4>{{ selectedAchievement.title }}</h4>
+            <p>{{ selectedAchievement.description }}</p>
+          </div>
+        </div>
+        <div class="share-buttons">
+          <button mat-raised-button color="primary" (click)="shareAchievement(selectedAchievement, 'twitter')">
+            <mat-icon>share</mat-icon>
+            Twitter
+          </button>
+          <button mat-raised-button color="primary" (click)="shareAchievement(selectedAchievement, 'facebook')">
+            <mat-icon>share</mat-icon>
+            Facebook
+          </button>
+          <button mat-raised-button color="primary" (click)="shareAchievement(selectedAchievement, 'whatsapp')">
+            <mat-icon>share</mat-icon>
+            WhatsApp
+          </button>
+          <button mat-raised-button (click)="shareAchievement(selectedAchievement, 'copy')">
+            <mat-icon>content_copy</mat-icon>
+            Copy Link
+          </button>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+</div>
+

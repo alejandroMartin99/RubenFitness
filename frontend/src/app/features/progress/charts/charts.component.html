@@ -1,0 +1,59 @@
+<div class="charts-container">
+  <div class="charts-header">
+    <h3>
+      <mat-icon>show_chart</mat-icon>
+      Performance Analytics
+    </h3>
+    <mat-form-field appearance="outline" class="period-selector">
+      <mat-label>Time Period</mat-label>
+      <mat-select [(value)]="selectedPeriod" (selectionChange)="onPeriodChange()">
+        <mat-option value="7">Last 7 days</mat-option>
+        <mat-option value="30">Last 30 days</mat-option>
+        <mat-option value="90">Last 90 days</mat-option>
+      </mat-select>
+    </mat-form-field>
+  </div>
+
+  <div class="charts-grid" *ngIf="!loading">
+    <!-- Workouts Chart -->
+    <mat-card class="chart-card">
+      <mat-card-content>
+        <div class="chart-wrapper">
+          <canvas id="workoutsChart"></canvas>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Duration Chart -->
+    <mat-card class="chart-card">
+      <mat-card-content>
+        <div class="chart-wrapper">
+          <canvas id="durationChart"></canvas>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Rating Chart -->
+    <mat-card class="chart-card">
+      <mat-card-content>
+        <div class="chart-wrapper">
+          <canvas id="ratingChart"></canvas>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+
+  <!-- Loading State -->
+  <div class="loading-state" *ngIf="loading">
+    <mat-spinner diameter="50"></mat-spinner>
+    <p>Loading charts...</p>
+  </div>
+
+  <!-- Empty State -->
+  <div class="empty-state" *ngIf="!loading && !workoutsChart">
+    <mat-icon>bar_chart</mat-icon>
+    <h4>No data available</h4>
+    <p>Complete some workouts to see your progress charts!</p>
+  </div>
+</div>
+

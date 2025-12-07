@@ -1,0 +1,158 @@
+-- =====================================================
+-- Progress Tracking Tables - Rubén Fitness
+-- =====================================================
+-- Execute this in your Supabase SQL Editor
+-- This extends the existing schema with achievements, streaks, and progress photos
+
+-- =====================================================
+-- 1. ACHIEVEMENTS TABLE
+-- =====================================================
+CREATE TABLE IF NOT EXISTS public.achievements (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID REFERENCES public.users(id) ON DELETE CASCADE,
+  type TEXT NOT NULL,
+  title TEXT NOT NULL,
+  description TEXT NOT NULL,
+  icon TEXT,
+  unlocked_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  progress INTEGER,
+  target INTEGER,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  UNIQUE(user_id, type)
+);
+
+-- Index for faster queries
+CREATE INDEX IF NOT EXISTS idx_achievements_user_id ON public.achievements(user_id);
+CREATE INDEX IF NOT EXISTS idx_achievements_type ON public.achievements(type);
+
+-- =====================================================
+-- 2. STREAKS TABLE
+-- =====================================================
+CREATE TABLE IF NOT EXISTS public.streaks (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID REFERENCES public.users(id) ON DELETE CASCADE UNIQUE,
+  current_streak INTEGER DEFAULT 0,
+  longest_streak INTEGER DEFAULT 0,
+  last_workout_date DATE,
+  weekly_streak INTEGER DEFAULT 0,
+  monthly_streak INTEGER DEFAULT 0,
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Index for faster queries
+CREATE INDEX IF NOT EXISTS idx_streaks_user_id ON public.streaks(user_id);
+
+-- =====================================================
+-- 3. PROGRESS PHOTOS TABLE
+-- =====================================================
+CREATE TABLE IF NOT EXISTS public.progress_photos (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID REFERENCES public.users(id) ON DELETE CASCADE,
+  photo_type TEXT NOT NULL CHECK (photo_type IN ('before', 'after')),
+  photo_url TEXT NOT NULL,
+  thumbnail_url TEXT,
+  taken_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  notes TEXT,
+  measurements JSONB,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Index for faster queries
+CREATE INDEX IF NOT EXISTS idx_progress_photos_user_id ON public.progress_photos(user_id);
+CREATE INDEX IF NOT EXISTS idx_progress_photos_type ON public.progress_photos(photo_type);
+CREATE INDEX IF NOT EXISTS idx_progress_photos_taken_at ON public.progress_photos(taken_at);
+
+-- =====================================================
+-- 4. ROW LEVEL SECURITY
+-- =====================================================
+ALTER TABLE public.achievements ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.streaks ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.progress_photos ENABLE ROW LEVEL SECURITY;
+
+-- =====================================================
+-- 5. RLS POLICIES - ACHIEVEMENTS
+-- =====================================================
+DROP POLICY IF EXISTS "Users can view own achievements" ON public.achievements;
+CREATE POLICY "Users can view own achievements" ON public.achievements
+  FOR SELECT USING (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "Users can insert own achievements" ON public.achievements;
+CREATE POLICY "Users can insert own achievements" ON public.achievements
+  FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "Users can update own achievements" ON public.achievements;
+CREATE POLICY "Users can update own achievements" ON public.achievements
+  FOR UPDATE USING (auth.uid() = user_id);
+
+-- =====================================================
+-- 6. RLS POLICIES - STREAKS
+-- =====================================================
+DROP POLICY IF EXISTS "Users can view own streaks" ON public.streaks;
+CREATE POLICY "Users can view own streaks" ON public.streaks
+  FOR SELECT USING (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "Users can insert own streaks" ON public.streaks;
+CREATE POLICY "Users can insert own streaks" ON public.streaks
+  FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "Users can update own streaks" ON public.streaks;
+CREATE POLICY "Users can update own streaks" ON public.streaks
+  FOR UPDATE USING (auth.uid() = user_id);
+
+-- =====================================================
+-- 7. RLS POLICIES - PROGRESS PHOTOS
+-- =====================================================
+DROP POLICY IF EXISTS "Users can view own photos" ON public.progress_photos;
+CREATE POLICY "Users can view own photos" ON public.progress_photos
+  FOR SELECT USING (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "Users can insert own photos" ON public.progress_photos;
+CREATE POLICY "Users can insert own photos" ON public.progress_photos
+  FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "Users can update own photos" ON public.progress_photos;
+CREATE POLICY "Users can update own photos" ON public.progress_photos
+  FOR UPDATE USING (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "Users can delete own photos" ON public.progress_photos;
+CREATE POLICY "Users can delete own photos" ON public.progress_photos
+  FOR DELETE USING (auth.uid() = user_id);
+
+-- =====================================================
+-- 8. TRIGGERS
+-- =====================================================
+-- Update updated_at for streaks
+DROP TRIGGER IF EXISTS update_streaks_updated_at ON public.streaks;
+CREATE TRIGGER update_streaks_updated_at 
+  BEFORE UPDATE ON public.streaks 
+  FOR EACH ROW 
+  EXECUTE FUNCTION update_updated_at_column();
+
+-- =====================================================
+-- 9. STORAGE BUCKET SETUP (Run in Supabase Dashboard)
+-- =====================================================
+-- Go to Storage in Supabase Dashboard and create a bucket named "progress-photos"
+-- Set it to Public if you want public URLs, or Private with RLS policies
+-- 
+-- For public bucket:
+-- 1. Go to Storage > Create bucket
+-- 2. Name: progress-photos
+-- 3. Public: Yes
+-- 4. File size limit: 10MB
+-- 5. Allowed MIME types: image/*
+--
+-- For private bucket with RLS:
+-- 1. Go to Storage > Create bucket
+-- 2. Name: progress-photos
+-- 3. Public: No
+-- 4. Add RLS policies:
+--    - SELECT: auth.uid() = (storage.foldername(name))[1]
+--    - INSERT: auth.uid() = (storage.foldername(name))[1]
+--    - UPDATE: auth.uid() = (storage.foldername(name))[1]
+--    - DELETE: auth.uid() = (storage.foldername(name))[1]
+
+-- =====================================================
+-- FIN
+-- =====================================================
+

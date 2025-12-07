@@ -9,7 +9,7 @@
   </div>
 
   <!-- Stats Grid -->
-  <div class="stats-grid" *ngIf="summary">
+  <div class="stats-grid" *ngIf="summary && !loading">
     <mat-card class="stat-card">
       <div class="stat-icon total">
         <mat-icon>fitness_center</mat-icon>
@@ -51,44 +51,60 @@
     </mat-card>
   </div>
 
-  <!-- Recent Workouts -->
-  <div class="recent-workouts" *ngIf="summary">
-    <h3 class="section-title">
-      <mat-icon>history</mat-icon>
-      Recent Workouts
-    </h3>
+  <!-- Tabs Navigation -->
+  <mat-tab-group class="progress-tabs" animationDuration="300ms" *ngIf="!loading">
+    <!-- Overview Tab -->
+    <mat-tab label="Overview">
+      <!-- Recent Workouts -->
+      <div class="recent-workouts" *ngIf="summary">
+        <h3 class="section-title">
+          <mat-icon>history</mat-icon>
+          Recent Workouts
+        </h3>
 
-    <!-- No workouts message -->
-    <mat-card class="empty-state" *ngIf="summary.recentWorkouts.length === 0">
-      <mat-icon>inbox</mat-icon>
-      <h4>No workouts yet</h4>
-      <p>Start tracking your progress by completing your first workout!</p>
-    </mat-card>
+        <!-- No workouts message -->
+        <mat-card class="empty-state" *ngIf="summary.recentWorkouts.length === 0">
+          <mat-icon>inbox</mat-icon>
+          <h4>No workouts yet</h4>
+          <p>Start tracking your progress by completing your first workout!</p>
+        </mat-card>
 
-    <!-- Workouts list -->
-    <div class="workouts-list" *ngIf="summary.recentWorkouts.length > 0">
-      <mat-card class="workout-item" *ngFor="let workout of summary.recentWorkouts">
-        <mat-card-content>
-          <div class="workout-content">
-            <div class="workout-info">
-              <h4>{{ workout.name }}</h4>
-              <p class="workout-date">
-                <mat-icon>calendar_today</mat-icon>
-                {{ workout.date | date:'fullDate' }}
-              </p>
-              <p class="workout-duration" *ngIf="workout.durationMinutes">
-                <mat-icon>schedule</mat-icon>
-                {{ workout.durationMinutes }} minutes
-              </p>
-            </div>
-            <div class="workout-status">
-              <mat-icon class="success">check_circle</mat-icon>
-            </div>
-          </div>
-        </mat-card-content>
-      </mat-card>
-    </div>
-  </div>
+        <!-- Workouts list -->
+        <div class="workouts-list" *ngIf="summary.recentWorkouts.length > 0">
+          <mat-card class="workout-item" *ngFor="let workout of summary.recentWorkouts">
+            <mat-card-content>
+              <div class="workout-content">
+                <div class="workout-info">
+                  <h4>{{ workout.name }}</h4>
+                  <p class="workout-date">
+                    <mat-icon>calendar_today</mat-icon>
+                    {{ workout.date | date:'fullDate' }}
+                  </p>
+                  <p class="workout-duration" *ngIf="workout.durationMinutes">
+                    <mat-icon>schedule</mat-icon>
+                    {{ workout.durationMinutes }} minutes
+                  </p>
+                </div>
+                <div class="workout-status">
+                  <mat-icon class="success">check_circle</mat-icon>
+                </div>
+              </div>
+            </mat-card-content>
+          </mat-card>
+        </div>
+      </div>
+    </mat-tab>
+
+    <!-- Charts Tab -->
+    <mat-tab label="Analytics">
+      <app-progress-charts></app-progress-charts>
+    </mat-tab>
+
+    <!-- Before & After Tab -->
+    <mat-tab label="Before & After">
+      <app-before-after></app-before-after>
+    </mat-tab>
+  </mat-tab-group>
 
   <!-- Loading state -->
   <div class="loading-state" *ngIf="loading">

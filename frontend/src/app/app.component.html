@@ -15,6 +15,10 @@
           <mat-icon matListIcon>bar_chart</mat-icon>
           <span matLine>Progress</span>
         </a>
+        <a mat-list-item routerLink="/motivation" (click)="appSidenav.close()">
+          <mat-icon matListIcon>emoji_events</mat-icon>
+          <span matLine>Motivation</span>
+        </a>
         <a mat-list-item routerLink="/coach" *ngIf="authService.isAdmin()" (click)="appSidenav.close()">
           <mat-icon matListIcon>supervisor_account</mat-icon>
           <span matLine>Coach Panel</span>

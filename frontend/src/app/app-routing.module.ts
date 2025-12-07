@@ -34,6 +34,11 @@ const routes: Routes = [
     canActivate: [AuthGuard]
   },
   {
+    path: 'motivation',
+    loadChildren: () => import('./features/motivation/motivation.module').then(m => m.MotivationModule),
+    canActivate: [AuthGuard]
+  },
+  {
     path: 'coach',
     loadChildren: () => import('./features/coach/coach.module').then(m => m.CoachModule),
     canActivate: [AuthGuard, RoleGuard],

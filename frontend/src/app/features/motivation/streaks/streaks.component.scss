@@ -1,0 +1,162 @@
+.streaks-container {
+  padding: 1.5rem 0;
+}
+
+.streak-display {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.streak-card-main {
+  background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
+  color: white;
+  box-shadow: 0 4px 20px rgba(255, 107, 107, 0.3);
+  border-radius: 16px;
+
+  mat-card-content {
+    padding: 3rem 2rem;
+  }
+}
+
+.streak-content {
+  display: flex;
+  align-items: center;
+  gap: 3rem;
+
+  @media (max-width: 768px) {
+    flex-direction: column;
+    text-align: center;
+    gap: 2rem;
+  }
+}
+
+.streak-icon-large {
+  mat-icon {
+    font-size: 96px;
+    width: 96px;
+    height: 96px;
+    color: #fff;
+    animation: pulse 2s infinite;
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+}
+
+.streak-info-main {
+  flex: 1;
+}
+
+.streak-value-large {
+  font-size: 5rem;
+  font-weight: 900;
+  line-height: 1;
+  margin-bottom: 0.5rem;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.streak-label-large {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-bottom: 1.5rem;
+  opacity: 0.95;
+}
+
+.streak-details-main {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.streak-stat {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 1.125rem;
+  opacity: 0.9;
+
+  mat-icon {
+    font-size: 24px;
+    width: 24px;
+    height: 24px;
+  }
+}
+
+.motivational-message-card {
+  border-radius: 16px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+
+  mat-card-content {
+    padding: 2rem;
+  }
+}
+
+.message-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+
+  mat-icon {
+    color: #667eea;
+    font-size: 28px;
+    width: 28px;
+    height: 28px;
+  }
+
+  h4 {
+    flex: 1;
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin: 0;
+    color: #333;
+  }
+}
+
+.message-content {
+  p {
+    font-size: 1.125rem;
+    line-height: 1.6;
+    color: #555;
+    margin: 0;
+    font-style: italic;
+  }
+}
+
+.loading-state,
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 2rem;
+  text-align: center;
+  gap: 1rem;
+
+  mat-icon {
+    font-size: 64px;
+    width: 64px;
+    height: 64px;
+    color: #ccc;
+  }
+
+  h4 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #666;
+    margin: 0;
+  }
+
+  p {
+    color: #999;
+    margin: 0;
+  }
+}
+

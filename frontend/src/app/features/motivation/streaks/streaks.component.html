@@ -1,0 +1,63 @@
+<div class="streaks-container">
+  <!-- Streak Display -->
+  <div class="streak-display" *ngIf="streak && !loading">
+    <mat-card class="streak-card-main">
+      <mat-card-content>
+        <div class="streak-content">
+          <div class="streak-icon-large">
+            <mat-icon>local_fire_department</mat-icon>
+          </div>
+          <div class="streak-info-main">
+            <div class="streak-value-large">{{ streak.current }}</div>
+            <div class="streak-label-large">Day Streak</div>
+            <div class="streak-details-main">
+              <div class="streak-stat">
+                <mat-icon>whatshot</mat-icon>
+                <span>Longest: {{ streak.longest }} days</span>
+              </div>
+              <div class="streak-stat" *ngIf="streak.weeklyStreak > 0">
+                <mat-icon>calendar_view_week</mat-icon>
+                <span>Week Streak: {{ streak.weeklyStreak }}</span>
+              </div>
+              <div class="streak-stat" *ngIf="streak.monthlyStreak > 0">
+                <mat-icon>calendar_month</mat-icon>
+                <span>Month Streak: {{ streak.monthlyStreak }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Motivational Message -->
+    <mat-card class="motivational-message-card" *ngIf="motivationalMessage">
+      <mat-card-content>
+        <div class="message-header">
+          <mat-icon>psychology</mat-icon>
+          <h4>Your Daily Motivation</h4>
+          <button mat-icon-button (click)="refreshMessage()" [disabled]="loadingMessage" matTooltip="Get new message">
+            <mat-icon>refresh</mat-icon>
+          </button>
+        </div>
+        <div class="message-content">
+          <p *ngIf="!loadingMessage">{{ motivationalMessage }}</p>
+          <mat-spinner diameter="30" *ngIf="loadingMessage"></mat-spinner>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+
+  <!-- Loading State -->
+  <div class="loading-state" *ngIf="loading">
+    <mat-spinner diameter="50"></mat-spinner>
+    <p>Loading your streaks...</p>
+  </div>
+
+  <!-- Empty State -->
+  <div class="empty-state" *ngIf="!loading && !streak">
+    <mat-icon>local_fire_department</mat-icon>
+    <h4>Start your streak!</h4>
+    <p>Complete your first workout to start building your streak</p>
+  </div>
+</div>
+

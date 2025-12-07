@@ -72,4 +72,81 @@ export interface ProgressStats {
   currentWeek: number;
 }
 
+/** Achievement/Achievement model */
+export interface Achievement {
+  id: string;
+  userId: string;
+  type: AchievementType;
+  title: string;
+  description: string;
+  icon?: string;
+  unlockedAt: Date;
+  progress?: number;
+  target?: number;
+}
+
+export type AchievementType = 
+  | 'first_workout'
+  | 'week_streak'
+  | 'month_streak'
+  | 'total_workouts'
+  | 'perfect_week'
+  | 'early_bird'
+  | 'night_owl'
+  | 'consistency_king'
+  | 'weight_loss'
+  | 'muscle_gain';
+
+/** Streak information */
+export interface Streak {
+  current: number;
+  longest: number;
+  lastWorkoutDate?: Date;
+  weeklyStreak: number;
+  monthlyStreak: number;
+}
+
+/** Progress photo for before/after comparison */
+export interface ProgressPhoto {
+  id: string;
+  userId: string;
+  photoType: 'before' | 'after';
+  photoUrl: string;
+  thumbnailUrl?: string;
+  takenAt: Date;
+  notes?: string;
+  measurements?: {
+    weight?: number;
+    bodyFat?: number;
+    measurements?: {
+      chest?: number;
+      waist?: number;
+      hips?: number;
+      arms?: number;
+      thighs?: number;
+    };
+  };
+}
+
+/** Performance metrics over time */
+export interface PerformanceMetric {
+  date: Date;
+  workouts: number;
+  totalDuration: number;
+  caloriesBurned?: number;
+  averageRating?: number;
+}
+
+/** Chart data for visualization */
+export interface ChartData {
+  labels: string[];
+  datasets: {
+    label: string;
+    data: number[];
+    backgroundColor?: string | string[];
+    borderColor?: string;
+    borderWidth?: number;
+  }[];
+}
+
 
