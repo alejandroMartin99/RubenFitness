@@ -107,7 +107,7 @@ export class ChartsComponent implements OnInit, OnDestroy {
             text: 'Workouts Over Time',
             font: {
               size: 16,
-              weight: '600'
+              weight: 'bold' as const
             }
           }
         },
@@ -158,7 +158,7 @@ export class ChartsComponent implements OnInit, OnDestroy {
             text: 'Total Duration (minutes)',
             font: {
               size: 16,
-              weight: '600'
+              weight: 'bold' as const
             }
           }
         },
@@ -223,7 +223,7 @@ export class ChartsComponent implements OnInit, OnDestroy {
             text: 'Workout Satisfaction Rating',
             font: {
               size: 16,
-              weight: '600'
+              weight: 'bold' as const
             }
           }
         },

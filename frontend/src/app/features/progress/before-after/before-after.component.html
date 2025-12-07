@@ -182,14 +182,14 @@
         <img [src]="selectedPhoto.photoUrl" [alt]="selectedPhoto.photoType + ' photo'" />
         <div class="photo-info" *ngIf="selectedPhoto.notes || selectedPhoto.measurements">
           <p *ngIf="selectedPhoto.notes"><strong>Notes:</strong> {{ selectedPhoto.notes }}</p>
-          <div *ngIf="selectedPhoto.measurements" class="measurements-display">
+          <div *ngIf="selectedPhoto?.measurements" class="measurements-display">
             <h5>Measurements:</h5>
             <div class="measurements-list">
-              <span *ngIf="selectedPhoto.measurements?.weight">Weight: {{ selectedPhoto.measurements.weight }} kg</span>
-              <span *ngIf="selectedPhoto.measurements?.bodyFat">Body Fat: {{ selectedPhoto.measurements.bodyFat }}%</span>
-              <span *ngIf="selectedPhoto.measurements?.measurements?.chest">Chest: {{ selectedPhoto.measurements.measurements.chest }} cm</span>
-              <span *ngIf="selectedPhoto.measurements?.measurements?.waist">Waist: {{ selectedPhoto.measurements.measurements.waist }} cm</span>
-              <span *ngIf="selectedPhoto.measurements?.measurements?.hips">Hips: {{ selectedPhoto.measurements.measurements.hips }} cm</span>
+              <span *ngIf="selectedPhoto?.measurements?.weight">Weight: {{ selectedPhoto.measurements?.weight }} kg</span>
+              <span *ngIf="selectedPhoto?.measurements?.bodyFat">Body Fat: {{ selectedPhoto.measurements?.bodyFat }}%</span>
+              <span *ngIf="selectedPhoto?.measurements?.measurements?.chest">Chest: {{ selectedPhoto.measurements?.measurements?.chest }} cm</span>
+              <span *ngIf="selectedPhoto?.measurements?.measurements?.waist">Waist: {{ selectedPhoto.measurements?.measurements?.waist }} cm</span>
+              <span *ngIf="selectedPhoto?.measurements?.measurements?.hips">Hips: {{ selectedPhoto.measurements?.measurements?.hips }} cm</span>
             </div>
           </div>
         </div>

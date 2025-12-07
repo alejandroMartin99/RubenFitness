@@ -146,6 +146,8 @@ export interface ChartData {
     backgroundColor?: string | string[];
     borderColor?: string;
     borderWidth?: number;
+    fill?: boolean;
+    tension?: number;
   }[];
 }
 

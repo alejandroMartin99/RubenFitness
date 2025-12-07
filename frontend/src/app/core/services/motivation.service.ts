@@ -57,7 +57,7 @@ export class MotivationService {
    */
   shareAchievement(achievement: Achievement, platform: 'twitter' | 'facebook' | 'whatsapp' | 'copy'): void {
     const text = `🎉 I just unlocked "${achievement.title}" in Rubén Fitness! ${achievement.description} #Fitness #Achievement`;
-    const url = window.location.origin;
+    const url = `${window.location.origin}/motivation`;
 
     switch (platform) {
       case 'twitter':

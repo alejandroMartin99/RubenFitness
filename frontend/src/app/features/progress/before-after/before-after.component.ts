@@ -109,6 +109,39 @@ export class BeforeAfterComponent implements OnInit {
   }
 
   /**
+   * Convert measurements from component format to model format
+   */
+  private convertMeasurements(): { weight?: number; bodyFat?: number; measurements?: { chest?: number; waist?: number; hips?: number; arms?: number; thighs?: number } } | undefined {
+    const hasAnyMeasurement = Object.values(this.measurements).some(v => v !== null);
+    if (!hasAnyMeasurement) {
+      return undefined;
+    }
+
+    const bodyMeasurements: { chest?: number; waist?: number; hips?: number; arms?: number; thighs?: number } = {};
+    if (this.measurements.chest !== null) bodyMeasurements.chest = this.measurements.chest;
+    if (this.measurements.waist !== null) bodyMeasurements.waist = this.measurements.waist;
+    if (this.measurements.hips !== null) bodyMeasurements.hips = this.measurements.hips;
+    if (this.measurements.arms !== null) bodyMeasurements.arms = this.measurements.arms;
+    if (this.measurements.thighs !== null) bodyMeasurements.thighs = this.measurements.thighs;
+
+    const hasBodyMeasurements = Object.keys(bodyMeasurements).length > 0;
+
+    const result: { weight?: number; bodyFat?: number; measurements?: { chest?: number; waist?: number; hips?: number; arms?: number; thighs?: number } } = {};
+    
+    if (this.measurements.weight !== null) {
+      result.weight = this.measurements.weight;
+    }
+    if (this.measurements.bodyFat !== null) {
+      result.bodyFat = this.measurements.bodyFat;
+    }
+    if (hasBodyMeasurements) {
+      result.measurements = bodyMeasurements;
+    }
+
+    return Object.keys(result).length > 0 ? result : undefined;
+  }
+
+  /**
    * Upload photo
    */
   uploadPhoto(): void {
@@ -143,9 +176,7 @@ export class BeforeAfterComponent implements OnInit {
                 photoUrl: originalResult.url,
                 thumbnailUrl: thumbnailResult.url,
                 notes: this.photoNotes || undefined,
-                measurements: Object.keys(this.measurements).some(k => this.measurements[k as keyof typeof this.measurements] !== null)
-                  ? this.measurements
-                  : undefined
+                measurements: this.convertMeasurements()
               }).subscribe({
                 next: () => {
                   this.uploading = false;
@@ -178,9 +209,7 @@ export class BeforeAfterComponent implements OnInit {
                   photoType: this.selectedPhotoType,
                   photoUrl: url,
                   notes: this.photoNotes || undefined,
-                  measurements: Object.keys(this.measurements).some(k => this.measurements[k as keyof typeof this.measurements] !== null)
-                    ? this.measurements
-                    : undefined
+                  measurements: this.convertMeasurements()
                 }).subscribe({
                   next: () => {
                     this.uploading = false;

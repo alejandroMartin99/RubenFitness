@@ -52,11 +52,12 @@
   </div>
 
   <!-- Tabs Navigation -->
-  <mat-tab-group class="progress-tabs" animationDuration="300ms" *ngIf="!loading">
+  <mat-tab-group class="progress-tabs" animationDuration="300ms">
     <!-- Overview Tab -->
     <mat-tab label="Overview">
-      <!-- Recent Workouts -->
-      <div class="recent-workouts" *ngIf="summary">
+      <ng-template matTabContent>
+        <!-- Recent Workouts -->
+        <div class="recent-workouts" *ngIf="summary">
         <h3 class="section-title">
           <mat-icon>history</mat-icon>
           Recent Workouts
@@ -93,16 +94,21 @@
           </mat-card>
         </div>
       </div>
+      </ng-template>
     </mat-tab>
 
     <!-- Charts Tab -->
     <mat-tab label="Analytics">
-      <app-progress-charts></app-progress-charts>
+      <ng-template matTabContent>
+        <app-progress-charts></app-progress-charts>
+      </ng-template>
     </mat-tab>
 
     <!-- Before & After Tab -->
     <mat-tab label="Before & After">
-      <app-before-after></app-before-after>
+      <ng-template matTabContent>
+        <app-before-after></app-before-after>
+      </ng-template>
     </mat-tab>
   </mat-tab-group>
 
