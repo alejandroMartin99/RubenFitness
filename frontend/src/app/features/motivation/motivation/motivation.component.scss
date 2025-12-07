@@ -44,25 +44,28 @@
     .mat-mdc-tab-label {
       font-weight: 600;
       font-size: 0.95rem;
-      color: var(--color-text) !important;
-      opacity: 0.6;
       transition: var(--transition-base);
       padding: 0 1.5rem;
       min-width: auto;
       
-      &.mdc-tab--active {
-        opacity: 1 !important;
-        color: var(--color-primary) !important;
-        font-weight: 700;
-      }
-      
-      &:hover {
-        opacity: 0.9 !important;
-        color: var(--color-primary-light) !important;
-      }
-      
       .mdc-tab__text-label {
-        color: inherit !important;
+        color: var(--color-text) !important;
+        opacity: 0.6;
+      }
+      
+      &.mdc-tab--active {
+        .mdc-tab__text-label {
+          color: var(--color-primary) !important;
+          opacity: 1 !important;
+          font-weight: 700;
+        }
+      }
+      
+      &:hover:not(.mdc-tab--active) {
+        .mdc-tab__text-label {
+          color: var(--color-text) !important;
+          opacity: 0.9 !important;
+        }
       }
     }
     
