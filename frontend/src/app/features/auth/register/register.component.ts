@@ -31,8 +31,19 @@ export class RegisterComponent {
    * Handle Google Sign Up
    */
   onGoogleSignUp(): void {
-    // Google OAuth needs to be configured in Supabase first
-    alert('Google Sign Up will be available after configuring OAuth in Supabase. Please follow the guide in GOOGLE_OAUTH_SETUP.md');
+    this.loading = true;
+    this.authService.loginWithGoogle().subscribe({
+      next: () => {
+        // OAuth redirects, so we don't navigate here
+        // The callback component will handle navigation
+        this.loading = false;
+      },
+      error: (err) => {
+        this.loading = false;
+        console.error('Google sign-up error:', err);
+        alert('Google Sign Up failed. Please try again.');
+      }
+    });
   }
 
   /**
@@ -57,8 +68,9 @@ export class RegisterComponent {
       fullName: this.fullName || undefined,
       age: this.age || undefined
     }).subscribe({
-      next: () => {
+      next: (user) => {
         this.loading = false;
+        // Redirect directly to dashboard
         this.router.navigate(['/dashboard']);
       },
       error: (err) => {
@@ -67,8 +79,8 @@ export class RegisterComponent {
         
         // Show specific error message
         let errorMessage = 'Error al registrar. Por favor intenta de nuevo.';
-        if (err.error?.detail) {
-          errorMessage = err.error.detail;
+        if (err.message) {
+          errorMessage = err.message;
         }
         alert(errorMessage);
       }

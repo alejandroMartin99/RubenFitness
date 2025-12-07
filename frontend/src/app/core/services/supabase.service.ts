@@ -30,6 +30,33 @@ export class SupabaseService {
   }
 
   /**
+   * Sign up with email and password
+   */
+  signUp(email: string, password: string, metadata?: any): Observable<any> {
+    return from(
+      this.supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: metadata
+        }
+      })
+    );
+  }
+
+  /**
+   * Sign in with email and password
+   */
+  signIn(email: string, password: string): Observable<any> {
+    return from(
+      this.supabase.auth.signInWithPassword({
+        email,
+        password
+      })
+    );
+  }
+
+  /**
    * Sign in with Google OAuth
    */
   signInWithGoogle(): Observable<any> {
@@ -37,7 +64,21 @@ export class SupabaseService {
       this.supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: window.location.origin + '/dashboard'
+          redirectTo: window.location.origin + '/auth/callback'
+        }
+      })
+    );
+  }
+
+  /**
+   * Sign in with Apple OAuth
+   */
+  signInWithApple(): Observable<any> {
+    return from(
+      this.supabase.auth.signInWithOAuth({
+        provider: 'apple',
+        options: {
+          redirectTo: window.location.origin + '/auth/callback'
         }
       })
     );
@@ -62,6 +103,46 @@ export class SupabaseService {
    */
   getCurrentUser(): Observable<any> {
     return from(this.supabase.auth.getUser());
+  }
+
+  /**
+   * Get user profile from public.users table
+   */
+  getUserProfile(userId: string): Observable<any> {
+    return from(
+      this.supabase
+        .from('users')
+        .select('*')
+        .eq('id', userId)
+        .single()
+    );
+  }
+
+  /**
+   * Update user profile in public.users table
+   */
+  updateUserProfile(userId: string, profileData: any): Observable<any> {
+    return from(
+      this.supabase
+        .from('users')
+        .update(profileData)
+        .eq('id', userId)
+    );
+  }
+
+  /**
+   * Create user profile in public.users table
+   */
+  createUserProfile(userId: string, email: string, profileData: any): Observable<any> {
+    return from(
+      this.supabase
+        .from('users')
+        .insert({
+          id: userId,
+          email,
+          ...profileData
+        })
+    );
   }
 }
 

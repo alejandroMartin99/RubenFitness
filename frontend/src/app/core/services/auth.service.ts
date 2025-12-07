@@ -4,10 +4,9 @@
  */
 
 import { Injectable } from '@angular/core';
-import { Observable, BehaviorSubject } from 'rxjs';
-import { v4 as uuidv4 } from 'uuid';
+import { Observable, BehaviorSubject, from } from 'rxjs';
+import { map, switchMap, catchError } from 'rxjs/operators';
 import { User, LoginCredentials, RegisterData } from '../models/user.model';
-import { ApiService } from './api.service';
 import { SupabaseService } from './supabase.service';
 
 @Injectable({
@@ -18,38 +17,10 @@ export class AuthService {
   private currentUserSubject = new BehaviorSubject<User | null>(null);
   public currentUser$ = this.currentUserSubject.asObservable();
 
-  /** Mock users for development (simple in-memory auth) */
-  // Using valid UUIDs for compatibility with Supabase
-  private readonly users: Array<{ email: string; password: string; user: User }> = [
-    {
-      email: 'admin@ruben.fitness',
-      password: 'admin',
-      user: {
-        id: '00000000-0000-0000-0000-000000000001', // Valid UUID for admin
-        email: 'admin@ruben.fitness',
-        fullName: 'Admin',
-        role: 'admin',
-        fitnessLevel: 'advanced'
-      }
-    },
-    {
-      email: 'tester@ruben.fitness',
-      password: 'tester',
-      user: {
-        id: '00000000-0000-0000-0000-000000000002', // Valid UUID for tester
-        email: 'tester@ruben.fitness',
-        fullName: 'Tester',
-        role: 'user',
-        fitnessLevel: 'intermediate'
-      }
-    }
-  ];
-
   constructor(
-    private apiService: ApiService,
     private supabaseService: SupabaseService
   ) {
-    // Check if user is already logged in (check localStorage, session, etc.)
+    // Check if user is already logged in
     this.checkAuthStatus();
     // Listen to Supabase auth changes
     this.listenToAuthChanges();
@@ -59,18 +30,9 @@ export class AuthService {
    * Listen to Supabase authentication state changes
    */
   private listenToAuthChanges(): void {
-    this.supabaseService.getClient().auth.onAuthStateChange((event, session) => {
+    this.supabaseService.getClient().auth.onAuthStateChange(async (event, session) => {
       if (event === 'SIGNED_IN' && session?.user) {
-        const user: User = {
-          id: session.user.id,
-          email: session.user.email || '',
-          fullName: session.user.user_metadata?.['full_name'] || '',
-          role: session.user.user_metadata?.['role'] || 'user',
-          fitnessLevel: session.user.user_metadata?.['fitness_level'] || 'beginner'
-        };
-        localStorage.setItem('currentUser', JSON.stringify(user));
-        localStorage.setItem('accessToken', session.access_token);
-        this.currentUserSubject.next(user);
+        await this.loadUserProfile(session.user.id);
       } else if (event === 'SIGNED_OUT') {
         this.currentUserSubject.next(null);
         localStorage.removeItem('currentUser');
@@ -80,13 +42,64 @@ export class AuthService {
   }
 
   /**
+   * Load user profile from database
+   */
+  private async loadUserProfile(userId: string): Promise<void> {
+    try {
+      const { data, error } = await this.supabaseService.getClient()
+        .from('users')
+        .select('*')
+        .eq('id', userId)
+        .single();
+
+      if (error && error.code !== 'PGRST116') { // PGRST116 = no rows returned
+        console.error('Error loading user profile:', error);
+        // If profile doesn't exist, create a basic one
+        const session = await this.supabaseService.getClient().auth.getSession();
+        if (session.data.session?.user) {
+          const user: User = {
+            id: session.data.session.user.id,
+            email: session.data.session.user.email || '',
+            fullName: session.data.session.user.user_metadata?.['full_name'] || '',
+            role: 'user',
+            fitnessLevel: 'beginner',
+          };
+          this.currentUserSubject.next(user);
+          localStorage.setItem('currentUser', JSON.stringify(user));
+          return;
+        }
+      }
+
+      if (data) {
+        const user: User = {
+          id: data.id,
+          email: data.email,
+          fullName: data.full_name,
+          age: data.age,
+          fitnessLevel: data.fitness_level,
+          role: data.role,
+          goals: data.goals,
+          availability: data.availability,
+        };
+        this.currentUserSubject.next(user);
+        localStorage.setItem('currentUser', JSON.stringify(user));
+      }
+    } catch (error) {
+      console.error('Error in loadUserProfile:', error);
+    }
+  }
+
+  /**
    * Check if user is currently authenticated
    */
-  private checkAuthStatus(): void {
-    // In a real app, you'd check Supabase session here
-    const storedUser = localStorage.getItem('currentUser');
-    if (storedUser) {
-      this.currentUserSubject.next(JSON.parse(storedUser));
+  private async checkAuthStatus(): Promise<void> {
+    try {
+      const { data: { session } } = await this.supabaseService.getClient().auth.getSession();
+      if (session?.user) {
+        await this.loadUserProfile(session.user.id);
+      }
+    } catch (error) {
+      console.error('Error checking auth status:', error);
     }
   }
 
@@ -95,39 +108,88 @@ export class AuthService {
    * @param credentials Login credentials
    */
   login(credentials: LoginCredentials): Observable<User> {
-    return new Observable(observer => {
-      // Try backend API first, fallback to mock if backend not available
-      this.apiService.post<any>('/api/v1/auth/login', credentials).subscribe({
-        next: (response) => {
-          const user: User = {
-            id: response.user.id,
-            email: response.user.email,
-            fullName: response.user.full_name,
-            role: response.user.role,
-            fitnessLevel: response.user.fitness_level,
-            age: response.user.age
-          };
-          localStorage.setItem('currentUser', JSON.stringify(user));
-          localStorage.setItem('accessToken', response.access_token);
-          this.currentUserSubject.next(user);
-          observer.next(user);
-          observer.complete();
-        },
-        error: (err) => {
-          console.log('Backend not available, using mock auth');
-          // Fallback to mock
-          const found = this.users.find(u => u.email === credentials.email && u.password === credentials.password);
-          if (!found) {
-            observer.error('Invalid credentials');
-            return;
-          }
-          localStorage.setItem('currentUser', JSON.stringify(found.user));
-          this.currentUserSubject.next(found.user);
-          observer.next(found.user);
-          observer.complete();
+    return this.supabaseService.signIn(credentials.email, credentials.password).pipe(
+      switchMap((result) => {
+        if (result.error) {
+          throw new Error(result.error.message || 'Invalid credentials');
         }
-      });
-    });
+        if (!result.data.session?.user) {
+          throw new Error('No user session returned');
+        }
+        const userId = result.data.session.user.id;
+        const accessToken = result.data.session.access_token;
+        const session = result.data.session;
+        
+        // Store access token
+        if (accessToken) {
+          localStorage.setItem('accessToken', accessToken);
+        }
+        
+        // Get user profile
+        return from(
+          this.supabaseService.getClient()
+            .from('users')
+            .select('*')
+            .eq('id', userId)
+            .single()
+        ).pipe(
+          switchMap((profileResult) => {
+            // If profile doesn't exist, create a basic one
+            if (profileResult.error && profileResult.error.code === 'PGRST116') {
+              return from(
+                this.supabaseService.getClient()
+                  .from('users')
+                  .insert({
+                    id: userId,
+                    email: session.user.email || credentials.email,
+                    full_name: session.user.user_metadata?.['full_name'],
+                    role: 'user',
+                    fitness_level: 'beginner'
+                  })
+              ).pipe(
+                map(() => ({
+                  data: {
+                    id: userId,
+                    email: session.user.email || credentials.email,
+                    full_name: session.user.user_metadata?.['full_name'],
+                    role: 'user',
+                    fitness_level: 'beginner'
+                  },
+                  session: session
+                }))
+              );
+            }
+            
+            // Profile exists, return it with session
+            return from(Promise.resolve({ 
+              data: profileResult.data, 
+              session: session 
+            }));
+          })
+        );
+      }),
+      map((result) => {
+        const userData = result.data || {};
+        const email = userData.email || (result.session?.user?.email || '');
+        const user: User = {
+          id: userData.id || '',
+          email: email,
+          fullName: userData.full_name,
+          age: userData.age,
+          fitnessLevel: userData.fitness_level,
+          role: userData.role || 'user',
+          goals: userData.goals,
+          availability: userData.availability,
+        };
+        this.currentUserSubject.next(user);
+        localStorage.setItem('currentUser', JSON.stringify(user));
+        return user;
+      }),
+      catchError((error) => {
+        console.error('Login error:', error);
+        throw error;
+      })
+    );
   }
 
   /**
@@ -135,67 +197,68 @@ export class AuthService {
    * @param data Registration data
    */
   register(data: RegisterData): Observable<User> {
-    return new Observable(observer => {
-      // Try backend API first, fallback to mock if backend not available
-      this.apiService.post<any>('/api/v1/auth/register', {
-        email: data.email,
-        password: data.password,
+    return this.supabaseService.signUp(
+      data.email,
+      data.password,
+      {
         full_name: data.fullName,
         age: data.age,
         fitness_level: data.fitnessLevel
-      }).subscribe({
-        next: (response) => {
-          const newUser: User = {
-            id: response.user.id,
-            email: response.user.email,
-            fullName: response.user.full_name,
-            role: response.user.role,
-            fitnessLevel: response.user.fitness_level,
-            age: response.user.age
-          };
-          localStorage.setItem('currentUser', JSON.stringify(newUser));
-          localStorage.setItem('accessToken', response.access_token);
-          this.currentUserSubject.next(newUser);
-          observer.next(newUser);
-          observer.complete();
-        },
-        error: (err) => {
-          console.log('Backend not available, using mock auth');
-          // Fallback to mock - generate valid UUID
-          const newUser: User = {
-            id: uuidv4(), // Generate valid UUID for Supabase compatibility
-            email: data.email,
-            fullName: data.fullName,
-            age: data.age,
-            fitnessLevel: data.fitnessLevel,
-            role: 'user'
-          };
-          localStorage.setItem('currentUser', JSON.stringify(newUser));
-          this.currentUserSubject.next(newUser);
-          observer.next(newUser);
-          observer.complete();
+      }
+    ).pipe(
+      switchMap((result) => {
+        if (result.error) {
+          throw new Error(result.error.message || 'Registration failed');
         }
-      });
-    });
+        if (!result.data.user) {
+          throw new Error('No user returned from registration');
+        }
+        // Create user profile in public.users table
+        const userId = result.data.user.id;
+        return this.supabaseService.createUserProfile(
+          userId,
+          data.email,
+          {
+            full_name: data.fullName,
+            age: data.age,
+            fitness_level: data.fitnessLevel || 'beginner',
+            role: 'user'
+          }
+        ).pipe(
+          map(() => result.data.user)
+        );
+      }),
+      map((userData) => {
+        const user: User = {
+          id: userData.id,
+          email: userData.email || data.email,
+          fullName: data.fullName,
+          age: data.age,
+          fitnessLevel: data.fitnessLevel || 'beginner',
+          role: 'user',
+        };
+        this.currentUserSubject.next(user);
+        localStorage.setItem('currentUser', JSON.stringify(user));
+        return user;
+      }),
+      catchError((error) => {
+        console.error('Registration error:', error);
+        throw error;
+      })
+    );
   }
 
   /**
    * Log out the current user
    */
-  logout(): void {
-    // Try backend logout first
-    this.apiService.post<any>('/api/v1/auth/logout', {}).subscribe({
-      next: () => {
-        console.log('Logged out from backend');
-      },
-      error: () => {
-        console.log('Backend not available');
-      }
-    });
-    
-    localStorage.removeItem('currentUser');
-    localStorage.removeItem('accessToken');
-    this.currentUserSubject.next(null);
+  logout(): Observable<any> {
+    return this.supabaseService.signOut().pipe(
+      map(() => {
+        localStorage.removeItem('currentUser');
+        localStorage.removeItem('accessToken');
+        this.currentUserSubject.next(null);
+      })
+    );
   }
 
   /**
@@ -226,23 +289,17 @@ export class AuthService {
   /**
    * Login with Google OAuth
    */
-  loginWithGoogle(): Observable<User> {
-    return new Observable(observer => {
-      // Use Supabase Google OAuth
-      this.supabaseService.signInWithGoogle().subscribe({
-        next: (result) => {
-          console.log('Google OAuth result:', result);
-          // Supabase OAuth redirects to Google, so we don't get user data here
-          // The user will be redirected back after authentication
-          observer.complete();
-        },
-        error: (err) => {
-          console.error('Google OAuth error:', err);
-          observer.error(err);
-        }
-      });
-    });
+  loginWithGoogle(): Observable<any> {
+    return this.supabaseService.signInWithGoogle();
   }
+
+  /**
+   * Login with Apple OAuth
+   */
+  loginWithApple(): Observable<any> {
+    return this.supabaseService.signInWithApple();
+  }
+
 }
 
 

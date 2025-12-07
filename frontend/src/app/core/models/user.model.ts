@@ -16,6 +16,10 @@ export interface User {
   fitnessLevel?: FitnessLevel;
   /** Role-based access control */
   role?: UserRole; // 'admin' or 'user'
+  /** User fitness goals */
+  goals?: string[];
+  /** User availability schedule */
+  availability?: UserAvailability;
   /** Account creation timestamp */
   createdAt?: Date;
 }
@@ -39,6 +43,29 @@ export interface RegisterData {
   fullName?: string;
   age?: number;
   fitnessLevel?: FitnessLevel;
+}
+
+/** User availability schedule */
+export interface UserAvailability {
+  /** Days of the week user is available */
+  days?: string[]; // e.g., ['monday', 'wednesday', 'friday']
+  /** Preferred time slots */
+  timeSlots?: {
+    morning?: boolean;
+    afternoon?: boolean;
+    evening?: boolean;
+  };
+  /** Hours per week available */
+  hoursPerWeek?: number;
+}
+
+/** Profile setup data */
+export interface ProfileSetupData {
+  goals: string[];
+  fitnessLevel: FitnessLevel;
+  availability: UserAvailability;
+  age?: number;
+  fullName?: string;
 }
 
 
