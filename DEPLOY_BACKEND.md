@@ -75,8 +75,8 @@ Haz un nuevo commit y push a GitHub para redepleyar el frontend con esta configu
 
 Después del deploy:
 
-1. Verifica que el backend responde: `https://tu-backend.onrender.com/health`
-2. Verifica Swagger: `https://tu-backend.onrender.com/docs`
+1. Verifica que el backend responde: `https://rubenfitness.onrender.com/health`
+2. Verifica Swagger: `https://rubenfitness.onrender.com/docs`
 3. Prueba el login en Vercel
 
 ---
