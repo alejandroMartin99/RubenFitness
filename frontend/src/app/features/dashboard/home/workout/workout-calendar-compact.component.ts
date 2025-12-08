@@ -1,4 +1,5 @@
 import { Component, OnInit, OnChanges, Input } from '@angular/core';
+import { Router } from '@angular/router';
 import { WorkoutService } from '../../../../core/services/workout.service';
 import { User } from '../../../../core/models/user.model';
 
@@ -17,7 +18,10 @@ export class WorkoutCalendarCompactComponent implements OnInit, OnChanges {
   todayWorkoutCompleted: boolean = false;
   loading: boolean = false;
 
-  constructor(private workoutService: WorkoutService) {}
+  constructor(
+    private workoutService: WorkoutService,
+    private router: Router
+  ) {}
 
   ngOnInit(): void {
     this.initCalendar();
@@ -230,6 +234,12 @@ export class WorkoutCalendarCompactComponent implements OnInit, OnChanges {
         this.initCalendar();
         
         this.loading = false;
+
+        // Prompt to log workout in Progress
+        const goLog = window.confirm(`¿Quieres registrar un entrenamiento el ${dateStr}?`);
+        if (goLog) {
+          this.router.navigate(['/progress'], { queryParams: { date: dateStr } });
+        }
       },
       error: (err) => {
         console.error('❌ Error marking workout:', err);

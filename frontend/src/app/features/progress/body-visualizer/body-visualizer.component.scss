@@ -1,0 +1,41 @@
+.visualizer-card {
+  background: #0f0f11;
+  border: 1px solid #1f1f24;
+  border-radius: 16px;
+  padding: 1rem;
+  color: #fff;
+}
+
+.visualizer-header {
+  margin-bottom: 0.5rem;
+}
+
+.visualizer-canvas {
+  width: 100%;
+  height: 320px;
+  border-radius: 12px;
+  background: #0b0b0c;
+  border: 1px solid #1f1f24;
+  overflow: hidden;
+}
+
+.legend {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-top: 0.75rem;
+  color: #ccc;
+
+  .dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 999px;
+    border: 1px solid #facc15;
+  }
+
+  .dot.active {
+    background: #facc15;
+    box-shadow: 0 0 8px rgba(250, 204, 21, 0.6);
+  }
+}
+

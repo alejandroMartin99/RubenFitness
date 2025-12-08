@@ -8,47 +8,103 @@
     <p>Track your fitness journey and celebrate your achievements</p>
   </div>
 
-  <!-- Stats Grid -->
-  <div class="stats-grid" *ngIf="summary && !loading">
-    <mat-card class="stat-card">
-      <div class="stat-icon total">
-        <mat-icon>fitness_center</mat-icon>
-      </div>
-      <div class="stat-content">
-        <div class="stat-value">{{ summary.totalWorkouts }}</div>
-        <div class="stat-label">Total Workouts</div>
-      </div>
+  <!-- Grid layout: 2 columns -->
+  <div class="top-grid">
+    <!-- Quick log -->
+    <mat-card class="panel-card">
+      <mat-card-header>
+        <mat-card-title>
+          <div class="title-row">
+            <mat-icon>playlist_add_check</mat-icon>
+            Registrar entrenamiento
+          </div>
+        </mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <form [formGroup]="workoutForm" class="log-form simple" (ngSubmit)="submitWorkout()">
+          <input class="input" type="date" formControlName="date" />
+
+          <select class="input select" formControlName="type">
+            <option *ngFor="let t of workoutTypes" [value]="t">{{ t }}</option>
+          </select>
+
+          <textarea class="input textarea" rows="3" formControlName="notes" placeholder="Notas (opcional)"></textarea>
+
+          <div class="title-row small">
+            <mat-icon>fitness_center</mat-icon>
+            Ejercicios (mín. 5)
+          </div>
+
+          <div class="exercise-list simple" formArrayName="exercises">
+            <div class="exercise-item simple" *ngFor="let ex of exercises.controls; let i = index" [formGroupName]="i">
+              <input class="input" formControlName="name" placeholder="Ejercicio" />
+              <div class="exercise-inline">
+                <div class="sets-table">
+                  <div class="sets-header">
+                    <span>#</span>
+                    <span>Reps</span>
+                    <span>Peso (kg)</span>
+                    <span></span>
+                  </div>
+                  <div class="set-row" *ngFor="let st of getSets(i).controls; let j = index" [formGroupName]="j">
+                    <span class="index">{{ j + 1 }}</span>
+                    <input class="input" type="number" formControlName="reps" placeholder="Reps" />
+                    <input class="input" type="number" formControlName="weight" placeholder="Peso" />
+                    <button mat-icon-button type="button" (click)="removeSet(i, j)" [disabled]="getSets(i).length === 1">
+                      <mat-icon>close</mat-icon>
+                    </button>
+                  </div>
+                  <button mat-stroked-button color="primary" type="button" (click)="addSet(i)">Añadir serie</button>
+                </div>
+                <div class="exercise-thumb" *ngIf="exerciseImage(ex.value?.name)">
+                  <img [src]="exerciseImage(ex.value?.name)!" alt="exercise" />
+                </div>
+                <button mat-icon-button type="button" (click)="removeExercise(i)" [disabled]="exercises.length === 1">
+                  <mat-icon>close</mat-icon>
+                </button>
+              </div>
+            </div>
+            <button mat-stroked-button color="primary" type="button" (click)="addExercise()">Añadir ejercicio</button>
+          </div>
+
+          <div class="actions">
+            <button mat-raised-button color="primary" type="submit" [disabled]="workoutForm.invalid">Guardar entrenamiento</button>
+          </div>
+        </form>
+      </mat-card-content>
     </mat-card>
 
-    <mat-card class="stat-card">
-      <div class="stat-icon streak">
-        <mat-icon>local_fire_department</mat-icon>
-      </div>
-      <div class="stat-content">
-        <div class="stat-value">{{ summary.currentStreak }}</div>
-        <div class="stat-label">Day Streak</div>
-      </div>
-    </mat-card>
+    <!-- Visualizer + body comp -->
+    <div class="right-column">
+      <app-body-visualizer [muscles]="selectedMuscles"></app-body-visualizer>
 
-    <mat-card class="stat-card">
-      <div class="stat-icon goal">
-        <mat-icon>emoji_events</mat-icon>
-      </div>
-      <div class="stat-content">
-        <div class="stat-value">{{ stats?.currentWeek || 0 }}</div>
-        <div class="stat-label">This Week</div>
-      </div>
-    </mat-card>
-
-    <mat-card class="stat-card">
-      <div class="stat-icon completion">
-        <mat-icon>trending_up</mat-icon>
-      </div>
-      <div class="stat-content">
-        <div class="stat-value">{{ stats ? ((stats.currentWeek / stats.weeklyGoal) * 100).toFixed(0) : 0 }}%</div>
-        <div class="stat-label">Goal Progress</div>
-      </div>
-    </mat-card>
+      <mat-card class="panel-card">
+        <mat-card-header>
+          <mat-card-title>
+            <div class="title-row">
+              <mat-icon>monitor_weight</mat-icon>
+              Composición corporal
+            </div>
+          </mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="body-grid">
+            <div class="body-item">
+              <div class="label">Masa muscular</div>
+              <div class="value">{{ bodyComp.muscle }} kg</div>
+            </div>
+            <div class="body-item">
+              <div class="label">Grasa corporal</div>
+              <div class="value">{{ bodyComp.fat }} %</div>
+            </div>
+            <div class="body-item">
+              <div class="label">Peso</div>
+              <div class="value">{{ bodyComp.weight }} kg</div>
+            </div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </div>
   </div>
 
   <!-- Tabs Navigation -->
