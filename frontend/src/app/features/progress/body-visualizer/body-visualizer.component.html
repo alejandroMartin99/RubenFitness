@@ -7,105 +7,113 @@
   </div>
   
   <div class="body-svg-container">
-    <svg viewBox="0 0 240 480" class="body-svg" xmlns="http://www.w3.org/2000/svg">
+    <svg viewBox="0 0 260 520" class="body-svg" xmlns="http://www.w3.org/2000/svg">
+      <!-- Background glow -->
+      <defs>
+        <radialGradient id="bodyGlow" cx="50%" cy="35%" r="65%">
+          <stop offset="0%" stop-color="rgba(250, 204, 21, 0.18)"/>
+          <stop offset="100%" stop-color="rgba(250, 204, 21, 0)"/>
+        </radialGradient>
+        <linearGradient id="bodyBase" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stop-color="#1c1c21"/>
+          <stop offset="100%" stop-color="#101014"/>
+        </linearGradient>
+      </defs>
+      <ellipse cx="130" cy="180" rx="118" ry="180" fill="url(#bodyGlow)" />
+
       <!-- Body silhouette -->
-      <g id="body-silhouette">
+      <g id="body-silhouette" stroke="#2f2f37" stroke-width="2" fill="url(#bodyBase)">
         <!-- Head -->
-        <ellipse cx="120" cy="40" rx="25" ry="30" class="body-outline" fill="none" stroke="#2a2a31" stroke-width="2"/>
-        
+        <path d="M110 25 Q130 5 150 25 L150 55 Q130 75 110 55 Z" class="body-outline" />
         <!-- Neck -->
-        <rect x="110" y="60" width="20" height="15" class="body-outline" fill="none" stroke="#2a2a31" stroke-width="2"/>
-        
+        <path d="M118 55 L142 55 L146 75 Q130 82 114 75 Z" class="body-outline" />
         <!-- Torso -->
-        <path d="M 80 75 Q 120 70 160 75 L 170 85 L 175 120 L 180 140 L 175 200 L 170 220 L 160 240 L 80 240 L 70 220 L 65 200 L 60 140 L 65 120 L 70 85 Z" 
-          class="body-outline" fill="none" stroke="#2a2a31" stroke-width="2"/>
+        <path d="M92 75 Q130 70 168 75 L182 95 Q190 140 188 195 Q186 235 170 270 Q150 310 130 315 Q110 310 90 270 Q74 235 72 195 Q70 140 78 95 Z" class="body-outline" />
       </g>
 
-      <!-- Muscles - Front View -->
+      <!-- Muscles (front) -->
       <g id="muscles-front">
         <!-- Chest -->
-        <path 
-          id="chest" 
-          d="M 85 100 Q 120 95 155 100 L 160 140 Q 120 145 85 140 Z" 
+        <path
+          id="chest"
+          d="M90 105 Q130 95 170 105 L176 140 Q130 150 84 140 Z"
           [class.active]="isActive('chest')"
           class="muscle-path"
         />
-        
+
+        <!-- Shoulders -->
+        <path
+          id="shoulders"
+          d="M78 90 Q130 82 182 90 L186 108 Q130 102 74 108 Z"
+          [class.active]="isActive('shoulders')"
+          class="muscle-path"
+        />
+
         <!-- Abs -->
-        <path 
-          id="abs" 
-          d="M 90 140 Q 120 145 150 140 L 155 180 Q 120 185 90 180 Z" 
+        <path
+          id="abs"
+          d="M96 150 Q130 156 164 150 L170 195 Q130 205 90 195 Z"
           [class.active]="isActive('abs')"
           class="muscle-path"
         />
-        
-        <!-- Obliques -->
-        <path 
-          id="obliques" 
-          d="M 75 160 Q 120 165 165 160 L 170 200 Q 120 195 75 200 Z" 
-          [class.active]="isActive('obliques')"
-          class="muscle-path"
-        />
-      </g>
 
-      <!-- Shoulders -->
-      <g id="shoulders-group">
-        <path 
-          id="shoulders" 
-          d="M 70 85 Q 120 80 170 85 L 175 100 Q 120 95 70 100 Z" 
-          [class.active]="isActive('shoulders')"
+        <!-- Obliques -->
+        <path
+          id="obliques"
+          d="M82 165 Q130 172 178 165 L184 205 Q130 212 76 205 Z"
+          [class.active]="isActive('obliques')"
           class="muscle-path"
         />
       </g>
 
       <!-- Arms -->
       <g id="arms-group">
-        <!-- Left arm (viewer's right) -->
-        <path 
-          id="biceps-left" 
-          d="M 50 100 Q 65 120 60 180 Q 55 200 50 220 L 45 200 Q 50 180 55 160 Q 50 140 50 120 Z" 
+        <!-- Left arm -->
+        <path
+          id="biceps-left"
+          d="M52 108 Q64 132 60 188 Q56 228 52 252 Q46 232 44 200 Q42 168 44 140 Z"
           [class.active]="isActive('biceps')"
           class="muscle-path"
         />
-        <path 
-          id="triceps-left" 
-          d="M 45 120 Q 50 140 45 200 L 40 220 Q 35 200 40 160 Q 35 140 40 120 Z" 
+        <path
+          id="triceps-left"
+          d="M44 132 Q48 152 46 200 Q44 230 40 248 Q36 224 36 190 Q36 160 38 140 Z"
           [class.active]="isActive('triceps')"
           class="muscle-path"
         />
-        <path 
-          id="forearms-left" 
-          d="M 40 220 Q 45 240 50 280 L 45 300 Q 40 280 40 250 Z" 
+        <path
+          id="forearms-left"
+          d="M40 248 Q44 268 50 312 L46 334 Q40 310 38 280 Z"
           [class.active]="isActive('forearms')"
           class="muscle-path"
         />
-        
-        <!-- Right arm (viewer's left) -->
-        <path 
-          id="biceps-right" 
-          d="M 190 100 Q 175 120 180 180 Q 185 200 190 220 L 195 200 Q 190 180 185 160 Q 190 140 190 120 Z" 
+
+        <!-- Right arm -->
+        <path
+          id="biceps-right"
+          d="M208 108 Q196 132 200 188 Q204 228 208 252 Q214 232 216 200 Q218 168 216 140 Z"
           [class.active]="isActive('biceps')"
           class="muscle-path"
         />
-        <path 
-          id="triceps-right" 
-          d="M 195 120 Q 190 140 195 200 L 200 220 Q 205 200 200 160 Q 205 140 200 120 Z" 
+        <path
+          id="triceps-right"
+          d="M216 132 Q212 152 214 200 Q216 230 220 248 Q224 224 224 190 Q224 160 222 140 Z"
           [class.active]="isActive('triceps')"
           class="muscle-path"
         />
-        <path 
-          id="forearms-right" 
-          d="M 200 220 Q 195 240 190 280 L 195 300 Q 200 280 200 250 Z" 
+        <path
+          id="forearms-right"
+          d="M220 248 Q216 268 210 312 L214 334 Q220 310 222 280 Z"
           [class.active]="isActive('forearms')"
           class="muscle-path"
         />
       </g>
 
-      <!-- Back muscles (visible from side) -->
+      <!-- Back (broad area) -->
       <g id="back-group">
-        <path 
-          id="back" 
-          d="M 70 100 Q 120 105 170 100 L 175 200 Q 120 205 70 200 Z" 
+        <path
+          id="back"
+          d="M82 112 Q130 118 178 112 L184 205 Q130 215 76 205 Z"
           [class.active]="isActive('back')"
           class="muscle-path"
         />
@@ -113,54 +121,58 @@
 
       <!-- Legs -->
       <g id="legs-group">
-        <!-- Left leg (viewer's right) -->
-        <path 
-          id="glutes-left" 
-          d="M 80 240 Q 100 245 120 240 L 125 250 Q 100 255 80 250 Z" 
+        <!-- Glutes -->
+        <path
+          id="glutes-left"
+          d="M92 240 Q116 248 132 240 L136 260 Q116 268 92 260 Z"
           [class.active]="isActive('glutes')"
           class="muscle-path"
         />
-        <path 
-          id="quadriceps-left" 
-          d="M 85 250 Q 100 260 115 250 L 120 340 Q 100 350 85 340 Z" 
+        <path
+          id="glutes-right"
+          d="M168 240 Q144 248 128 240 L124 260 Q144 268 168 260 Z"
+          [class.active]="isActive('glutes')"
+          class="muscle-path"
+        />
+
+        <!-- Quads -->
+        <path
+          id="quadriceps-left"
+          d="M96 258 Q118 268 134 258 L140 350 Q118 364 98 350 Z"
           [class.active]="isActive('quadriceps')"
           class="muscle-path"
         />
-        <path 
-          id="hamstrings-left" 
-          d="M 75 250 Q 100 255 125 250 L 130 340 Q 100 345 75 340 Z" 
+        <path
+          id="quadriceps-right"
+          d="M164 258 Q142 268 126 258 L120 350 Q142 364 162 350 Z"
+          [class.active]="isActive('quadriceps')"
+          class="muscle-path"
+        />
+
+        <!-- Hamstrings -->
+        <path
+          id="hamstrings-left"
+          d="M88 258 Q118 270 148 258 L154 350 Q118 356 88 346 Z"
           [class.active]="isActive('hamstrings')"
           class="muscle-path"
         />
-        <path 
-          id="calves-left" 
-          d="M 85 340 Q 100 350 115 340 L 120 420 Q 100 430 85 420 Z" 
+        <path
+          id="hamstrings-right"
+          d="M172 258 Q142 270 112 258 L106 350 Q142 356 172 346 Z"
+          [class.active]="isActive('hamstrings')"
+          class="muscle-path"
+        />
+
+        <!-- Calves -->
+        <path
+          id="calves-left"
+          d="M100 350 Q120 362 140 350 L146 430 Q120 444 98 432 Z"
           [class.active]="isActive('calves')"
           class="muscle-path"
         />
-        
-        <!-- Right leg (viewer's left) -->
-        <path 
-          id="glutes-right" 
-          d="M 160 240 Q 140 245 120 240 L 115 250 Q 140 255 160 250 Z" 
-          [class.active]="isActive('glutes')"
-          class="muscle-path"
-        />
-        <path 
-          id="quadriceps-right" 
-          d="M 155 250 Q 140 260 125 250 L 120 340 Q 140 350 155 340 Z" 
-          [class.active]="isActive('quadriceps')"
-          class="muscle-path"
-        />
-        <path 
-          id="hamstrings-right" 
-          d="M 165 250 Q 140 255 115 250 L 110 340 Q 140 345 165 340 Z" 
-          [class.active]="isActive('hamstrings')"
-          class="muscle-path"
-        />
-        <path 
-          id="calves-right" 
-          d="M 155 340 Q 140 350 125 340 L 120 420 Q 140 430 155 420 Z" 
+        <path
+          id="calves-right"
+          d="M160 350 Q140 362 120 350 L114 430 Q140 444 162 432 Z"
           [class.active]="isActive('calves')"
           class="muscle-path"
         />

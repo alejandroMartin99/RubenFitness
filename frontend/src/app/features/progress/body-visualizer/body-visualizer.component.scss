@@ -30,35 +30,36 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  background: #0b0b0c;
-  border-radius: 12px;
-  padding: 1rem;
-  min-height: 320px;
+  background: radial-gradient(circle at 20% 20%, rgba(250, 204, 21, 0.08), transparent 35%), #0b0b0c;
+  border-radius: 16px;
+  padding: 1.25rem;
+  min-height: 360px;
   border: 1px solid #1f1f24;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.35);
 }
 
 .body-svg {
   width: 100%;
-  max-width: 240px;
+  max-width: 260px;
   height: auto;
 }
 
 .muscle-path {
-  fill: #1a1a1e;
-  stroke: #2a2a31;
-  stroke-width: 1;
+  fill: #18181c;
+  stroke: #2f2f37;
+  stroke-width: 1.25;
   transition: all 0.3s ease;
   cursor: pointer;
 
   &:hover {
-    fill: #2a2a31;
+    fill: #22222a;
   }
 
   &.active {
     fill: #facc15;
     stroke: #facc15;
     stroke-width: 2;
-    filter: drop-shadow(0 0 8px rgba(250, 204, 21, 0.6));
+    filter: drop-shadow(0 0 10px rgba(250, 204, 21, 0.6));
     animation: pulse 2s ease-in-out infinite;
   }
 }
@@ -74,6 +75,8 @@
 
 .body-outline {
   pointer-events: none;
+  fill: none;
+  stroke-linejoin: round;
 }
 
 .legend {
