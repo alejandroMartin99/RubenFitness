@@ -30,41 +30,110 @@
 
           <textarea class="input textarea" rows="3" formControlName="notes" placeholder="Notas (opcional)"></textarea>
 
-          <div class="title-row small">
-            <mat-icon>fitness_center</mat-icon>
-            Ejercicios (mín. 5)
-          </div>
-
-          <div class="exercise-list simple" formArrayName="exercises">
-            <div class="exercise-item simple" *ngFor="let ex of exercises.controls; let i = index" [formGroupName]="i">
-              <input class="input" formControlName="name" placeholder="Ejercicio" />
-              <div class="exercise-inline">
-                <div class="sets-table">
-                  <div class="sets-header">
-                    <span>#</span>
-                    <span>Reps</span>
-                    <span>Peso (kg)</span>
-                    <span></span>
-                  </div>
-                  <div class="set-row" *ngFor="let st of getSets(i).controls; let j = index" [formGroupName]="j">
-                    <span class="index">{{ j + 1 }}</span>
-                    <input class="input" type="number" formControlName="reps" placeholder="Reps" />
-                    <input class="input" type="number" formControlName="weight" placeholder="Peso" />
-                    <button mat-icon-button type="button" (click)="removeSet(i, j)" [disabled]="getSets(i).length === 1">
-                      <mat-icon>close</mat-icon>
-                    </button>
-                  </div>
-                  <button mat-stroked-button color="primary" type="button" (click)="addSet(i)">Añadir serie</button>
-                </div>
-                <div class="exercise-thumb" *ngIf="exerciseImage(ex.value?.name)">
-                  <img [src]="exerciseImage(ex.value?.name)!" alt="exercise" />
-                </div>
-                <button mat-icon-button type="button" (click)="removeExercise(i)" [disabled]="exercises.length === 1">
-                  <mat-icon>close</mat-icon>
-                </button>
+          <div class="exercises-section">
+            <div class="exercises-header">
+              <div class="title-row small">
+                <mat-icon>fitness_center</mat-icon>
+                Ejercicios (mín. 5)
               </div>
+              <button mat-stroked-button color="primary" type="button" (click)="addExercise()">
+                <mat-icon>add</mat-icon>
+                Añadir ejercicio
+              </button>
             </div>
-            <button mat-stroked-button color="primary" type="button" (click)="addExercise()">Añadir ejercicio</button>
+
+            <div class="exercise-list" formArrayName="exercises">
+              <mat-expansion-panel 
+                *ngFor="let ex of exercises.controls; let i = index" 
+                [formGroupName]="i"
+                class="exercise-panel"
+                [expanded]="i === 0"
+              >
+                <mat-expansion-panel-header>
+                  <mat-panel-title>
+                    <div class="exercise-header-content">
+                      <span class="exercise-number">{{ i + 1 }}</span>
+                      <input 
+                        class="exercise-name-input" 
+                        formControlName="name" 
+                        placeholder="Nombre del ejercicio"
+                        (click)="$event.stopPropagation()"
+                      />
+                      <div class="exercise-stats" *ngIf="getExerciseStats(i).sets > 0">
+                        <span class="stat-badge">{{ getExerciseStats(i).sets }} series</span>
+                        <span class="stat-badge" *ngIf="getExerciseStats(i).volume > 0">
+                          {{ getExerciseStats(i).volume }} kg
+                        </span>
+                      </div>
+                    </div>
+                  </mat-panel-title>
+                </mat-expansion-panel-header>
+
+                <div class="exercise-content">
+                  <div class="exercise-image-container" *ngIf="exerciseImage(ex.get('name')?.value)">
+                    <img [src]="exerciseImage(ex.get('name')?.value)!" alt="exercise" />
+                  </div>
+
+                  <div class="sets-section">
+                    <div class="sets-table" formArrayName="sets">
+                      <div class="sets-header">
+                        <span>#</span>
+                        <span>Reps</span>
+                        <span>Peso (kg)</span>
+                        <span></span>
+                      </div>
+                      <div 
+                        class="set-row" 
+                        *ngFor="let st of getSets(i).controls; let j = index" 
+                        [formGroupName]="j"
+                      >
+                        <span class="index">{{ j + 1 }}</span>
+                        <input 
+                          class="input small" 
+                          type="number" 
+                          formControlName="reps" 
+                          placeholder="Reps"
+                          min="1"
+                        />
+                        <input 
+                          class="input small" 
+                          type="number" 
+                          formControlName="weight" 
+                          placeholder="Peso"
+                          min="0"
+                          step="0.5"
+                        />
+                        <button 
+                          mat-icon-button 
+                          type="button" 
+                          (click)="removeSet(i, j)" 
+                          [disabled]="getSets(i).length === 1"
+                          class="remove-btn"
+                        >
+                          <mat-icon>close</mat-icon>
+                        </button>
+                      </div>
+                    </div>
+                    <div class="sets-actions">
+                      <button mat-stroked-button color="primary" type="button" (click)="addSet(i)">
+                        <mat-icon>add</mat-icon>
+                        Añadir serie
+                      </button>
+                      <button 
+                        mat-stroked-button 
+                        type="button" 
+                        (click)="removeExercise(i)" 
+                        [disabled]="exercises.length === 1"
+                        class="remove-exercise-btn"
+                      >
+                        <mat-icon>delete</mat-icon>
+                        Eliminar ejercicio
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </mat-expansion-panel>
+            </div>
           </div>
 
           <div class="actions">

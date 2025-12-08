@@ -2,13 +2,176 @@
   <div class="visualizer-header">
     <div class="title-row">
       <mat-icon>self_improvement</mat-icon>
-      Mapa muscular
+      <span>Músculos trabajados</span>
     </div>
   </div>
-  <div class="visualizer-canvas" id="body-visualizer-canvas"></div>
-  <div class="legend">
-    <div class="dot active"></div>
-    <span>Músculos activados</span>
+  
+  <div class="body-svg-container">
+    <svg viewBox="0 0 240 480" class="body-svg" xmlns="http://www.w3.org/2000/svg">
+      <!-- Body silhouette -->
+      <g id="body-silhouette">
+        <!-- Head -->
+        <ellipse cx="120" cy="40" rx="25" ry="30" class="body-outline" fill="none" stroke="#2a2a31" stroke-width="2"/>
+        
+        <!-- Neck -->
+        <rect x="110" y="60" width="20" height="15" class="body-outline" fill="none" stroke="#2a2a31" stroke-width="2"/>
+        
+        <!-- Torso -->
+        <path d="M 80 75 Q 120 70 160 75 L 170 85 L 175 120 L 180 140 L 175 200 L 170 220 L 160 240 L 80 240 L 70 220 L 65 200 L 60 140 L 65 120 L 70 85 Z" 
+          class="body-outline" fill="none" stroke="#2a2a31" stroke-width="2"/>
+      </g>
+
+      <!-- Muscles - Front View -->
+      <g id="muscles-front">
+        <!-- Chest -->
+        <path 
+          id="chest" 
+          d="M 85 100 Q 120 95 155 100 L 160 140 Q 120 145 85 140 Z" 
+          [class.active]="isActive('chest')"
+          class="muscle-path"
+        />
+        
+        <!-- Abs -->
+        <path 
+          id="abs" 
+          d="M 90 140 Q 120 145 150 140 L 155 180 Q 120 185 90 180 Z" 
+          [class.active]="isActive('abs')"
+          class="muscle-path"
+        />
+        
+        <!-- Obliques -->
+        <path 
+          id="obliques" 
+          d="M 75 160 Q 120 165 165 160 L 170 200 Q 120 195 75 200 Z" 
+          [class.active]="isActive('obliques')"
+          class="muscle-path"
+        />
+      </g>
+
+      <!-- Shoulders -->
+      <g id="shoulders-group">
+        <path 
+          id="shoulders" 
+          d="M 70 85 Q 120 80 170 85 L 175 100 Q 120 95 70 100 Z" 
+          [class.active]="isActive('shoulders')"
+          class="muscle-path"
+        />
+      </g>
+
+      <!-- Arms -->
+      <g id="arms-group">
+        <!-- Left arm (viewer's right) -->
+        <path 
+          id="biceps-left" 
+          d="M 50 100 Q 65 120 60 180 Q 55 200 50 220 L 45 200 Q 50 180 55 160 Q 50 140 50 120 Z" 
+          [class.active]="isActive('biceps')"
+          class="muscle-path"
+        />
+        <path 
+          id="triceps-left" 
+          d="M 45 120 Q 50 140 45 200 L 40 220 Q 35 200 40 160 Q 35 140 40 120 Z" 
+          [class.active]="isActive('triceps')"
+          class="muscle-path"
+        />
+        <path 
+          id="forearms-left" 
+          d="M 40 220 Q 45 240 50 280 L 45 300 Q 40 280 40 250 Z" 
+          [class.active]="isActive('forearms')"
+          class="muscle-path"
+        />
+        
+        <!-- Right arm (viewer's left) -->
+        <path 
+          id="biceps-right" 
+          d="M 190 100 Q 175 120 180 180 Q 185 200 190 220 L 195 200 Q 190 180 185 160 Q 190 140 190 120 Z" 
+          [class.active]="isActive('biceps')"
+          class="muscle-path"
+        />
+        <path 
+          id="triceps-right" 
+          d="M 195 120 Q 190 140 195 200 L 200 220 Q 205 200 200 160 Q 205 140 200 120 Z" 
+          [class.active]="isActive('triceps')"
+          class="muscle-path"
+        />
+        <path 
+          id="forearms-right" 
+          d="M 200 220 Q 195 240 190 280 L 195 300 Q 200 280 200 250 Z" 
+          [class.active]="isActive('forearms')"
+          class="muscle-path"
+        />
+      </g>
+
+      <!-- Back muscles (visible from side) -->
+      <g id="back-group">
+        <path 
+          id="back" 
+          d="M 70 100 Q 120 105 170 100 L 175 200 Q 120 205 70 200 Z" 
+          [class.active]="isActive('back')"
+          class="muscle-path"
+        />
+      </g>
+
+      <!-- Legs -->
+      <g id="legs-group">
+        <!-- Left leg (viewer's right) -->
+        <path 
+          id="glutes-left" 
+          d="M 80 240 Q 100 245 120 240 L 125 250 Q 100 255 80 250 Z" 
+          [class.active]="isActive('glutes')"
+          class="muscle-path"
+        />
+        <path 
+          id="quadriceps-left" 
+          d="M 85 250 Q 100 260 115 250 L 120 340 Q 100 350 85 340 Z" 
+          [class.active]="isActive('quadriceps')"
+          class="muscle-path"
+        />
+        <path 
+          id="hamstrings-left" 
+          d="M 75 250 Q 100 255 125 250 L 130 340 Q 100 345 75 340 Z" 
+          [class.active]="isActive('hamstrings')"
+          class="muscle-path"
+        />
+        <path 
+          id="calves-left" 
+          d="M 85 340 Q 100 350 115 340 L 120 420 Q 100 430 85 420 Z" 
+          [class.active]="isActive('calves')"
+          class="muscle-path"
+        />
+        
+        <!-- Right leg (viewer's left) -->
+        <path 
+          id="glutes-right" 
+          d="M 160 240 Q 140 245 120 240 L 115 250 Q 140 255 160 250 Z" 
+          [class.active]="isActive('glutes')"
+          class="muscle-path"
+        />
+        <path 
+          id="quadriceps-right" 
+          d="M 155 250 Q 140 260 125 250 L 120 340 Q 140 350 155 340 Z" 
+          [class.active]="isActive('quadriceps')"
+          class="muscle-path"
+        />
+        <path 
+          id="hamstrings-right" 
+          d="M 165 250 Q 140 255 115 250 L 110 340 Q 140 345 165 340 Z" 
+          [class.active]="isActive('hamstrings')"
+          class="muscle-path"
+        />
+        <path 
+          id="calves-right" 
+          d="M 155 340 Q 140 350 125 340 L 120 420 Q 140 430 155 420 Z" 
+          [class.active]="isActive('calves')"
+          class="muscle-path"
+        />
+      </g>
+    </svg>
+  </div>
+
+  <div class="legend" *ngIf="activeMuscles.size > 0">
+    <div class="legend-item">
+      <div class="dot active"></div>
+      <span>Músculos activados</span>
+    </div>
   </div>
 </div>
-

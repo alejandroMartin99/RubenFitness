@@ -153,6 +153,24 @@ export class OverviewComponent implements OnInit {
     return this.exerciseImages[key] || null;
   }
 
+  getExerciseStats(index: number): { sets: number; volume: number } {
+    const exercise = this.exercises.at(index);
+    const sets = this.getSets(index);
+    const setsArray = sets.controls;
+    
+    let volume = 0;
+    setsArray.forEach(set => {
+      const reps = set.get('reps')?.value || 0;
+      const weight = set.get('weight')?.value || 0;
+      volume += reps * weight;
+    });
+
+    return {
+      sets: setsArray.length,
+      volume: Math.round(volume)
+    };
+  }
+
   submitWorkout(): void {
     if (this.workoutForm.invalid) return;
 
