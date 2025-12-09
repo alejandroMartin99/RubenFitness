@@ -5,7 +5,7 @@ Handles workout progress tracking and statistics
 
 from fastapi import APIRouter, HTTPException
 from datetime import datetime, date, timedelta
-from app.models.schemas import ProgressRequest, ProgressResponse
+from app.models.schemas import ProgressRequest, ProgressResponse, WorkoutLogRequest, ExerciseLog, ExerciseSet
 from app.services.supabase_service import supabase_service
 
 router = APIRouter()
@@ -163,15 +163,56 @@ async def get_progress(user_id: str):
         
         # Convert to WorkoutRecord format
         from app.models.schemas import WorkoutRecord
-        recent_workouts = [
-            WorkoutRecord(
-                workout_id=w.get("workout_id", ""),
-                name=w.get("name", "Workout"),
-                completed=True,
-                date=datetime.fromisoformat(w.get("date", datetime.utcnow().isoformat()))
-            )
-            for w in summary.get("recent_workouts", [])
-        ]
+        import json
+        import re
+        
+        recent_workouts = []
+        for w in summary.get("recent_workouts", []):
+            # Handle both 'date' and 'workout_date' fields
+            date_str = w.get("workout_date") or w.get("date") or datetime.utcnow().isoformat()
+            try:
+                # Try parsing as date first, then datetime
+                if isinstance(date_str, str):
+                    if 'T' in date_str:
+                        workout_datetime = datetime.fromisoformat(date_str.replace('Z', '+00:00'))
+                    else:
+                        # It's a date string, convert to datetime
+                        workout_date = datetime.strptime(date_str, '%Y-%m-%d').date()
+                        workout_datetime = datetime.combine(workout_date, datetime.min.time())
+                else:
+                    workout_datetime = datetime.utcnow()
+            except Exception as e:
+                print(f"Error parsing date: {e}, using current time")
+                workout_datetime = datetime.utcnow()
+            
+            # Try to extract workout type from notes JSON
+            workout_name = w.get("name") or "Workout"
+            notes = w.get("notes", "") or ""
+            
+            # Try to extract workout_type from JSON in notes
+            try:
+                json_match = re.search(r'WORKOUT_DATA:\s*({[\s\S]*?})', notes)
+                if json_match:
+                    workout_data = json.loads(json_match.group(1))
+                    workout_type = workout_data.get("workout_type", "")
+                    if workout_type:
+                        workout_name = workout_type
+            except Exception as e:
+                # If JSON parsing fails, try to extract from notes text
+                if "Tipo:" in notes:
+                    try:
+                        tipo_line = [line for line in notes.split('\n') if 'Tipo:' in line]
+                        if tipo_line:
+                            workout_name = tipo_line[0].split('Tipo:')[1].strip().split('\n')[0].strip()
+                    except:
+                        pass
+            
+            recent_workouts.append(WorkoutRecord(
+                workout_id=w.get("workout_id") or w.get("id", ""),
+                name=workout_name,
+                completed=w.get("completed", True),
+                date=workout_datetime
+            ))
         
         return ProgressResponse(
             user_id=user_id,
@@ -212,5 +253,168 @@ async def get_progress_stats(user_id: str):
     
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error fetching progress stats: {str(e)}")
+
+
+@router.post("/progress/log-workout")
+async def log_workout(request: WorkoutLogRequest):
+    """
+    Log a detailed workout with exercises, sets, reps, and weight
+    
+    Args:
+        request: WorkoutLogRequest with user_id, date, type, notes, and exercises
+    
+    Returns:
+        Success confirmation with workout log ID
+    """
+    try:
+        if not supabase_service.is_connected():
+            # Return mock response if database is not connected
+            return {
+                "message": "Workout logged (mock mode)",
+                "user_id": request.user_id,
+                "date": request.date,
+                "type": request.type,
+                "exercises_count": len(request.exercises),
+                "timestamp": datetime.utcnow().isoformat()
+            }
+        
+        # Parse date
+        workout_date = datetime.fromisoformat(request.date).date() if isinstance(request.date, str) else request.date
+        
+        # Calculate total volume and duration estimate
+        total_volume = 0
+        total_sets = 0
+        for exercise in request.exercises:
+            for set_data in exercise.sets:
+                total_volume += set_data.reps * set_data.weight
+                total_sets += 1
+        
+        # Estimate duration (rough calculation: ~2 minutes per set)
+        estimated_duration = total_sets * 2
+        
+        # Build notes with workout type and exercise summary
+        notes_content = f"Tipo: {request.type}\nEjercicios: {len(request.exercises)}"
+        if request.notes:
+            notes_content = f"{request.notes}\n\n{notes_content}"
+        
+        # Save progress record
+        # workout_id is NULL because these are custom workouts not in the workouts table
+        progress_result = supabase_service.supabase.table("progress").insert({
+            "user_id": request.user_id,
+            "workout_id": None,  # NULL for custom workouts
+            "workout_date": workout_date.isoformat(),
+            "duration_minutes": estimated_duration,
+            "notes": notes_content
+        }).execute()
+        
+        progress_id = progress_result.data[0]["id"] if progress_result.data else None
+        
+        # Save detailed exercises and sets as JSON in a separate field or table
+        # For now, we'll store it as JSON in the notes or create a workout_logs table
+        # Let's store it in a JSON field if available, otherwise append to notes
+        
+        # Save detailed exercises and sets data
+        # Store as JSON in notes for now (can be migrated to a separate table later)
+        try:
+            import json
+            workout_data = {
+                "workout_type": request.type,
+                "exercises": [
+                    {
+                        "name": ex.name,
+                        "sets": [{"reps": s.reps, "weight": s.weight} for s in ex.sets]
+                    }
+                    for ex in request.exercises
+                ],
+                "total_volume": total_volume,
+                "total_sets": total_sets
+            }
+            
+            # Append JSON data to notes
+            if progress_id:
+                updated_notes = f"{notes_content}\n\n--- Datos detallados ---\n{json.dumps(workout_data, indent=2, ensure_ascii=False)}"
+                supabase_service.supabase.table("progress")\
+                    .update({
+                        "notes": updated_notes
+                    })\
+                    .eq("id", progress_id)\
+                    .execute()
+        except Exception as e:
+            print(f"Note: Could not save detailed workout data: {e}")
+        
+        # Update streaks automatically
+        try:
+            _update_streaks(request.user_id, workout_date)
+        except Exception as e:
+            print(f"Error updating streaks: {e}")
+        
+        return {
+            "message": "Workout logged successfully",
+            "progress_id": progress_id,
+            "workout_type": request.type,
+            "date": request.date,
+            "exercises_count": len(request.exercises),
+            "total_sets": total_sets,
+            "total_volume": total_volume,
+            "estimated_duration": estimated_duration,
+            "timestamp": datetime.utcnow().isoformat()
+        }
+    
+    except Exception as e:
+        print(f"Error logging workout: {e}")
+        raise HTTPException(status_code=500, detail=f"Error logging workout: {str(e)}")
+
+
+@router.delete("/progress/{progress_id}")
+async def delete_progress(progress_id: str):
+    """
+    Delete a progress/workout record
+    
+    Args:
+        progress_id: Progress record ID to delete
+    
+    Returns:
+        Success confirmation
+    """
+    try:
+        if not supabase_service.is_connected():
+            return {
+                "message": "Progress deleted (mock mode)",
+                "progress_id": progress_id
+            }
+        
+        # Get the progress record first to verify it exists and get user_id
+        progress_result = supabase_service.supabase.table("progress")\
+            .select("user_id")\
+            .eq("id", progress_id)\
+            .single()\
+            .execute()
+        
+        if not progress_result.data:
+            raise HTTPException(status_code=404, detail="Progress record not found")
+        
+        user_id = progress_result.data.get("user_id")
+        
+        # Delete the progress record
+        delete_result = supabase_service.supabase.table("progress")\
+            .delete()\
+            .eq("id", progress_id)\
+            .eq("user_id", user_id)\
+            .execute()
+        
+        # Note: We might want to update streaks here, but for simplicity we'll leave it
+        # The streaks will be recalculated on the next workout
+        
+        return {
+            "message": "Progress record deleted successfully",
+            "progress_id": progress_id,
+            "timestamp": datetime.utcnow().isoformat()
+        }
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Error deleting progress: {e}")
+        raise HTTPException(status_code=500, detail=f"Error deleting progress: {str(e)}")
 
 

@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, AfterViewInit, ViewChild } from '@angular/core';
 import { ProgressService } from '../../../core/services/progress.service';
 import { ChartData } from '../../../core/models/progress.model';
 import { Chart, ChartConfiguration, registerables } from 'chart.js';
@@ -12,10 +12,15 @@ Chart.register(...registerables);
   templateUrl: './charts.component.html',
   styleUrls: ['./charts.component.scss']
 })
-export class ChartsComponent implements OnInit, OnDestroy {
+export class ChartsComponent implements OnInit, OnDestroy, AfterViewInit {
   workoutsChart: Chart | null = null;
   durationChart: Chart | null = null;
-  ratingChart: Chart | null = null;
+  volumeChart: Chart | null = null;
+  muscleGroupChart: Chart | null = null;
+  muscleFrequencyChart: Chart | null = null;
+  exerciseVolumeChart: Chart | null = null;
+  exerciseProgressChart: Chart | null = null;
+  
   loading = true;
   selectedPeriod: '7' | '30' | '90' = '30';
   
@@ -24,7 +29,14 @@ export class ChartsComponent implements OnInit, OnDestroy {
   constructor(private progressService: ProgressService) {}
 
   ngOnInit(): void {
-    this.loadCharts();
+    // Don't load charts here - wait for AfterViewInit
+  }
+
+  ngAfterViewInit(): void {
+    // Wait a bit for the DOM to be ready, especially when using matTabContent
+    setTimeout(() => {
+      this.loadCharts();
+    }, 100);
   }
 
   ngOnDestroy(): void {
@@ -34,60 +46,133 @@ export class ChartsComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Load charts data
+   * Load all charts data
    */
   loadCharts(): void {
     this.loading = true;
+    this.chartsLoaded = 0;
+    this.destroyCharts(); // Destroy existing charts before creating new ones
     const days = parseInt(this.selectedPeriod);
 
-    // Load workouts chart
+    // Section 1: Entrenamientos
     this.progressService.getWorkoutsChartData(days)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (data) => {
           this.createWorkoutsChart(data);
-          this.loading = false;
+          this.checkLoadingComplete();
         },
         error: (err) => {
           console.error('Error loading workouts chart:', err);
-          this.loading = false;
+          this.checkLoadingComplete();
         }
       });
 
-    // Load duration chart
     this.progressService.getDurationChartData(days)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (data) => {
           this.createDurationChart(data);
+          this.checkLoadingComplete();
         },
         error: (err) => {
           console.error('Error loading duration chart:', err);
+          this.checkLoadingComplete();
         }
       });
 
-    // Load rating chart
-    this.progressService.getPerformanceMetrics(days)
+    this.progressService.getVolumeChartData(days)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: (metrics) => {
-          const ratingData = this.buildRatingChartData(metrics);
-          this.createRatingChart(ratingData);
+        next: (data) => {
+          this.createVolumeChart(data);
+          this.checkLoadingComplete();
         },
         error: (err) => {
-          console.error('Error loading rating chart:', err);
+          console.error('Error loading volume chart:', err);
+          this.checkLoadingComplete();
         }
       });
+
+    // Section 2: Grupo Muscular
+    this.progressService.getMuscleGroupChartData(days)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (data) => {
+          this.createMuscleGroupChart(data);
+          this.checkLoadingComplete();
+        },
+        error: (err) => {
+          console.error('Error loading muscle group chart:', err);
+          this.checkLoadingComplete();
+        }
+      });
+
+    this.progressService.getMuscleFrequencyChartData(days)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (data) => {
+          this.createMuscleFrequencyChart(data);
+          this.checkLoadingComplete();
+        },
+        error: (err) => {
+          console.error('Error loading muscle frequency chart:', err);
+          this.checkLoadingComplete();
+        }
+      });
+
+    // Section 3: Ejercicios
+    this.progressService.getExerciseVolumeChartData(days)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (data) => {
+          this.createExerciseVolumeChart(data);
+          this.checkLoadingComplete();
+        },
+        error: (err) => {
+          console.error('Error loading exercise volume chart:', err);
+          this.checkLoadingComplete();
+        }
+      });
+
+    this.progressService.getExerciseProgressChartData(days)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (data) => {
+          this.createExerciseProgressChart(data);
+          this.checkLoadingComplete();
+        },
+        error: (err) => {
+          console.error('Error loading exercise progress chart:', err);
+          this.checkLoadingComplete();
+        }
+      });
+  }
+
+  private chartsLoaded = 0;
+  private totalCharts = 7; // Total number of charts to load
+
+  private checkLoadingComplete(): void {
+    this.chartsLoaded++;
+    if (this.chartsLoaded >= this.totalCharts) {
+      setTimeout(() => {
+        this.loading = false;
+      }, 300);
+    }
   }
 
   /**
    * Create workouts chart
    */
   private createWorkoutsChart(data: ChartData): void {
-    const canvas = document.getElementById('workoutsChart') as HTMLCanvasElement;
-    if (!canvas) return;
+    // Wait a bit for DOM to be ready
+    setTimeout(() => {
+      const canvas = document.getElementById('workoutsChart') as HTMLCanvasElement;
+      if (!canvas) {
+        console.warn('Workouts chart canvas not found');
+        return;
+      }
 
-    // Destroy existing chart
     if (this.workoutsChart) {
       this.workoutsChart.destroy();
     }
@@ -99,38 +184,35 @@ export class ChartsComponent implements OnInit, OnDestroy {
         responsive: true,
         maintainAspectRatio: false,
         plugins: {
-          legend: {
-            display: false
-          },
+          legend: { display: false },
           title: {
             display: true,
-            text: 'Workouts Over Time',
-            font: {
-              size: 16,
-              weight: 'bold' as const
-            }
+            text: 'Entrenamientos por Día',
+            font: { size: 16, weight: 'bold' as const },
+            color: '#ffffff'
           }
         },
         scales: {
-          y: {
-            beginAtZero: true,
-            ticks: {
-              stepSize: 1
-            }
-          }
+          x: { ticks: { color: '#ffffff' }, grid: { color: 'rgba(255,255,255,0.1)' } },
+          y: { beginAtZero: true, ticks: { color: '#ffffff', stepSize: 1 }, grid: { color: 'rgba(255,255,255,0.1)' } }
         }
       }
     };
 
-    this.workoutsChart = new Chart(canvas, config);
+      this.workoutsChart = new Chart(canvas, config);
+    }, 50);
   }
 
   /**
    * Create duration chart
    */
   private createDurationChart(data: ChartData): void {
-    const canvas = document.getElementById('durationChart') as HTMLCanvasElement;
-    if (!canvas) return;
+    setTimeout(() => {
+      const canvas = document.getElementById('durationChart') as HTMLCanvasElement;
+      if (!canvas) {
+        console.warn('Duration chart canvas not found');
+        return;
+      }
 
     if (this.durationChart) {
       this.durationChart.destroy();
@@ -150,62 +232,38 @@ export class ChartsComponent implements OnInit, OnDestroy {
         responsive: true,
         maintainAspectRatio: false,
         plugins: {
-          legend: {
-            display: false
-          },
+          legend: { display: false },
           title: {
             display: true,
-            text: 'Total Duration (minutes)',
-            font: {
-              size: 16,
-              weight: 'bold' as const
-            }
+            text: 'Duración Total (minutos)',
+            font: { size: 16, weight: 'bold' as const },
+            color: '#ffffff'
           }
         },
         scales: {
-          y: {
-            beginAtZero: true
-          }
+          x: { ticks: { color: '#ffffff' }, grid: { color: 'rgba(255,255,255,0.1)' } },
+          y: { beginAtZero: true, ticks: { color: '#ffffff' }, grid: { color: 'rgba(255,255,255,0.1)' } }
         }
       }
     };
 
-    this.durationChart = new Chart(canvas, config);
+      this.durationChart = new Chart(canvas, config);
+    }, 50);
   }
 
   /**
-   * Build rating chart data
+   * Create volume chart
    */
-  private buildRatingChartData(metrics: any[]): ChartData {
-    const ratings = metrics
-      .filter(m => m.averageRating)
-      .map(m => m.averageRating);
-    
-    return {
-      labels: metrics
-        .filter(m => m.averageRating)
-        .map(m => m.date.toLocaleDateString('es-ES', { month: 'short', day: 'numeric' })),
-      datasets: [{
-        label: 'Average Rating',
-        data: ratings,
-        backgroundColor: 'rgba(255, 193, 7, 0.6)',
-        borderColor: 'rgba(255, 193, 7, 1)',
-        borderWidth: 2,
-        fill: true,
-        tension: 0.4
-      }]
-    };
-  }
+  private createVolumeChart(data: ChartData): void {
+    setTimeout(() => {
+      const canvas = document.getElementById('volumeChart') as HTMLCanvasElement;
+      if (!canvas) {
+        console.warn('Volume chart canvas not found');
+        return;
+      }
 
-  /**
-   * Create rating chart
-   */
-  private createRatingChart(data: ChartData): void {
-    const canvas = document.getElementById('ratingChart') as HTMLCanvasElement;
-    if (!canvas) return;
-
-    if (this.ratingChart) {
-      this.ratingChart.destroy();
+    if (this.volumeChart) {
+      this.volumeChart.destroy();
     }
 
     const config: ChartConfiguration = {
@@ -215,49 +273,205 @@ export class ChartsComponent implements OnInit, OnDestroy {
         responsive: true,
         maintainAspectRatio: false,
         plugins: {
-          legend: {
-            display: false
-          },
+          legend: { display: false },
           title: {
             display: true,
-            text: 'Workout Satisfaction Rating',
-            font: {
-              size: 16,
-              weight: 'bold' as const
-            }
+            text: 'Volumen Total (kg)',
+            font: { size: 16, weight: 'bold' as const },
+            color: '#ffffff'
           }
         },
         scales: {
-          y: {
-            beginAtZero: true,
-            max: 5,
-            ticks: {
-              stepSize: 1
-            }
+          x: { ticks: { color: '#ffffff' }, grid: { color: 'rgba(255,255,255,0.1)' } },
+          y: { beginAtZero: true, ticks: { color: '#ffffff' }, grid: { color: 'rgba(255,255,255,0.1)' } }
+        }
+      }
+    };
+
+      this.volumeChart = new Chart(canvas, config);
+    }, 50);
+  }
+
+  /**
+   * Create muscle group chart
+   */
+  private createMuscleGroupChart(data: ChartData): void {
+    setTimeout(() => {
+      const canvas = document.getElementById('muscleGroupChart') as HTMLCanvasElement;
+      if (!canvas) {
+        console.warn('Muscle group chart canvas not found');
+        return;
+      }
+
+    if (this.muscleGroupChart) {
+      this.muscleGroupChart.destroy();
+    }
+
+    const config: ChartConfiguration = {
+      type: 'doughnut',
+      data: data,
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { 
+            display: true,
+            position: 'right',
+            labels: { color: '#ffffff' }
+          },
+          title: {
+            display: true,
+            text: 'Volumen por Grupo Muscular',
+            font: { size: 16, weight: 'bold' as const },
+            color: '#ffffff'
           }
         }
       }
     };
 
-    this.ratingChart = new Chart(canvas, config);
+      this.muscleGroupChart = new Chart(canvas, config);
+    }, 50);
+  }
+
+  /**
+   * Create muscle frequency chart
+   */
+  private createMuscleFrequencyChart(data: ChartData): void {
+    setTimeout(() => {
+      const canvas = document.getElementById('muscleFrequencyChart') as HTMLCanvasElement;
+      if (!canvas) {
+        console.warn('Muscle frequency chart canvas not found');
+        return;
+      }
+
+    if (this.muscleFrequencyChart) {
+      this.muscleFrequencyChart.destroy();
+    }
+
+    const config: ChartConfiguration = {
+      type: 'bar',
+      data: data,
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          title: {
+            display: true,
+            text: 'Frecuencia por Grupo Muscular',
+            font: { size: 16, weight: 'bold' as const },
+            color: '#ffffff'
+          }
+        },
+        scales: {
+          x: { ticks: { color: '#ffffff' }, grid: { color: 'rgba(255,255,255,0.1)' } },
+          y: { beginAtZero: true, ticks: { color: '#ffffff', stepSize: 1 }, grid: { color: 'rgba(255,255,255,0.1)' } }
+        }
+      }
+    };
+
+      this.muscleFrequencyChart = new Chart(canvas, config);
+    }, 50);
+  }
+
+  /**
+   * Create exercise volume chart
+   */
+  private createExerciseVolumeChart(data: ChartData): void {
+    setTimeout(() => {
+      const canvas = document.getElementById('exerciseVolumeChart') as HTMLCanvasElement;
+      if (!canvas) {
+        console.warn('Exercise volume chart canvas not found');
+        return;
+      }
+
+    if (this.exerciseVolumeChart) {
+      this.exerciseVolumeChart.destroy();
+    }
+
+    const config: ChartConfiguration = {
+      type: 'bar',
+      data: data,
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        indexAxis: 'y',
+        plugins: {
+          legend: { display: false },
+          title: {
+            display: true,
+            text: 'Top 10 Ejercicios por Volumen',
+            font: { size: 16, weight: 'bold' as const },
+            color: '#ffffff'
+          }
+        },
+        scales: {
+          x: { ticks: { color: '#ffffff' }, grid: { color: 'rgba(255,255,255,0.1)' } },
+          y: { ticks: { color: '#ffffff' }, grid: { color: 'rgba(255,255,255,0.1)' } }
+        }
+      }
+    };
+
+      this.exerciseVolumeChart = new Chart(canvas, config);
+    }, 50);
+  }
+
+  /**
+   * Create exercise progress chart
+   */
+  private createExerciseProgressChart(data: ChartData): void {
+    setTimeout(() => {
+      const canvas = document.getElementById('exerciseProgressChart') as HTMLCanvasElement;
+      if (!canvas) {
+        console.warn('Exercise progress chart canvas not found');
+        return;
+      }
+
+    if (this.exerciseProgressChart) {
+      this.exerciseProgressChart.destroy();
+    }
+
+    const config: ChartConfiguration = {
+      type: 'line',
+      data: data,
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { 
+            display: true,
+            position: 'top',
+            labels: { color: '#ffffff' }
+          },
+          title: {
+            display: true,
+            text: 'Progreso por Ejercicio',
+            font: { size: 16, weight: 'bold' as const },
+            color: '#ffffff'
+          }
+        },
+        scales: {
+          x: { ticks: { color: '#ffffff' }, grid: { color: 'rgba(255,255,255,0.1)' } },
+          y: { beginAtZero: true, ticks: { color: '#ffffff' }, grid: { color: 'rgba(255,255,255,0.1)' } }
+        }
+      }
+    };
+
+      this.exerciseProgressChart = new Chart(canvas, config);
+    }, 50);
   }
 
   /**
    * Destroy all charts
    */
   private destroyCharts(): void {
-    if (this.workoutsChart) {
-      this.workoutsChart.destroy();
-      this.workoutsChart = null;
-    }
-    if (this.durationChart) {
-      this.durationChart.destroy();
-      this.durationChart = null;
-    }
-    if (this.ratingChart) {
-      this.ratingChart.destroy();
-      this.ratingChart = null;
-    }
+    [this.workoutsChart, this.durationChart, this.volumeChart, 
+     this.muscleGroupChart, this.muscleFrequencyChart, 
+     this.exerciseVolumeChart, this.exerciseProgressChart].forEach(chart => {
+      if (chart) {
+        chart.destroy();
+      }
+    });
   }
 
   /**
@@ -268,4 +482,3 @@ export class ChartsComponent implements OnInit, OnDestroy {
     this.loadCharts();
   }
 }
-

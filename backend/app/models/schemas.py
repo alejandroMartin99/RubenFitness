@@ -80,6 +80,28 @@ class ProgressResponse(BaseModel):
     created_at: datetime
 
 
+# Workout Log Models (detailed workout with exercises and sets)
+class ExerciseSet(BaseModel):
+    """Individual set within an exercise"""
+    reps: int
+    weight: float
+
+
+class ExerciseLog(BaseModel):
+    """Exercise with multiple sets"""
+    name: str
+    sets: List[ExerciseSet]
+
+
+class WorkoutLogRequest(BaseModel):
+    """Detailed workout log request with exercises and sets"""
+    user_id: str
+    date: str  # ISO date string (YYYY-MM-DD)
+    type: str  # Workout type (e.g., "Espalda - Bíceps")
+    notes: Optional[str] = None
+    exercises: List[ExerciseLog]
+
+
 # Sleep Models
 class SleepRecord(BaseModel):
     """Individual sleep record"""

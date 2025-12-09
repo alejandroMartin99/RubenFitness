@@ -34,7 +34,7 @@
             <div class="exercises-header">
               <div class="title-row small">
                 <mat-icon>fitness_center</mat-icon>
-                Ejercicios (mín. 5)
+                Ejercicios (mín. 1)
               </div>
               <button mat-stroked-button color="primary" type="button" (click)="addExercise()">
                 <mat-icon>add</mat-icon>
@@ -189,15 +189,15 @@
         </h3>
 
         <!-- No workouts message -->
-        <mat-card class="empty-state" *ngIf="summary.recentWorkouts.length === 0">
+        <mat-card class="empty-state" *ngIf="!summary.recentWorkouts || summary.recentWorkouts.length === 0">
           <mat-icon>inbox</mat-icon>
           <h4>No workouts yet</h4>
           <p>Start tracking your progress by completing your first workout!</p>
         </mat-card>
 
         <!-- Workouts list -->
-        <div class="workouts-list" *ngIf="summary.recentWorkouts.length > 0">
-          <mat-card class="workout-item" *ngFor="let workout of summary.recentWorkouts">
+        <div class="workouts-list" *ngIf="summary.recentWorkouts && summary.recentWorkouts.length > 0">
+          <mat-card class="workout-item" *ngFor="let workout of summary.recentWorkouts; let i = index">
             <mat-card-content>
               <div class="workout-content">
                 <div class="workout-info">
@@ -208,11 +208,36 @@
                   </p>
                   <p class="workout-duration" *ngIf="workout.durationMinutes">
                     <mat-icon>schedule</mat-icon>
-                    {{ workout.durationMinutes }} minutes
+                    {{ workout.durationMinutes }} minutos
                   </p>
                 </div>
-                <div class="workout-status">
-                  <mat-icon class="success">check_circle</mat-icon>
+                <div class="workout-actions">
+                  <div class="workout-status">
+                    <mat-icon class="success">check_circle</mat-icon>
+                  </div>
+                  <div class="action-buttons">
+                    <button mat-icon-button color="primary" (click)="editWorkout(workout, i)" [class.active]="editingWorkoutIndex === i" matTooltip="Editar entrenamiento">
+                      <mat-icon>edit</mat-icon>
+                    </button>
+                    <button mat-icon-button color="warn" (click)="deleteWorkout(workout, i)" matTooltip="Eliminar entrenamiento">
+                      <mat-icon>delete</mat-icon>
+                    </button>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- Edit note when editing -->
+              <div class="workout-edit-note" *ngIf="editingWorkoutIndex === i">
+                <p>El formulario de arriba se ha poblado con los datos de este entrenamiento. Modifica y guarda para actualizar.</p>
+                <div class="edit-form-actions">
+                  <button mat-raised-button color="primary" (click)="saveEditedWorkout()">
+                    <mat-icon>save</mat-icon>
+                    Guardar cambios
+                  </button>
+                  <button mat-stroked-button (click)="cancelEdit()">
+                    <mat-icon>close</mat-icon>
+                    Cancelar
+                  </button>
                 </div>
               </div>
             </mat-card-content>

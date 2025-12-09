@@ -144,7 +144,7 @@ export interface ChartData {
     label: string;
     data: number[];
     backgroundColor?: string | string[];
-    borderColor?: string;
+    borderColor?: string | string[];
     borderWidth?: number;
     fill?: boolean;
     tension?: number;

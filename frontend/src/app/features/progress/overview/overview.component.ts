@@ -44,6 +44,8 @@ export class OverviewComponent implements OnInit {
   };
 
   selectedMuscles: string[] = [];
+  editingWorkoutIndex: number | null = null;
+  editingWorkout: any = null;
 
   constructor(
     private progressService: ProgressService,
@@ -68,11 +70,22 @@ export class OverviewComponent implements OnInit {
 
     this.progressService.getSummary().subscribe({
       next: (data) => {
+        // Ensure recentWorkouts is always an array
+        if (data && !data.recentWorkouts) {
+          data.recentWorkouts = [];
+        }
         this.summary = data;
         this.loading = false;
       },
       error: (err) => {
         console.error('Error loading progress summary:', err);
+        // Set default empty summary on error
+        this.summary = {
+          userId: '',
+          totalWorkouts: 0,
+          currentStreak: 0,
+          recentWorkouts: []
+        };
         this.loading = false;
       }
     });
@@ -92,7 +105,7 @@ export class OverviewComponent implements OnInit {
       date: [new Date().toISOString().split('T')[0], Validators.required],
       type: [this.workoutTypes[0], Validators.required],
       notes: [''],
-      exercises: this.fb.array(this.defaultExercises(5))
+      exercises: this.fb.array(this.defaultExercises(1))
     });
   }
 
@@ -197,8 +210,11 @@ export class OverviewComponent implements OnInit {
           notes: ''
         });
         this.exercises.clear();
-        this.defaultExercises(5).forEach((ex) => this.exercises.push(ex));
+        this.defaultExercises(1).forEach((ex) => this.exercises.push(ex));
         this.updateMuscles();
+        
+        // Reload progress data to update Recent Workouts
+        this.loadProgress();
       },
       error: (err) => {
         console.error('Error logging workout:', err);
@@ -233,5 +249,89 @@ export class OverviewComponent implements OnInit {
     } else {
       this.selectedMuscles = [];
     }
+  }
+
+  editWorkout(workout: any, index: number): void {
+    this.editingWorkoutIndex = index;
+    
+    // Try to extract workout data from notes or use available data
+    this.editingWorkout = {
+      type: workout.name,
+      date: workout.date,
+      notes: workout.notes || '',
+      workoutId: workout.workoutId
+    };
+    
+    // Populate form with workout data for editing
+    const dateStr = workout.date instanceof Date 
+      ? workout.date.toISOString().split('T')[0]
+      : new Date(workout.date).toISOString().split('T')[0];
+    
+    this.workoutForm.patchValue({
+      date: dateStr,
+      type: workout.name,
+      notes: workout.notes || ''
+    });
+    
+    this.updateMuscles();
+  }
+
+  deleteWorkout(workout: any, index: number): void {
+    if (confirm('¿Estás seguro de que quieres eliminar este entrenamiento?')) {
+      // For now, just remove from the list (backend deletion can be added later)
+      if (this.summary && this.summary.recentWorkouts) {
+        this.summary.recentWorkouts.splice(index, 1);
+        this.summary.totalWorkouts = Math.max(0, this.summary.totalWorkouts - 1);
+      }
+      this.editingWorkoutIndex = null;
+      this.editingWorkout = null;
+    }
+  }
+
+  saveEditedWorkout(): void {
+    if (this.workoutForm.invalid || !this.editingWorkout) return;
+
+    const payload = this.workoutForm.value;
+    const totalVolume = payload.exercises.reduce((acc: number, ex: any) => {
+      const setsVol = (ex.sets || []).reduce(
+        (s: number, st: any) => s + (st.reps || 0) * (st.weight || 0),
+        0
+      );
+      return acc + setsVol;
+    }, 0);
+
+    this.progressService.logWorkout(payload).subscribe({
+      next: () => {
+        this.loadProgress();
+        this.editingWorkoutIndex = null;
+        this.editingWorkout = null;
+        // Reset form
+        this.workoutForm.reset({
+          date: new Date().toISOString().split('T')[0],
+          type: this.workoutTypes[0],
+          notes: ''
+        });
+        this.exercises.clear();
+        this.defaultExercises(1).forEach((ex) => this.exercises.push(ex));
+        this.updateMuscles();
+      },
+      error: (err) => {
+        console.error('Error saving edited workout:', err);
+      }
+    });
+  }
+
+  cancelEdit(): void {
+    this.editingWorkoutIndex = null;
+    this.editingWorkout = null;
+    // Reset form
+    this.workoutForm.reset({
+      date: new Date().toISOString().split('T')[0],
+      type: this.workoutTypes[0],
+      notes: ''
+    });
+    this.exercises.clear();
+    this.defaultExercises(1).forEach((ex) => this.exercises.push(ex));
+    this.updateMuscles();
   }
 }

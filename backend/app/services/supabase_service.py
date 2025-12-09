@@ -326,10 +326,13 @@ class SupabaseService:
             return None
         
         try:
+            # Convert datetime to date for workout_date field
+            workout_date = date.date() if isinstance(date, datetime) else date
+            
             result = self.supabase.table("progress").insert({
                 "user_id": user_id,
                 "workout_id": workout_id,
-                "date": date.isoformat(),
+                "workout_date": workout_date.isoformat() if isinstance(workout_date, date) else workout_date,
                 "notes": notes
             }).execute()
             
@@ -356,7 +359,7 @@ class SupabaseService:
             recent_result = self.supabase.table("progress")\
                 .select("*")\
                 .eq("user_id", user_id)\
-                .order("date", desc=True)\
+                .order("workout_date", desc=True)\
                 .limit(10)\
                 .execute()
             
