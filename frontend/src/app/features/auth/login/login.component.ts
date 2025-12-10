@@ -67,6 +67,7 @@ export class LoginComponent {
    * Handle form submission
    */
   onSubmit(): void {
+    console.log('login submit');
     if (!this.email || !this.password) {
       alert('Please enter email and password');
       return;
@@ -77,8 +78,11 @@ export class LoginComponent {
     this.authService.login({ email: this.email, password: this.password }).subscribe({
       next: (user) => {
         this.loading = false;
-        // Redirect directly to dashboard
-        this.router.navigate(['/dashboard']);
+        // Use the user object directly to check role, as BehaviorSubject might not be updated yet
+        const isAdmin = user.role === 'admin' || user.email === 'admin@ruben.fitness';
+        const target = isAdmin ? '/coach' : '/dashboard';
+        console.log('Login successful, redirecting to:', target, 'User role:', user.role);
+        this.router.navigate([target]);
       },
       error: (err) => {
         this.loading = false;

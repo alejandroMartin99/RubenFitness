@@ -1,0 +1,114 @@
+<div class="coach-page">
+  <header class="page-header">
+    <div>
+      <p class="eyebrow">Panel admin</p>
+      <h1>Seguimiento de usuarios</h1>
+      <p class="subtitle">Revisa entrenos, rachas y composición corporal de cada cliente</p>
+    </div>
+    <div class="actions">
+      <button mat-stroked-button color="primary">Exportar</button>
+      <button mat-flat-button color="primary">Asignar rutina</button>
+    </div>
+  </header>
+
+  <section class="kpi-grid">
+    <div class="kpi-card" *ngFor="let k of kpis">
+      <p class="kpi-label">{{ k.label }}</p>
+      <p class="kpi-value">{{ k.value }}</p>
+      <p class="kpi-trend" *ngIf="k.trend">{{ k.trend }}</p>
+    </div>
+  </section>
+
+  <section class="panel">
+    <div class="panel-header">
+      <div>
+        <h2>Usuarios</h2>
+        <p>Estado general, última sesión y objetivos</p>
+      </div>
+      <mat-form-field appearance="outline" class="search">
+        <mat-label>Buscar</mat-label>
+        <input matInput [(ngModel)]="search" placeholder="Nombre, email, objetivo" />
+        <button *ngIf="search" mat-icon-button matSuffix aria-label="Clear" (click)="search=''">
+          <mat-icon>close</mat-icon>
+        </button>
+      </mat-form-field>
+    </div>
+
+    <div class="table">
+      <div class="table-head">
+        <span>Usuario</span>
+        <span>Último entreno</span>
+        <span>Semana</span>
+        <span>Volumen</span>
+        <span>Racha</span>
+        <span>Peso</span>
+        <span>% Grasa</span>
+        <span>Músculo</span>
+        <span>Objetivos</span>
+      </div>
+      <div class="table-row" *ngFor="let c of filteredClients">
+        <div>
+          <p class="name">{{ c.name }}</p>
+          <p class="muted">{{ c.email }}</p>
+        </div>
+        <div>{{ c.lastWorkout }}</div>
+        <div>{{ c.workoutsWeek }} w/o</div>
+        <div>{{ c.volumeWeek | number:'1.0-0' }} kg</div>
+        <div>{{ c.streak }} días</div>
+        <div>{{ c.weight }} kg</div>
+        <div>{{ c.fat }} %</div>
+        <div>{{ c.muscle }} kg</div>
+        <div class="tags">
+          <span class="tag" *ngFor="let g of c.goals">{{ g }}</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="grid-2">
+    <div class="panel">
+      <div class="panel-header">
+        <div>
+          <h2>Actividad semanal</h2>
+          <p>Workouts y volumen estimado</p>
+        </div>
+      </div>
+      <div class="list">
+        <div class="list-item" *ngFor="let c of filteredClients">
+          <div>
+            <p class="name">{{ c.name }}</p>
+            <p class="muted">{{ c.lastWorkout }}</p>
+          </div>
+          <div class="badges">
+            <span class="pill">{{ c.workoutsWeek }} sesiones</span>
+            <span class="pill">{{ c.volumeWeek | number:'1.0-0' }} kg</span>
+            <span class="pill success">{{ c.streak }} días racha</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-header">
+        <div>
+          <h2>Composición corporal</h2>
+          <p>Última medición por usuario</p>
+        </div>
+      </div>
+      <div class="list">
+        <div class="list-item" *ngFor="let c of filteredClients">
+          <div>
+            <p class="name">{{ c.name }}</p>
+            <p class="muted">Último registro</p>
+          </div>
+          <div class="pill-set">
+            <span class="pill">Peso {{ c.weight }} kg</span>
+            <span class="pill">Grasa {{ c.fat }} %</span>
+            <span class="pill">Músculo {{ c.muscle }} kg</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+

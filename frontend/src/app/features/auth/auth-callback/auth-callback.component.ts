@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { Router, ActivatedRoute } from '@angular/router';
+import { Router } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
 import { SupabaseService } from '../../../core/services/supabase.service';
 
@@ -19,89 +19,84 @@ import { SupabaseService } from '../../../core/services/supabase.service';
       justify-content: center;
       min-height: 100vh;
       gap: 1rem;
+      background: #000;
+      color: #fff;
     }
   `]
 })
 export class AuthCallbackComponent implements OnInit {
   constructor(
     private router: Router,
-    private route: ActivatedRoute,
     private authService: AuthService,
     private supabaseService: SupabaseService
   ) {}
 
   ngOnInit(): void {
-    // Handle OAuth callback from Supabase
     this.handleAuthCallback();
   }
 
   private async handleAuthCallback(): Promise<void> {
     try {
-      // Get the URL hash fragments (Supabase OAuth returns data in hash)
-      const hashParams = new URLSearchParams(window.location.hash.substring(1));
-      const accessToken = hashParams.get('access_token');
-      const error = hashParams.get('error');
-
-      if (error) {
-        console.error('OAuth error:', error);
-        alert(`Authentication failed: ${error}`);
-        this.router.navigate(['/auth/login']);
-        return;
-      }
-
-      // Wait a bit for Supabase to process the session
+      // Wait for Supabase to process the OAuth callback
       await new Promise(resolve => setTimeout(resolve, 500));
 
       // Get the session from Supabase
       const { data: { session }, error: sessionError } = await this.supabaseService.getClient().auth.getSession();
 
-      if (sessionError) {
+      if (sessionError || !session?.user) {
         console.error('Session error:', sessionError);
         this.router.navigate(['/auth/login']);
         return;
       }
 
-      if (session?.user) {
-        // Load user profile to check if setup is needed
-        const userId = session.user.id;
+      const userId = session.user.id;
+      const accessToken = session.access_token;
+
+      // Load user profile through AuthService (it will handle creation if needed)
+      // We need to manually trigger the load since the auth state change might not fire immediately
+      const { data: profile, error: profileError } = await this.supabaseService.getClient()
+        .from('users')
+        .select('*')
+        .eq('id', userId)
+        .single();
+
+      let userRole = 'user';
+      if (profile) {
+        userRole = profile.role || (profile.email === 'admin@ruben.fitness' ? 'admin' : 'user');
+      } else if (profileError && profileError.code === 'PGRST116') {
+        // Profile doesn't exist, create it
+        const email = session.user.email || '';
+        userRole = email === 'admin@ruben.fitness' ? 'admin' : 'user';
         
-        // Check if user profile exists
-        const { data: profile, error: profileError } = await this.supabaseService.getClient()
+        const { error: createError } = await this.supabaseService.getClient()
           .from('users')
-          .select('*')
-          .eq('id', userId)
-          .single();
+          .insert({
+            id: userId,
+            email: email,
+            full_name: session.user.user_metadata?.['full_name'] || session.user.user_metadata?.['name'] || '',
+            role: userRole,
+            fitness_level: 'beginner'
+          });
 
-        // If profile doesn't exist, create a basic one
-        if (profileError && profileError.code === 'PGRST116') {
-          const { error: createError } = await this.supabaseService.getClient()
-            .from('users')
-            .insert({
-              id: userId,
-              email: session.user.email || '',
-              full_name: session.user.user_metadata?.['full_name'] || session.user.user_metadata?.['name'],
-              role: 'user',
-              fitness_level: 'beginner'
-            });
-
-          if (createError) {
-            console.error('Error creating user profile:', createError);
-          }
+        if (createError) {
+          console.error('Error creating user profile:', createError);
         }
-
-        // Small delay to ensure everything is processed
-        await new Promise(resolve => setTimeout(resolve, 300));
-
-        // Redirect directly to dashboard
-        this.router.navigate(['/dashboard']);
-      } else {
-        // No session, redirect to login
-        this.router.navigate(['/auth/login']);
       }
+
+      // Store token
+      if (accessToken) {
+        localStorage.setItem('accessToken', accessToken);
+      }
+
+      // Wait a bit for everything to settle
+      await new Promise(resolve => setTimeout(resolve, 300));
+
+      // Redirect based on role
+      const target = userRole === 'admin' ? '/coach' : '/dashboard';
+      this.router.navigate([target]);
     } catch (error) {
       console.error('Auth callback error:', error);
       this.router.navigate(['/auth/login']);
     }
   }
 }
-

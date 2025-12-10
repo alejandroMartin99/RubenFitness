@@ -1,6 +1,7 @@
 /**
  * Authentication Guard
  * Protects routes that require user authentication
+ * Simplified synchronous check
  */
 
 import { Injectable } from '@angular/core';
@@ -16,18 +17,14 @@ export class AuthGuard implements CanActivate {
     private router: Router
   ) {}
 
-  /**
-   * Check if user can activate the route
-   */
   canActivate(): boolean {
-    if (this.authService.isAuthenticated()) {
-      return true;
-    } else {
-      // Redirect to login if not authenticated
+    const isAuth = this.authService.isAuthenticated();
+    
+    if (!isAuth) {
       this.router.navigate(['/auth/login']);
       return false;
     }
+    
+    return true;
   }
 }
-
-
