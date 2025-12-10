@@ -6,109 +6,396 @@
       <p class="subtitle">Revisa entrenos, rachas y composición corporal de cada cliente</p>
     </div>
     <div class="actions">
-      <button mat-stroked-button color="primary">Exportar</button>
+      <button mat-stroked-button color="primary" (click)="loadData()" [disabled]="loading">
+        <mat-icon>refresh</mat-icon>
+        Actualizar
+      </button>
       <button mat-flat-button color="primary">Asignar rutina</button>
     </div>
   </header>
 
-  <section class="kpi-grid">
-    <div class="kpi-card" *ngFor="let k of kpis">
-      <p class="kpi-label">{{ k.label }}</p>
-      <p class="kpi-value">{{ k.value }}</p>
-      <p class="kpi-trend" *ngIf="k.trend">{{ k.trend }}</p>
-    </div>
-  </section>
+  <div *ngIf="loading" class="loading-container">
+    <mat-spinner></mat-spinner>
+    <p>Cargando datos...</p>
+  </div>
 
-  <section class="panel">
-    <div class="panel-header">
-      <div>
-        <h2>Usuarios</h2>
-        <p>Estado general, última sesión y objetivos</p>
+  <div *ngIf="error && !loading" class="error-container">
+    <mat-icon>error_outline</mat-icon>
+    <p>{{ error }}</p>
+    <button mat-stroked-button (click)="loadData()">Reintentar</button>
+  </div>
+
+  <div *ngIf="!loading && !error">
+    <!-- KPIs Section -->
+    <section class="kpi-grid">
+      <div class="kpi-card" *ngFor="let k of kpis" [class.positive]="k.trendType === 'positive'" [class.negative]="k.trendType === 'negative'">
+        <p class="kpi-label">{{ k.label }}</p>
+        <p class="kpi-value">{{ k.value }}</p>
+        <p class="kpi-trend" *ngIf="k.trend" [class.positive]="k.trendType === 'positive'" [class.negative]="k.trendType === 'negative'">
+          <mat-icon *ngIf="k.trendType === 'positive'">trending_up</mat-icon>
+          <mat-icon *ngIf="k.trendType === 'negative'">trending_down</mat-icon>
+          {{ k.trend }}
+        </p>
       </div>
-      <mat-form-field appearance="outline" class="search">
-        <mat-label>Buscar</mat-label>
-        <input matInput [(ngModel)]="search" placeholder="Nombre, email, objetivo" />
-        <button *ngIf="search" mat-icon-button matSuffix aria-label="Clear" (click)="search=''">
+    </section>
+
+    <!-- Evolution Charts Section -->
+    <section class="charts-grid">
+      <div class="panel chart-panel">
+        <div class="panel-header">
+          <div>
+            <h2>Evolución de workouts</h2>
+            <p>Últimos 30 días</p>
+          </div>
+        </div>
+        <div class="chart-container">
+          <canvas #evolutionChart></canvas>
+        </div>
+      </div>
+
+      <div class="panel chart-panel">
+        <div class="panel-header">
+          <div>
+            <h2>Volumen total diario</h2>
+            <p>Últimos 30 días</p>
+          </div>
+        </div>
+        <div class="chart-container">
+          <canvas #volumeChart></canvas>
+        </div>
+      </div>
+
+      <div class="panel chart-panel">
+        <div class="panel-header">
+          <div>
+            <h2>Usuarios activos</h2>
+            <p>Últimos 30 días</p>
+          </div>
+        </div>
+        <div class="chart-container">
+          <canvas #usersChart></canvas>
+        </div>
+      </div>
+    </section>
+
+    <!-- Users Table Section -->
+    <section class="panel">
+      <div class="panel-header">
+        <div>
+          <h2>Usuarios</h2>
+          <p>Estado general, última sesión y objetivos</p>
+        </div>
+        <div class="search-wrapper">
+          <input 
+            type="text" 
+            class="search-input" 
+            [(ngModel)]="search" 
+            placeholder="Buscar por nombre, email u objetivo..." 
+          />
+          <mat-icon class="search-icon">search</mat-icon>
+          <button *ngIf="search" class="search-clear" (click)="search=''" aria-label="Clear">
+            <mat-icon>close</mat-icon>
+          </button>
+        </div>
+      </div>
+
+      <div class="table">
+        <div class="table-head">
+          <span>Usuario</span>
+          <span>Último entreno</span>
+          <span>Semana</span>
+          <span>Volumen</span>
+          <span>Racha</span>
+          <span>Peso</span>
+          <span>% Grasa</span>
+          <span>Músculo</span>
+          <span>Objetivos</span>
+          <span>Acciones</span>
+        </div>
+        <div class="table-row clickable-row" *ngFor="let c of filteredClients" (click)="viewClientDetails(c)">
+          <div>
+            <p class="name clickable">{{ c.name }}</p>
+            <p class="muted">{{ c.email }}</p>
+          </div>
+          <div>
+            <span>{{ c.lastWorkout }}</span>
+            <span class="trend-badge positive" *ngIf="c.workoutsTrend > 0">
+              <mat-icon>trending_up</mat-icon> {{ c.workoutsTrend }}%
+            </span>
+            <span class="trend-badge negative" *ngIf="c.workoutsTrend < 0">
+              <mat-icon>trending_down</mat-icon> {{ Math.abs(c.workoutsTrend) }}%
+            </span>
+          </div>
+          <div>{{ c.workoutsWeek }} w/o</div>
+          <div>
+            <span>{{ formatVolume(c.volumeWeek) }} kg</span>
+            <span class="trend-badge positive" *ngIf="c.volumeTrend > 0">
+              <mat-icon>trending_up</mat-icon>
+            </span>
+            <span class="trend-badge negative" *ngIf="c.volumeTrend < 0">
+              <mat-icon>trending_down</mat-icon>
+            </span>
+          </div>
+          <div>
+            <span class="streak-badge" [class.active]="c.streak > 0">{{ c.streak }} días</span>
+            <span class="muted small" *ngIf="c.longestStreak > c.streak">Récord: {{ c.longestStreak }}</span>
+          </div>
+          <div>{{ c.weight ? formatNumber(c.weight) + ' kg' : '-' }}</div>
+          <div>{{ c.fat ? formatNumber(c.fat) + ' %' : '-' }}</div>
+          <div>{{ c.muscle ? formatNumber(c.muscle) + ' kg' : '-' }}</div>
+          <div class="tags">
+            <span class="tag" *ngFor="let g of c.goals">{{ g }}</span>
+            <span class="tag muted" *ngIf="c.goals.length === 0">Sin objetivos</span>
+          </div>
+          <div class="actions-cell">
+            <button mat-icon-button [matMenuTriggerFor]="menu" color="primary" title="Acciones">
+              <mat-icon>more_vert</mat-icon>
+            </button>
+            <mat-menu #menu="matMenu">
+              <button mat-menu-item (click)="openWhatsApp(c)">
+                <mat-icon>chat</mat-icon>
+                <span>WhatsApp</span>
+              </button>
+              <button mat-menu-item (click)="viewClientDetails(c)">
+                <mat-icon>visibility</mat-icon>
+                <span>Ver detalles</span>
+              </button>
+              <button mat-menu-item>
+                <mat-icon>edit</mat-icon>
+                <span>Editar</span>
+              </button>
+            </mat-menu>
+          </div>
+        </div>
+        <div class="table-empty" *ngIf="filteredClients.length === 0">
+          <mat-icon>search_off</mat-icon>
+          <p>No se encontraron usuarios</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Activity and Body Composition Grid -->
+    <section class="grid-2">
+      <div class="panel">
+        <div class="panel-header">
+          <div>
+            <h2>Actividad semanal</h2>
+            <p>Workouts y volumen estimado</p>
+          </div>
+        </div>
+        <div class="list">
+          <div class="list-item" *ngFor="let c of filteredClients">
+            <div>
+              <p class="name">{{ c.name }}</p>
+              <p class="muted">{{ c.lastWorkout }}</p>
+            </div>
+            <div class="badges">
+              <span class="pill">{{ c.workoutsWeek }} sesiones</span>
+              <span class="pill">{{ formatVolume(c.volumeWeek) }} kg</span>
+              <span class="pill success" *ngIf="c.streak > 0">{{ c.streak }} días racha</span>
+              <span class="pill" *ngIf="c.streak === 0">Sin racha</span>
+            </div>
+          </div>
+          <div class="list-empty" *ngIf="filteredClients.length === 0">
+            <p>No hay datos</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-header">
+          <div>
+            <h2>Composición corporal</h2>
+            <p>Última medición por usuario</p>
+          </div>
+        </div>
+        <div class="list">
+          <div class="list-item" *ngFor="let c of filteredClients">
+            <div>
+              <p class="name">{{ c.name }}</p>
+              <p class="muted">Último registro</p>
+            </div>
+            <div class="pill-set">
+              <span class="pill" *ngIf="c.weight">Peso {{ formatNumber(c.weight) }} kg</span>
+              <span class="pill" *ngIf="c.fat">Grasa {{ formatNumber(c.fat) }} %</span>
+              <span class="pill" *ngIf="c.muscle">Músculo {{ formatNumber(c.muscle) }} kg</span>
+              <span class="pill muted" *ngIf="!c.weight && !c.fat && !c.muscle">Sin datos</span>
+            </div>
+          </div>
+          <div class="list-empty" *ngIf="filteredClients.length === 0">
+            <p>No hay datos</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- Client Details Dialog -->
+  <div class="client-details-overlay" *ngIf="selectedClient" (click)="closeClientDetails()">
+    <div class="client-details-panel" (click)="$event.stopPropagation()">
+      <div class="details-header">
+        <h2>{{ selectedClient.name }}</h2>
+        <button mat-icon-button (click)="closeClientDetails()">
           <mat-icon>close</mat-icon>
         </button>
-      </mat-form-field>
-    </div>
+      </div>
+      <div *ngIf="loadingDetails" class="details-loading">
+        <mat-spinner diameter="40"></mat-spinner>
+        <p>Cargando detalles...</p>
+      </div>
 
-    <div class="table">
-      <div class="table-head">
-        <span>Usuario</span>
-        <span>Último entreno</span>
-        <span>Semana</span>
-        <span>Volumen</span>
-        <span>Racha</span>
-        <span>Peso</span>
-        <span>% Grasa</span>
-        <span>Músculo</span>
-        <span>Objetivos</span>
-      </div>
-      <div class="table-row" *ngFor="let c of filteredClients">
-        <div>
-          <p class="name">{{ c.name }}</p>
-          <p class="muted">{{ c.email }}</p>
+      <div class="details-content" *ngIf="!loadingDetails">
+        <!-- Contact Section -->
+        <div class="detail-section">
+          <h3>
+            <mat-icon>contact_mail</mat-icon>
+            Información de contacto
+          </h3>
+          <div class="contact-info">
+            <div class="info-item">
+              <mat-icon>email</mat-icon>
+              <span>{{ selectedClient.email }}</span>
+            </div>
+            <div class="info-item" *ngIf="selectedClient.phone">
+              <mat-icon>phone</mat-icon>
+              <span>{{ selectedClient.phone }}</span>
+            </div>
+            <button mat-stroked-button color="primary" (click)="openWhatsApp(selectedClient)" *ngIf="selectedClient.phone" class="whatsapp-btn">
+              <mat-icon>chat</mat-icon>
+              Contactar por WhatsApp
+            </button>
+            <p class="muted small" *ngIf="!selectedClient.phone">No hay teléfono registrado</p>
+          </div>
         </div>
-        <div>{{ c.lastWorkout }}</div>
-        <div>{{ c.workoutsWeek }} w/o</div>
-        <div>{{ c.volumeWeek | number:'1.0-0' }} kg</div>
-        <div>{{ c.streak }} días</div>
-        <div>{{ c.weight }} kg</div>
-        <div>{{ c.fat }} %</div>
-        <div>{{ c.muscle }} kg</div>
-        <div class="tags">
-          <span class="tag" *ngFor="let g of c.goals">{{ g }}</span>
-        </div>
-      </div>
-    </div>
-  </section>
 
-  <section class="grid-2">
-    <div class="panel">
-      <div class="panel-header">
-        <div>
-          <h2>Actividad semanal</h2>
-          <p>Workouts y volumen estimado</p>
-        </div>
-      </div>
-      <div class="list">
-        <div class="list-item" *ngFor="let c of filteredClients">
-          <div>
-            <p class="name">{{ c.name }}</p>
-            <p class="muted">{{ c.lastWorkout }}</p>
+        <!-- Stats Section -->
+        <div class="detail-section">
+          <h3>
+            <mat-icon>bar_chart</mat-icon>
+            Estadísticas de entrenamiento
+          </h3>
+          <div class="stats-grid">
+            <div class="stat-card">
+              <span class="stat-label">Workouts esta semana</span>
+              <span class="stat-value">{{ selectedClient.workoutsWeek }}</span>
+              <span class="stat-trend positive" *ngIf="selectedClient.workoutsTrend > 0">
+                <mat-icon>trending_up</mat-icon> +{{ selectedClient.workoutsTrend }}%
+              </span>
+              <span class="stat-trend negative" *ngIf="selectedClient.workoutsTrend < 0">
+                <mat-icon>trending_down</mat-icon> {{ selectedClient.workoutsTrend }}%
+              </span>
+            </div>
+            <div class="stat-card">
+              <span class="stat-label">Volumen semanal</span>
+              <span class="stat-value">{{ formatVolume(selectedClient.volumeWeek) }} kg</span>
+              <span class="stat-trend positive" *ngIf="selectedClient.volumeTrend > 0">
+                <mat-icon>trending_up</mat-icon> +{{ selectedClient.volumeTrend }}%
+              </span>
+              <span class="stat-trend negative" *ngIf="selectedClient.volumeTrend < 0">
+                <mat-icon>trending_down</mat-icon> {{ selectedClient.volumeTrend }}%
+              </span>
+            </div>
+            <div class="stat-card">
+              <span class="stat-label">Workouts este mes</span>
+              <span class="stat-value">{{ selectedClient.monthlyWorkouts }}</span>
+            </div>
+            <div class="stat-card">
+              <span class="stat-label">Volumen mensual</span>
+              <span class="stat-value">{{ formatVolume(selectedClient.monthlyVolume) }} kg</span>
+            </div>
+            <div class="stat-card">
+              <span class="stat-label">Racha actual</span>
+              <span class="stat-value">{{ selectedClient.streak }} días</span>
+              <span class="stat-badge success" *ngIf="selectedClient.streak > 0">Activa</span>
+            </div>
+            <div class="stat-card">
+              <span class="stat-label">Racha récord</span>
+              <span class="stat-value">{{ selectedClient.longestStreak }} días</span>
+            </div>
+            <div class="stat-card">
+              <span class="stat-label">Último entrenamiento</span>
+              <span class="stat-value">{{ selectedClient.lastWorkout }}</span>
+            </div>
+            <div class="stat-card">
+              <span class="stat-label">Nivel de fitness</span>
+              <span class="stat-value">{{ selectedClient.fitnessLevel }}</span>
+            </div>
           </div>
-          <div class="badges">
-            <span class="pill">{{ c.workoutsWeek }} sesiones</span>
-            <span class="pill">{{ c.volumeWeek | number:'1.0-0' }} kg</span>
-            <span class="pill success">{{ c.streak }} días racha</span>
-          </div>
         </div>
-      </div>
-    </div>
 
-    <div class="panel">
-      <div class="panel-header">
-        <div>
-          <h2>Composición corporal</h2>
-          <p>Última medición por usuario</p>
-        </div>
-      </div>
-      <div class="list">
-        <div class="list-item" *ngFor="let c of filteredClients">
-          <div>
-            <p class="name">{{ c.name }}</p>
-            <p class="muted">Último registro</p>
+        <!-- Body Composition History -->
+        <div class="detail-section" *ngIf="clientDetails?.bodyComposition && clientDetails.bodyComposition.length > 0">
+          <h3>
+            <mat-icon>fitness_center</mat-icon>
+            Evolución composición corporal
+          </h3>
+          <div class="body-comp-history">
+            <div class="body-comp-item" *ngFor="let comp of clientDetails.bodyComposition.slice(0, 5)">
+              <div class="comp-date">{{ comp.date | date:'dd/MM/yyyy' }}</div>
+              <div class="comp-values">
+                <span *ngIf="comp.weight">Peso: {{ formatNumber(comp.weight) }} kg</span>
+                <span *ngIf="comp.fat">Grasa: {{ formatNumber(comp.fat) }} %</span>
+                <span *ngIf="comp.muscle">Músculo: {{ formatNumber(comp.muscle) }} kg</span>
+              </div>
+            </div>
           </div>
-          <div class="pill-set">
-            <span class="pill">Peso {{ c.weight }} kg</span>
-            <span class="pill">Grasa {{ c.fat }} %</span>
-            <span class="pill">Músculo {{ c.muscle }} kg</span>
+        </div>
+
+        <!-- Current Body Composition -->
+        <div class="detail-section">
+          <h3>
+            <mat-icon>straighten</mat-icon>
+            Composición corporal actual
+          </h3>
+          <div class="body-comp-grid">
+            <div class="body-comp-card">
+              <span class="label">Peso</span>
+              <span class="value">{{ selectedClient.weight ? formatNumber(selectedClient.weight) + ' kg' : 'Sin datos' }}</span>
+            </div>
+            <div class="body-comp-card">
+              <span class="label">% Grasa</span>
+              <span class="value">{{ selectedClient.fat ? formatNumber(selectedClient.fat) + ' %' : 'Sin datos' }}</span>
+            </div>
+            <div class="body-comp-card">
+              <span class="label">Músculo</span>
+              <span class="value">{{ selectedClient.muscle ? formatNumber(selectedClient.muscle) + ' kg' : 'Sin datos' }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Recent Workouts -->
+        <div class="detail-section" *ngIf="clientDetails?.workouts && clientDetails.workouts.length > 0">
+          <h3>
+            <mat-icon>history</mat-icon>
+            Últimos entrenamientos
+          </h3>
+          <div class="workouts-list">
+            <div class="workout-item" *ngFor="let workout of clientDetails.workouts.slice(0, 10)">
+              <div class="workout-date">{{ workout.workout_date | date:'dd/MM/yyyy' }}</div>
+              <div class="workout-info">
+                <span class="workout-type" *ngIf="workout.notes">
+                  {{ workout.notes | json | slice:0:50 }}
+                </span>
+                <span class="workout-volume" *ngIf="workout.total_volume">
+                  Volumen: {{ formatVolume(workout.total_volume) }} kg
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Goals Section -->
+        <div class="detail-section">
+          <h3>
+            <mat-icon>flag</mat-icon>
+            Objetivos
+          </h3>
+          <div class="tags">
+            <span class="tag" *ngFor="let g of selectedClient.goals">{{ g }}</span>
+            <span class="tag muted" *ngIf="selectedClient.goals.length === 0">Sin objetivos definidos</span>
           </div>
         </div>
       </div>
     </div>
-  </section>
+  </div>
 </div>
-
