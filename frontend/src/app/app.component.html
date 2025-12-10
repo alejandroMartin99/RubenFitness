@@ -69,13 +69,9 @@
     </mat-sidenav-content>
   </mat-sidenav-container>
   <ng-template #noauth>
-    <!-- Toolbar for unauthenticated state -->
-    <mat-toolbar color="primary" class="navbar">
-      <span class="navbar-title">{{ title }}</span>
-    </mat-toolbar>
-    <main class="main-content">
+    <div class="auth-shell">
       <router-outlet></router-outlet>
-    </main>
+    </div>
   </ng-template>
 </div>
 
