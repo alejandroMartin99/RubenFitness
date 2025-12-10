@@ -274,7 +274,8 @@ async def get_all_users():
 @router.get("/admin/user/{user_id}/details")
 async def get_user_details(user_id: str):
     """
-    Get detailed insights for a specific user
+    Get comprehensive details for a specific user
+    Returns ALL data from all tables for complete insights
     """
     try:
         if not supabase_service.is_connected():
@@ -292,39 +293,104 @@ async def get_user_details(user_id: str):
 
         user = user_result.data
 
-        # Get all progress
+        # Get complete profile
+        try:
+            profile_result = supabase_service.supabase.table("user_profiles")\
+                .select("*")\
+                .eq("user_id", user_id)\
+                .single()\
+                .execute()
+            profile = profile_result.data if profile_result.data else {}
+        except Exception as e:
+            # Profile doesn't exist, use empty dict
+            profile = {}
+
+        # Get ALL progress records with full details
         progress_result = supabase_service.supabase.table("progress")\
             .select("*")\
             .eq("user_id", user_id)\
             .order("workout_date", desc=True)\
-            .limit(50)\
             .execute()
         workouts = progress_result.data if progress_result.data else []
 
         # Get streak
-        streak_result = supabase_service.supabase.table("streaks")\
-            .select("*")\
-            .eq("user_id", user_id)\
-            .single()\
-            .execute()
-        streak = streak_result.data if streak_result.data else {}
+        try:
+            streak_result = supabase_service.supabase.table("streaks")\
+                .select("*")\
+                .eq("user_id", user_id)\
+                .single()\
+                .execute()
+            streak = streak_result.data if streak_result.data else {}
+        except Exception as e:
+            # Streak doesn't exist, use empty dict
+            streak = {}
 
-        # Get body composition history
+        # Get ALL body composition history
         body_comp_result = supabase_service.supabase.table("body_composition")\
             .select("*")\
             .eq("user_id", user_id)\
             .order("date", desc=True)\
-            .limit(30)\
             .execute()
         body_comp_history = body_comp_result.data if body_comp_result.data else []
 
-        # Get profile
-        profile_result = supabase_service.supabase.table("user_profiles")\
+        # Get progress photos
+        photos_result = supabase_service.supabase.table("progress_photos")\
             .select("*")\
             .eq("user_id", user_id)\
-            .single()\
+            .order("taken_at", desc=True)\
             .execute()
-        profile = profile_result.data if profile_result.data else {}
+        photos = photos_result.data if photos_result.data else []
+
+        # Get achievements
+        achievements_result = supabase_service.supabase.table("achievements")\
+            .select("*")\
+            .eq("user_id", user_id)\
+            .order("unlocked_at", desc=True)\
+            .execute()
+        achievements = achievements_result.data if achievements_result.data else []
+
+        # Get daily health data (last 30 days)
+        today = date.today()
+        month_start = today - timedelta(days=30)
+        health_result = supabase_service.supabase.table("daily_health_data")\
+            .select("*")\
+            .eq("user_id", user_id)\
+            .gte("date", month_start.isoformat())\
+            .order("date", desc=True)\
+            .execute()
+        health_data = health_result.data if health_result.data else []
+
+        # Get workout days (calendar marks)
+        workout_days_result = supabase_service.supabase.table("workout_days")\
+            .select("*")\
+            .eq("user_id", user_id)\
+            .order("date", desc=True)\
+            .limit(90)\
+            .execute()
+        workout_days = workout_days_result.data if workout_days_result.data else []
+
+        # Get habits
+        habits_result = supabase_service.supabase.table("habits")\
+            .select("*")\
+            .eq("user_id", user_id)\
+            .execute()
+        habits = habits_result.data if habits_result.data else []
+
+        # Get habit logs (last 30 days)
+        habit_logs_result = supabase_service.supabase.table("habit_logs")\
+            .select("*, habits(*)")\
+            .eq("user_id", user_id)\
+            .gte("log_date", month_start.isoformat())\
+            .order("log_date", desc=True)\
+            .execute()
+        habit_logs = habit_logs_result.data if habit_logs_result.data else []
+
+        # Get chat conversations count
+        conversations_result = supabase_service.supabase.table("chat_conversations")\
+            .select("id", count="exact")\
+            .eq("user_id", user_id)\
+            .execute()
+        conversations_count = conversations_result.count if hasattr(conversations_result, 'count') else 0
 
         return {
             "success": True,
@@ -332,7 +398,14 @@ async def get_user_details(user_id: str):
             "profile": profile,
             "workouts": workouts,
             "streak": streak,
-            "bodyComposition": body_comp_history
+            "bodyComposition": body_comp_history,
+            "photos": photos,
+            "achievements": achievements,
+            "healthData": health_data,
+            "workoutDays": workout_days,
+            "habits": habits,
+            "habitLogs": habit_logs,
+            "conversationsCount": conversations_count
         }
 
     except HTTPException:

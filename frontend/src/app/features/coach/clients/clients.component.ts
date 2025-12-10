@@ -1,4 +1,5 @@
 import { Component, OnInit, AfterViewInit, OnDestroy, ViewChild, ElementRef } from '@angular/core';
+import { Router } from '@angular/router';
 import { CoachService, ClientKpi, ClientRow, AdminDashboardData } from '../../../core/services/coach.service';
 import { Chart, ChartConfiguration, registerables } from 'chart.js';
 import { Subject } from 'rxjs';
@@ -34,7 +35,10 @@ export class ClientsComponent implements OnInit, AfterViewInit, OnDestroy {
 
   private destroy$ = new Subject<void>();
 
-  constructor(private coachService: CoachService) {}
+  constructor(
+    private coachService: CoachService,
+    private router: Router
+  ) {}
 
   ngOnInit(): void {
     this.loadData();
@@ -268,28 +272,7 @@ export class ClientsComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   viewClientDetails(client: ClientRow): void {
-    this.selectedClient = client;
-    this.loadingDetails = true;
-    this.clientDetails = null;
-
-    this.coachService.getUserDetails(client.id)
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: (data) => {
-          if (data.success) {
-            this.clientDetails = data;
-          }
-          this.loadingDetails = false;
-        },
-        error: (err) => {
-          console.error('Error loading client details:', err);
-          this.loadingDetails = false;
-        }
-      });
-  }
-
-  closeClientDetails(): void {
-    this.selectedClient = null;
-    this.clientDetails = null;
+    // Navigate to dedicated details page
+    this.router.navigate(['/coach/client', client.id]);
   }
 }
