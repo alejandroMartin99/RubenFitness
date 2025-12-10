@@ -105,14 +105,25 @@ Para verificar que es la clave anon, puedes decodificar el JWT en [jwt.io](https
 2. Si hay un deployment reciente, haz clic en los **3 puntos** > **Redeploy** para aplicar los cambios
 3. O espera al próximo deployment automático
 
-#### Paso 5: Verificar en el Código
+#### Paso 5: Verificar que SUPABASE_ANON_KEY tiene Prioridad
 
-El código en `frontend/scripts/generate-env.js` ya está configurado para leer `SUPABASE_ANON_KEY` de las variables de entorno de Vercel y generar los archivos `environment.prod.ts` automáticamente.
+El código en `frontend/scripts/generate-env.js` busca las variables en este orden:
+1. `SUPABASE_ANON_KEY` ✅ (prioridad)
+2. `SUPABASE_KEY` (fallback)
 
 **⚠️ IMPORTANTE:** 
+- Asegúrate de que `SUPABASE_ANON_KEY` tenga la clave **anon** (pública)
+- Si también tienes `SUPABASE_KEY`, verifica que no sea la service_role
+- **Recomendación:** Elimina `SUPABASE_KEY` de Vercel para evitar confusión, o asegúrate de que también tenga la clave anon
 - El frontend **SIEMPRE** debe usar la clave **anon** (pública)
 - La **service_role** solo debe usarse en el backend (Render)
 - Nunca expongas la service_role en el frontend
+
+#### Paso 6: Verificar después del Deployment
+
+Después de hacer redeploy, verifica que el archivo generado `environment.prod.ts` tenga la clave anon correcta:
+- Debe tener `"role":"anon"` en el JWT (puedes verificar en [jwt.io](https://jwt.io))
+- NO debe tener `"role":"service_role"`
 
 ### 4. Verificar el Código
 

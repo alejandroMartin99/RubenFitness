@@ -4,10 +4,12 @@ Application entry point for the Rubén Fitness Backend API
 """
 
 import os
+from datetime import datetime
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.api.v1 import chat, progress, auth, sleep, water, workout, profile, motivation, admin
 from app.core.config import settings
+from app.services.supabase_service import supabase_service
 
 # Initialize FastAPI app
 app = FastAPI(
@@ -19,9 +21,17 @@ app = FastAPI(
 # Configure CORS to allow frontend requests
 # In development, use explicit origins; in production, allow all origins
 cors_origins = settings.CORS_ORIGINS
-if os.getenv("ENVIRONMENT") == "production":
+
+# Check if we're in production
+is_production = os.getenv("ENVIRONMENT") == "production" or os.getenv("ENV") == "production"
+
+if is_production:
     # In production, allow all origins for easier deployment
+    # This allows requests from any Vercel deployment (production, preview, etc.)
     cors_origins = ["*"]
+    print(f"[CORS] Production mode: Allowing all origins")
+else:
+    print(f"[CORS] Development mode: Allowing origins: {cors_origins}")
 
 app.add_middleware(
     CORSMiddleware,
@@ -57,5 +67,18 @@ async def root():
 async def health_check():
     """Health check endpoint"""
     return {"status": "healthy"}
+
+
+@app.get("/test")
+async def test():
+    """Test endpoint for debugging and verification"""
+    return {
+        "status": "ok",
+        "message": "Backend is working correctly",
+        "environment": os.getenv("ENVIRONMENT", "development"),
+        "cors_origins": cors_origins if not is_production else ["*"],
+        "supabase_connected": supabase_service.is_connected() if hasattr(supabase_service, 'is_connected') else False,
+        "timestamp": datetime.now().isoformat()
+    }
 
 

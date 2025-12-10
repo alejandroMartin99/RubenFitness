@@ -21,7 +21,14 @@ class Settings(BaseSettings):
     DEBUG: bool = False
     
     # CORS - defaults (can be overridden by environment variable)
-    CORS_ORIGINS: List[str] = ["http://localhost:4200", "http://localhost:3000"]
+    # In production, this will be overridden to ["*"] in main.py
+    # You can also set CORS_ORIGINS environment variable as comma-separated list
+    CORS_ORIGINS: List[str] = [
+        "http://localhost:4200",
+        "http://localhost:3000",
+        "https://ruben-fitness.vercel.app",
+        "https://*.vercel.app"  # Allow all Vercel preview deployments
+    ]
     
     # Supabase Configuration
     SUPABASE_URL: str = "https://nymrsnhnzcagvwwnkyno.supabase.co"
