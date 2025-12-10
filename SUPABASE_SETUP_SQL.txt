@@ -162,7 +162,106 @@ BEGIN
 END$$;
 
 -- =====================================================
--- 9. CHAT MESSAGES TABLE
+-- 9. ACHIEVEMENTS TABLE
+-- =====================================================
+CREATE TABLE IF NOT EXISTS public.achievements (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID REFERENCES public.users(id) ON DELETE CASCADE,
+  type TEXT NOT NULL,
+  title TEXT NOT NULL,
+  description TEXT NOT NULL,
+  icon TEXT,
+  unlocked_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  progress INTEGER,
+  target INTEGER,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  UNIQUE(user_id, type)
+);
+
+-- =====================================================
+-- 10. STREAKS TABLE
+-- =====================================================
+CREATE TABLE IF NOT EXISTS public.streaks (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID REFERENCES public.users(id) ON DELETE CASCADE UNIQUE,
+  current_streak INTEGER DEFAULT 0,
+  longest_streak INTEGER DEFAULT 0,
+  last_workout_date DATE,
+  weekly_streak INTEGER DEFAULT 0,
+  monthly_streak INTEGER DEFAULT 0,
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- =====================================================
+-- 11. PROGRESS PHOTOS TABLE
+-- =====================================================
+CREATE TABLE IF NOT EXISTS public.progress_photos (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID REFERENCES public.users(id) ON DELETE CASCADE,
+  photo_type TEXT NOT NULL CHECK (photo_type IN ('before', 'after')),
+  photo_url TEXT NOT NULL,
+  thumbnail_url TEXT,
+  taken_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  notes TEXT,
+  measurements JSONB,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- =====================================================
+-- 12. CHAT CONVERSATIONS TABLE
+-- =====================================================
+CREATE TABLE IF NOT EXISTS public.chat_conversations (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID NOT NULL REFERENCES public.users(id) ON DELETE CASCADE,
+  title TEXT NOT NULL DEFAULT 'Nuevo chat',
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- Add conversation_id to chat_messages if not exists
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_schema = 'public'
+      AND table_name = 'chat_messages'
+      AND column_name = 'conversation_id'
+  ) THEN
+    ALTER TABLE public.chat_messages
+      ADD COLUMN conversation_id UUID NULL REFERENCES public.chat_conversations(id) ON DELETE CASCADE;
+    CREATE INDEX IF NOT EXISTS idx_chat_messages_conversation_id ON public.chat_messages(conversation_id);
+  END IF;
+END $$;
+
+-- =====================================================
+-- 13. DAILY HEALTH DATA (sleep/water)
+-- =====================================================
+CREATE TABLE IF NOT EXISTS public.daily_health_data (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID REFERENCES public.users(id) ON DELETE CASCADE,
+  date DATE NOT NULL,
+  sleep_hours DECIMAL(4, 2) DEFAULT 0,
+  water_ml INTEGER DEFAULT 0,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  UNIQUE(user_id, date)
+);
+
+-- =====================================================
+-- 14. WORKOUT DAYS TABLE (calendar marks)
+-- =====================================================
+CREATE TABLE IF NOT EXISTS public.workout_days (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID REFERENCES public.users(id) ON DELETE CASCADE,
+  date DATE NOT NULL,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  UNIQUE(user_id, date)
+);
+
+-- =====================================================
+-- 15. CHAT MESSAGES TABLE
 -- =====================================================
 CREATE TABLE IF NOT EXISTS public.chat_messages (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -175,7 +274,7 @@ CREATE TABLE IF NOT EXISTS public.chat_messages (
 );
 
 -- =====================================================
--- 10. HABITS TABLE
+-- 16. HABITS TABLE
 -- =====================================================
 CREATE TABLE IF NOT EXISTS public.habits (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -188,7 +287,7 @@ CREATE TABLE IF NOT EXISTS public.habits (
 );
 
 -- =====================================================
--- 11. HABIT LOGS TABLE
+-- 17. HABIT LOGS TABLE
 -- =====================================================
 CREATE TABLE IF NOT EXISTS public.habit_logs (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -202,7 +301,7 @@ CREATE TABLE IF NOT EXISTS public.habit_logs (
 );
 
 -- =====================================================
--- 12. COACH CLIENTS TABLE
+-- 18. COACH CLIENTS TABLE
 -- =====================================================
 CREATE TABLE IF NOT EXISTS public.coach_clients (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -215,7 +314,7 @@ CREATE TABLE IF NOT EXISTS public.coach_clients (
 );
 
 -- =====================================================
--- 13. INDEXES
+-- 19. INDEXES
 -- =====================================================
 CREATE INDEX IF NOT EXISTS idx_users_email ON public.users(email);
 CREATE INDEX IF NOT EXISTS idx_users_role ON public.users(role);
@@ -223,13 +322,23 @@ CREATE INDEX IF NOT EXISTS idx_workouts_user_id ON public.workouts(user_id);
 CREATE INDEX IF NOT EXISTS idx_exercises_workout_id ON public.exercises(workout_id);
 CREATE INDEX IF NOT EXISTS idx_progress_user_id ON public.progress(user_id);
 CREATE INDEX IF NOT EXISTS idx_body_comp_user_date ON public.body_composition(user_id, date);
+CREATE INDEX IF NOT EXISTS idx_achievements_user_id ON public.achievements(user_id);
+CREATE INDEX IF NOT EXISTS idx_achievements_type ON public.achievements(type);
+CREATE INDEX IF NOT EXISTS idx_streaks_user_id ON public.streaks(user_id);
+CREATE INDEX IF NOT EXISTS idx_progress_photos_user_id ON public.progress_photos(user_id);
+CREATE INDEX IF NOT EXISTS idx_progress_photos_type ON public.progress_photos(photo_type);
+CREATE INDEX IF NOT EXISTS idx_progress_photos_taken_at ON public.progress_photos(taken_at);
+CREATE INDEX IF NOT EXISTS idx_daily_health_data_user_id ON public.daily_health_data(user_id);
+CREATE INDEX IF NOT EXISTS idx_daily_health_data_date ON public.daily_health_data(date);
+CREATE INDEX IF NOT EXISTS idx_workout_days_user_id ON public.workout_days(user_id);
+CREATE INDEX IF NOT EXISTS idx_workout_days_date ON public.workout_days(date);
 CREATE INDEX IF NOT EXISTS idx_chat_messages_user_id ON public.chat_messages(user_id);
 CREATE INDEX IF NOT EXISTS idx_habits_user_id ON public.habits(user_id);
 CREATE INDEX IF NOT EXISTS idx_habit_logs_user_id ON public.habit_logs(user_id);
 CREATE INDEX IF NOT EXISTS idx_coach_clients_coach_id ON public.coach_clients(coach_id);
 
 -- =====================================================
--- 14. ROW LEVEL SECURITY
+-- 20. ROW LEVEL SECURITY
 -- =====================================================
 ALTER TABLE public.users ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.user_profiles ENABLE ROW LEVEL SECURITY;
@@ -237,13 +346,19 @@ ALTER TABLE public.workouts ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.exercises ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.progress ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.body_composition ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.achievements ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.streaks ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.progress_photos ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.chat_conversations ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.chat_messages ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.habits ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.habit_logs ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.coach_clients ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.daily_health_data ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.workout_days ENABLE ROW LEVEL SECURITY;
 
 -- =====================================================
--- 15. RLS POLICIES - USERS
+-- 21. RLS POLICIES - USERS
 -- =====================================================
 DROP POLICY IF EXISTS "Users can view own data" ON public.users;
 CREATE POLICY "Users can view own data" ON public.users FOR SELECT USING (auth.uid() = id);
@@ -259,43 +374,107 @@ DROP POLICY IF EXISTS "Admins can view all users" ON public.users;
 -- Admins will use the service_role key for admin operations
 
 -- =====================================================
--- 16. RLS POLICIES - USER PROFILES
+-- 22. RLS POLICIES - USER PROFILES
 -- =====================================================
 DROP POLICY IF EXISTS "Users can manage own user_profiles" ON public.user_profiles;
 CREATE POLICY "Users can manage own user_profiles" ON public.user_profiles FOR ALL USING (auth.uid() = user_id);
 
 -- =====================================================
--- 17. RLS POLICIES - WORKOUTS
+-- 23. RLS POLICIES - WORKOUTS
 -- =====================================================
 DROP POLICY IF EXISTS "Users can manage own workouts" ON public.workouts;
 CREATE POLICY "Users can manage own workouts" ON public.workouts FOR ALL USING (auth.uid() = user_id);
 
 -- =====================================================
--- 18. RLS POLICIES - EXERCISES
+-- 24. RLS POLICIES - EXERCISES
 -- =====================================================
 DROP POLICY IF EXISTS "Users can view own exercises" ON public.exercises;
 CREATE POLICY "Users can view own exercises" ON public.exercises FOR SELECT USING (EXISTS (SELECT 1 FROM public.workouts WHERE id = public.exercises.workout_id AND user_id = auth.uid()));
 
 -- =====================================================
--- 19. RLS POLICIES - PROGRESS
+-- 25. RLS POLICIES - PROGRESS
 -- =====================================================
 DROP POLICY IF EXISTS "Users can manage own progress" ON public.progress;
 CREATE POLICY "Users can manage own progress" ON public.progress FOR ALL USING (auth.uid() = user_id);
 
 -- =====================================================
--- 20. RLS POLICIES - BODY COMPOSITION
+-- 26. RLS POLICIES - BODY COMPOSITION
 -- =====================================================
 DROP POLICY IF EXISTS "Users can manage own body_comp" ON public.body_composition;
 CREATE POLICY "Users can manage own body_comp" ON public.body_composition FOR ALL USING (auth.uid() = user_id);
 
 -- =====================================================
--- 21. RLS POLICIES - CHAT MESSAGES
+-- 27. RLS POLICIES - ACHIEVEMENTS
+-- =====================================================
+DROP POLICY IF EXISTS "Users can view own achievements" ON public.achievements;
+CREATE POLICY "Users can view own achievements" ON public.achievements FOR SELECT USING (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can insert own achievements" ON public.achievements;
+CREATE POLICY "Users can insert own achievements" ON public.achievements FOR INSERT WITH CHECK (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can update own achievements" ON public.achievements;
+CREATE POLICY "Users can update own achievements" ON public.achievements FOR UPDATE USING (auth.uid() = user_id);
+
+-- =====================================================
+-- 28. RLS POLICIES - STREAKS
+-- =====================================================
+DROP POLICY IF EXISTS "Users can view own streaks" ON public.streaks;
+CREATE POLICY "Users can view own streaks" ON public.streaks FOR SELECT USING (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can insert own streaks" ON public.streaks;
+CREATE POLICY "Users can insert own streaks" ON public.streaks FOR INSERT WITH CHECK (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can update own streaks" ON public.streaks;
+CREATE POLICY "Users can update own streaks" ON public.streaks FOR UPDATE USING (auth.uid() = user_id);
+
+-- =====================================================
+-- 29. RLS POLICIES - PROGRESS PHOTOS
+-- =====================================================
+DROP POLICY IF EXISTS "Users can view own photos" ON public.progress_photos;
+CREATE POLICY "Users can view own photos" ON public.progress_photos FOR SELECT USING (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can insert own photos" ON public.progress_photos;
+CREATE POLICY "Users can insert own photos" ON public.progress_photos FOR INSERT WITH CHECK (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can update own photos" ON public.progress_photos;
+CREATE POLICY "Users can update own photos" ON public.progress_photos FOR UPDATE USING (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can delete own photos" ON public.progress_photos;
+CREATE POLICY "Users can delete own photos" ON public.progress_photos FOR DELETE USING (auth.uid() = user_id);
+
+-- =====================================================
+-- 30. RLS POLICIES - CHAT CONVERSATIONS
+-- =====================================================
+DROP POLICY IF EXISTS "Users can view own conversations" ON public.chat_conversations;
+CREATE POLICY "Users can view own conversations" ON public.chat_conversations FOR SELECT USING (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can insert own conversations" ON public.chat_conversations;
+CREATE POLICY "Users can insert own conversations" ON public.chat_conversations FOR INSERT WITH CHECK (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can update own conversations" ON public.chat_conversations;
+CREATE POLICY "Users can update own conversations" ON public.chat_conversations FOR UPDATE USING (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can delete own conversations" ON public.chat_conversations;
+CREATE POLICY "Users can delete own conversations" ON public.chat_conversations FOR DELETE USING (auth.uid() = user_id);
+
+-- =====================================================
+-- 31. RLS POLICIES - DAILY HEALTH DATA
+-- =====================================================
+DROP POLICY IF EXISTS "Users can view own health data" ON public.daily_health_data;
+CREATE POLICY "Users can view own health data" ON public.daily_health_data FOR SELECT USING (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can insert own health data" ON public.daily_health_data;
+CREATE POLICY "Users can insert own health data" ON public.daily_health_data FOR INSERT WITH CHECK (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can update own health data" ON public.daily_health_data;
+CREATE POLICY "Users can update own health data" ON public.daily_health_data FOR UPDATE USING (auth.uid() = user_id);
+
+-- =====================================================
+-- 32. RLS POLICIES - WORKOUT DAYS
+-- =====================================================
+DROP POLICY IF EXISTS "Users can view own workout days" ON public.workout_days;
+CREATE POLICY "Users can view own workout days" ON public.workout_days FOR SELECT USING (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can insert own workout days" ON public.workout_days;
+CREATE POLICY "Users can insert own workout days" ON public.workout_days FOR INSERT WITH CHECK (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can update own workout days" ON public.workout_days;
+CREATE POLICY "Users can update own workout days" ON public.workout_days FOR UPDATE USING (auth.uid() = user_id);
+
+-- =====================================================
+-- 33. RLS POLICIES - CHAT MESSAGES
 -- =====================================================
 DROP POLICY IF EXISTS "Users can manage own messages" ON public.chat_messages;
 CREATE POLICY "Users can manage own messages" ON public.chat_messages FOR ALL USING (auth.uid() = user_id);
 
 -- =====================================================
--- 22. RLS POLICIES - HABITS
+-- 34. RLS POLICIES - HABITS
 -- =====================================================
 DROP POLICY IF EXISTS "Users can manage own habits" ON public.habits;
 CREATE POLICY "Users can manage own habits" ON public.habits FOR ALL USING (auth.uid() = user_id);
@@ -304,7 +483,7 @@ DROP POLICY IF EXISTS "Users can manage own habit logs" ON public.habit_logs;
 CREATE POLICY "Users can manage own habit logs" ON public.habit_logs FOR ALL USING (auth.uid() = user_id);
 
 -- =====================================================
--- 23. RLS POLICIES - COACH CLIENTS
+-- 35. RLS POLICIES - COACH CLIENTS
 -- =====================================================
 DROP POLICY IF EXISTS "Coaches can view their clients" ON public.coach_clients;
 CREATE POLICY "Coaches can view their clients" ON public.coach_clients FOR SELECT USING (auth.uid() = coach_id);
@@ -313,7 +492,7 @@ DROP POLICY IF EXISTS "Coaches can manage their clients" ON public.coach_clients
 CREATE POLICY "Coaches can manage their clients" ON public.coach_clients FOR ALL USING (auth.uid() = coach_id);
 
 -- =====================================================
--- 24. TRIGGERS
+-- 36. TRIGGERS
 -- =====================================================
 CREATE OR REPLACE FUNCTION update_updated_at_column()
 RETURNS TRIGGER AS $$
