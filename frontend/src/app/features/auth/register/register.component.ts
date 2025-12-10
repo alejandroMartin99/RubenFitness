@@ -47,6 +47,25 @@ export class RegisterComponent {
   }
 
   /**
+   * Handle Apple Sign Up
+   */
+  onAppleSignUp(): void {
+    this.loading = true;
+    this.authService.loginWithApple().subscribe({
+      next: () => {
+        // OAuth redirects, so we don't navigate here
+        // The callback component will handle navigation
+        this.loading = false;
+      },
+      error: (err) => {
+        this.loading = false;
+        console.error('Apple sign-up error:', err);
+        alert('Apple Sign Up failed. Please try again.');
+      }
+    });
+  }
+
+  /**
    * Handle form submission
    */
   onSubmit(): void {

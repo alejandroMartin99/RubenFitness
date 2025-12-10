@@ -157,25 +157,27 @@
             </div>
           </div>
           <div class="workout-content" *ngIf="workout.notes">
-            <div *ngIf="parseWorkoutNotes(workout.notes) as workoutData">
-              <div *ngIf="workoutData.type" class="workout-type">
-                <strong>Tipo:</strong> {{ workoutData.type }}
+            <div *ngIf="workout.parsedNotes; else rawNotes">
+              <div *ngIf="workout.parsedNotes.type" class="workout-type">
+                <strong>Tipo:</strong> {{ workout.parsedNotes.type }}
               </div>
-              <div *ngIf="workoutData.exercises && workoutData.exercises.length > 0" class="exercises-list">
+              <div *ngIf="workout.parsedNotes.exercises && workout.parsedNotes.exercises.length > 0" class="exercises-list">
                 <strong>Ejercicios:</strong>
-                <div class="exercise-item" *ngFor="let exercise of workoutData.exercises">
-                  <div class="exercise-name">{{ exercise.name }}</div>
-                  <div class="exercise-sets" *ngIf="exercise.sets && exercise.sets.length > 0">
+                <div class="exercise-item" *ngFor="let exercise of workout.parsedNotes.exercises">
+                  <div class="exercise-name">{{ exercise?.name || 'Sin nombre' }}</div>
+                  <div class="exercise-sets" *ngIf="exercise?.sets && exercise.sets.length > 0">
                     <div class="set-item" *ngFor="let set of exercise.sets; let i = index">
-                      Serie {{ i + 1 }}: {{ set.reps }} reps × {{ set.weight }} kg
+                      Serie {{ i + 1 }}: {{ set?.reps || 0 }} reps × {{ set?.weight || 0 }} kg
                     </div>
                   </div>
                 </div>
               </div>
             </div>
-            <div *ngIf="!parseWorkoutNotes(workout.notes)" class="workout-notes">
-              {{ workout.notes }}
-            </div>
+            <ng-template #rawNotes>
+              <div class="workout-notes">
+                <pre>{{ workout.formattedNotes || workout.notes }}</pre>
+              </div>
+            </ng-template>
           </div>
         </div>
       </div>
@@ -185,8 +187,37 @@
     <section class="detail-section" *ngIf="details.bodyComposition && details.bodyComposition.length > 0">
       <h2>
         <mat-icon>straighten</mat-icon>
-        Historial composición corporal ({{ details.bodyComposition.length }} registros)
+        Evolución composición corporal ({{ details.bodyComposition.length }} registros)
       </h2>
+      
+      <!-- Evolution Summary -->
+      <div class="evolution-summary" *ngIf="getBodyCompEvolution() as evolution">
+        <h3>Evolución desde la primera medición</h3>
+        <div class="evolution-stats">
+          <div class="evolution-item" *ngIf="evolution.weight">
+            <span class="evolution-label">Peso:</span>
+            <span class="evolution-value" [class.positive]="evolution.weight.isPositive" [class.negative]="!evolution.weight.isPositive">
+              {{ evolution.weight.value > 0 ? '+' : '' }}{{ formatNumber(evolution.weight.value) }} kg
+              ({{ evolution.weight.percent }}%)
+            </span>
+          </div>
+          <div class="evolution-item" *ngIf="evolution.fat">
+            <span class="evolution-label">% Grasa:</span>
+            <span class="evolution-value" [class.positive]="evolution.fat.isPositive" [class.negative]="!evolution.fat.isPositive">
+              {{ evolution.fat.value > 0 ? '+' : '' }}{{ formatNumber(evolution.fat.value) }}%
+              ({{ evolution.fat.percent }}%)
+            </span>
+          </div>
+          <div class="evolution-item" *ngIf="evolution.muscle">
+            <span class="evolution-label">Músculo:</span>
+            <span class="evolution-value" [class.positive]="evolution.muscle.isPositive" [class.negative]="!evolution.muscle.isPositive">
+              {{ evolution.muscle.value > 0 ? '+' : '' }}{{ formatNumber(evolution.muscle.value) }} kg
+              ({{ evolution.muscle.percent }}%)
+            </span>
+          </div>
+        </div>
+      </div>
+      
       <div class="body-comp-list">
         <div class="body-comp-card" *ngFor="let comp of details.bodyComposition">
           <div class="comp-date">{{ comp.date | date:'dd/MM/yyyy' }}</div>
@@ -220,12 +251,12 @@
           <div class="photo-badge" [class.before]="photo.photo_type === 'before'" [class.after]="photo.photo_type === 'after'">
             {{ photo.photo_type === 'before' ? 'Antes' : 'Después' }}
           </div>
-          <img [src]="photo.photo_url || photo.thumbnail_url" [alt]="photo.photo_type" (error)="$event.target.style.display='none'" />
+          <img [src]="(photo.photo_url || photo.thumbnail_url) || ''" [alt]="photo.photo_type || 'Foto'" (error)="onImageError($event)" />
           <div class="photo-info">
             <div class="photo-date">{{ photo.taken_at | date:'dd/MM/yyyy' }}</div>
             <div class="photo-measurements" *ngIf="photo.measurements">
-              <div *ngIf="photo.measurements.weight">Peso: {{ photo.measurements.weight }} kg</div>
-              <div *ngIf="photo.measurements.bodyFat">Grasa: {{ photo.measurements.bodyFat }} %</div>
+              <div *ngIf="photo.measurements?.weight">Peso: {{ photo.measurements.weight }} kg</div>
+              <div *ngIf="photo.measurements?.bodyFat">Grasa: {{ photo.measurements.bodyFat }} %</div>
             </div>
             <div class="photo-notes" *ngIf="photo.notes">{{ photo.notes }}</div>
           </div>
@@ -261,11 +292,25 @@
         Datos de salud (últimos 30 días)
       </h2>
       <div class="health-list">
-        <div class="health-item" *ngFor="let health of details.healthData">
-          <div class="health-date">{{ health.date | date:'dd/MM/yyyy' }}</div>
-          <div class="health-values">
-            <span *ngIf="health.sleep_hours">😴 {{ health.sleep_hours }}h</span>
-            <span *ngIf="health.water_ml">💧 {{ health.water_ml }}ml</span>
+        <div class="health-card" *ngFor="let health of details.healthData">
+          <div class="health-header">
+            <div class="health-date">{{ health.date | date:'dd/MM/yyyy' }}</div>
+          </div>
+          <div class="health-metrics">
+            <div class="health-metric" *ngIf="health.sleep_hours">
+              <mat-icon class="metric-icon sleep">bed</mat-icon>
+              <div class="metric-content">
+                <span class="metric-label">Sueño</span>
+                <span class="metric-value">{{ health.sleep_hours }}h</span>
+              </div>
+            </div>
+            <div class="health-metric" *ngIf="health.water_ml">
+              <mat-icon class="metric-icon water">water_drop</mat-icon>
+              <div class="metric-content">
+                <span class="metric-label">Agua</span>
+                <span class="metric-value">{{ formatWater(health.water_ml) }}</span>
+              </div>
+            </div>
           </div>
         </div>
       </div>

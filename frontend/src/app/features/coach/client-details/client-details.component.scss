@@ -254,6 +254,67 @@
     .workout-notes {
       color: rgba(255, 255, 255, 0.7);
       line-height: 1.6;
+      
+      pre {
+        margin: 0;
+        white-space: pre-wrap;
+        word-wrap: break-word;
+        font-family: inherit;
+        font-size: 0.9rem;
+        color: rgba(255, 255, 255, 0.8);
+        background: #111114;
+        padding: 0.75rem;
+        border-radius: 6px;
+        border: 1px solid #1a1a1d;
+      }
+    }
+  }
+}
+
+.evolution-summary {
+  background: #0b0b0e;
+  border: 1px solid #1a1a1d;
+  border-radius: 10px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+
+  h3 {
+    color: #fff;
+    font-size: 1.1rem;
+    margin-bottom: 1rem;
+    font-weight: 600;
+  }
+
+  .evolution-stats {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+
+    .evolution-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.75rem;
+      background: #111114;
+      border-radius: 8px;
+
+      .evolution-label {
+        color: rgba(255, 255, 255, 0.7);
+        font-weight: 500;
+      }
+
+      .evolution-value {
+        font-weight: 600;
+        font-size: 1rem;
+
+        &.positive {
+          color: #10b981; // Verde para cambios positivos
+        }
+
+        &.negative {
+          color: #ef4444; // Rojo para cambios negativos
+        }
+      }
     }
   }
 }
@@ -307,7 +368,7 @@
 
 .photos-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 1.5rem;
 }
 
@@ -317,6 +378,13 @@
   border: 1px solid #1a1a1d;
   border-radius: 12px;
   overflow: hidden;
+  transition: transform 0.2s, box-shadow 0.2s;
+  
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 24px rgba(246, 195, 67, 0.15);
+    border-color: #f6c343;
+  }
 
   .photo-badge {
     position: absolute;
@@ -326,7 +394,8 @@
     border-radius: 999px;
     font-size: 0.85rem;
     font-weight: 600;
-    z-index: 1;
+    z-index: 2;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 
     &.before {
       background: #ef4444;
@@ -338,12 +407,13 @@
       color: #fff;
     }
   }
-
+  
   img {
     width: 100%;
-    height: 250px;
+    height: 300px;
     object-fit: cover;
     display: block;
+    background: #111114;
   }
 
   .photo-info {
@@ -418,29 +488,93 @@
 
 .health-list {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 0.75rem;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1rem;
 }
 
-.health-item {
+.health-card {
   background: #0b0b0e;
   border: 1px solid #1a1a1d;
-  border-radius: 8px;
-  padding: 0.75rem;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+  border-radius: 12px;
+  padding: 1.25rem;
+  transition: all 0.2s ease;
 
-  .health-date {
-    font-weight: 600;
-    color: #fff;
+  &:hover {
+    border-color: #262630;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
   }
 
-  .health-values {
+  .health-header {
+    margin-bottom: 1rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid #1f1f24;
+
+    .health-date {
+      font-weight: 600;
+      font-size: 0.95rem;
+      color: #fff;
+      letter-spacing: 0.02em;
+    }
+  }
+
+  .health-metrics {
     display: flex;
-    gap: 1rem;
-    font-size: 0.9rem;
-    color: rgba(255, 255, 255, 0.7);
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .health-metric {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.5rem;
+    background: #111114;
+    border-radius: 8px;
+    transition: background 0.2s ease;
+
+    &:hover {
+      background: #16161c;
+    }
+
+    .metric-icon {
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 8px;
+      font-size: 20px;
+
+      &.sleep {
+        background: rgba(99, 102, 241, 0.15);
+        color: #6366f1;
+      }
+
+      &.water {
+        background: rgba(59, 130, 246, 0.15);
+        color: #3b82f6;
+      }
+    }
+
+    .metric-content {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+
+      .metric-label {
+        font-size: 0.8rem;
+        color: rgba(255, 255, 255, 0.6);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        margin-bottom: 0.15rem;
+      }
+
+      .metric-value {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #fff;
+      }
+    }
   }
 }
 

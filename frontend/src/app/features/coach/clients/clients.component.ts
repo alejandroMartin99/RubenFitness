@@ -20,9 +20,6 @@ export class ClientsComponent implements OnInit, AfterViewInit, OnDestroy {
   search = '';
   loading = true;
   error: string | null = null;
-  selectedClient: ClientRow | null = null;
-  clientDetails: any = null;
-  loadingDetails = false;
   Math = Math; // Expose Math to template
 
   kpis: ClientKpi[] = [];

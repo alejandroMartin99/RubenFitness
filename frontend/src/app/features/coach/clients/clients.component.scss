@@ -160,7 +160,7 @@
 .table-head,
 .table-row {
   display: grid;
-  grid-template-columns: 1.5fr repeat(7, 1fr) 1.5fr 0.5fr;
+  grid-template-columns: 1.5fr repeat(7, 1fr) 1.5fr 0.5fr 0.5fr;
   gap: 0.75rem;
   align-items: center;
   padding: 0.6rem 0.8rem;
