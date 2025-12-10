@@ -57,14 +57,43 @@ export class SupabaseService {
   }
 
   /**
+   * Get the correct redirect URL for OAuth
+   * Uses environment variable if available, otherwise falls back to window.location.origin
+   */
+  private getRedirectUrl(): string {
+    // In production, use the production URL from environment or window.location.origin
+    const origin = window.location.origin;
+    const callbackPath = '/auth/callback';
+    
+    // Ensure we're using the correct protocol (https in production)
+    const protocol = window.location.protocol;
+    const host = window.location.host;
+    
+    // Build the redirect URL
+    let redirectUrl = `${protocol}//${host}${callbackPath}`;
+    
+    // Log for debugging
+    console.log('OAuth redirect URL:', redirectUrl);
+    
+    return redirectUrl;
+  }
+
+  /**
    * Sign in with Google OAuth
    */
   signInWithGoogle(): Observable<any> {
+    const redirectUrl = this.getRedirectUrl();
+    console.log('Initiating Google OAuth with redirect:', redirectUrl);
+    
     return from(
       this.supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: window.location.origin + '/auth/callback'
+          redirectTo: redirectUrl,
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'consent'
+          }
         }
       })
     );
@@ -74,11 +103,14 @@ export class SupabaseService {
    * Sign in with Apple OAuth
    */
   signInWithApple(): Observable<any> {
+    const redirectUrl = this.getRedirectUrl();
+    console.log('Initiating Apple OAuth with redirect:', redirectUrl);
+    
     return from(
       this.supabase.auth.signInWithOAuth({
         provider: 'apple',
         options: {
-          redirectTo: window.location.origin + '/auth/callback'
+          redirectTo: redirectUrl
         }
       })
     );
