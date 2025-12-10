@@ -8,6 +8,66 @@
     <p>Track your fitness journey and celebrate your achievements</p>
   </div>
 
+  <!-- Body Composition block -->
+  <mat-card class="panel-card body-comp-card">
+    <mat-card-header>
+      <mat-card-title>
+        <div class="title-row">
+          <mat-icon>monitor_weight</mat-icon>
+          Composición corporal
+        </div>
+      </mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <div class="body-comp-top">
+        <div class="body-grid">
+          <div class="body-item">
+            <div class="label">Masa muscular</div>
+            <div class="value">{{ bodyComp.muscle }} kg</div>
+          </div>
+          <div class="body-item">
+            <div class="label">Grasa corporal</div>
+            <div class="value">{{ bodyComp.fat }} %</div>
+          </div>
+          <div class="body-item">
+            <div class="label">Peso</div>
+            <div class="value">{{ bodyComp.weight }} kg</div>
+          </div>
+        </div>
+        <form [formGroup]="bodyCompForm" class="body-form" (ngSubmit)="addBodyComposition()">
+          <input class="input" type="date" formControlName="date" />
+          <input class="input" type="number" step="0.1" min="0" formControlName="muscle" placeholder="Masa (kg)" />
+          <input class="input" type="number" step="0.1" min="0" formControlName="fat" placeholder="Grasa (%)" />
+          <input class="input" type="number" step="0.1" min="0" formControlName="weight" placeholder="Peso (kg)" />
+          <button mat-raised-button color="primary" type="submit">Guardar medida</button>
+        </form>
+      </div>
+
+      <div class="body-charts">
+        <ng-container *ngIf="bodyCompHistory.length > 0; else noBodyComp">
+          <div class="chart-card">
+            <div class="chart-title">Masa muscular</div>
+            <canvas id="muscleChart"></canvas>
+          </div>
+          <div class="chart-card">
+            <div class="chart-title">Grasa corporal</div>
+            <canvas id="fatChart"></canvas>
+          </div>
+          <div class="chart-card">
+            <div class="chart-title">Peso</div>
+            <canvas id="weightChart"></canvas>
+          </div>
+        </ng-container>
+        <ng-template #noBodyComp>
+          <div class="empty-body-comp">
+            <mat-icon>info</mat-icon>
+            <p>Registra tu primera medición para ver las gráficas.</p>
+          </div>
+        </ng-template>
+      </div>
+    </mat-card-content>
+  </mat-card>
+
   <!-- Grid layout: 2 columns -->
   <div class="top-grid">
     <!-- Quick log -->
@@ -143,36 +203,9 @@
       </mat-card-content>
     </mat-card>
 
-    <!-- Visualizer + body comp -->
+    <!-- Visualizer -->
     <div class="right-column">
       <app-body-visualizer [muscles]="selectedMuscles"></app-body-visualizer>
-
-      <mat-card class="panel-card">
-        <mat-card-header>
-          <mat-card-title>
-            <div class="title-row">
-              <mat-icon>monitor_weight</mat-icon>
-              Composición corporal
-            </div>
-          </mat-card-title>
-        </mat-card-header>
-        <mat-card-content>
-          <div class="body-grid">
-            <div class="body-item">
-              <div class="label">Masa muscular</div>
-              <div class="value">{{ bodyComp.muscle }} kg</div>
-            </div>
-            <div class="body-item">
-              <div class="label">Grasa corporal</div>
-              <div class="value">{{ bodyComp.fat }} %</div>
-            </div>
-            <div class="body-item">
-              <div class="label">Peso</div>
-              <div class="value">{{ bodyComp.weight }} kg</div>
-            </div>
-          </div>
-        </mat-card-content>
-      </mat-card>
     </div>
   </div>
 
@@ -196,40 +229,53 @@
         </mat-card>
 
         <!-- Workouts list -->
-        <div class="workouts-list" *ngIf="summary.recentWorkouts && summary.recentWorkouts.length > 0">
-          <mat-card class="workout-item" *ngFor="let workout of summary.recentWorkouts; let i = index">
-            <mat-card-content>
-              <div class="workout-content">
-                <div class="workout-info">
-                  <h4>{{ workout.name }}</h4>
-                  <p class="workout-date">
+        <mat-accordion class="workouts-accordion" *ngIf="summary.recentWorkouts && summary.recentWorkouts.length > 0">
+          <mat-expansion-panel *ngFor="let workout of summary.recentWorkouts; let i = index" class="workout-panel">
+            <mat-expansion-panel-header>
+              <mat-panel-title>
+                <div class="workout-header">
+                  <div class="workout-title">{{ workout.name }}</div>
+                  <div class="workout-date">
                     <mat-icon>calendar_today</mat-icon>
                     {{ workout.date | date:'fullDate' }}
-                  </p>
-                  <p class="workout-duration" *ngIf="workout.durationMinutes">
-                    <mat-icon>schedule</mat-icon>
-                    {{ workout.durationMinutes }} minutos
-                  </p>
-                </div>
-                <div class="workout-actions">
-                  <div class="workout-status">
-                    <mat-icon class="success">check_circle</mat-icon>
-                  </div>
-                  <div class="action-buttons">
-                    <button mat-icon-button color="primary" (click)="editWorkout(workout, i)" [class.active]="editingWorkoutIndex === i" matTooltip="Editar entrenamiento">
-                      <mat-icon>edit</mat-icon>
-                    </button>
-                    <button mat-icon-button color="warn" (click)="deleteWorkout(workout, i)" matTooltip="Eliminar entrenamiento">
-                      <mat-icon>delete</mat-icon>
-                    </button>
                   </div>
                 </div>
+              </mat-panel-title>
+              <mat-panel-description>
+                <div class="panel-actions">
+                  <button mat-icon-button color="primary" (click)="editWorkout(workout, i)" [class.active]="editingWorkoutIndex === i" matTooltip="Editar">
+                    <mat-icon>edit</mat-icon>
+                  </button>
+                  <button mat-icon-button color="warn" (click)="deleteWorkout(workout, i)" matTooltip="Eliminar">
+                    <mat-icon>delete</mat-icon>
+                  </button>
+                </div>
+              </mat-panel-description>
+            </mat-expansion-panel-header>
+
+            <div class="workout-body">
+              <div class="workout-row" *ngIf="workout.durationMinutes">
+                <mat-icon>schedule</mat-icon>
+                <span>{{ workout.durationMinutes }} minutos</span>
               </div>
-              
-              <!-- Edit note when editing -->
-              <div class="workout-edit-note" *ngIf="editingWorkoutIndex === i">
-                <p>El formulario de arriba se ha poblado con los datos de este entrenamiento. Modifica y guarda para actualizar.</p>
-                <div class="edit-form-actions">
+              <div class="workout-row" *ngIf="workout.notes">
+                <mat-icon>note</mat-icon>
+                <span>{{ workout.notes }}</span>
+              </div>
+              <div class="workout-row">
+                <mat-icon>check_circle</mat-icon>
+                <span>Completado</span>
+              </div>
+
+              <div class="edit-inline" *ngIf="editingWorkoutIndex === i">
+                <div class="edit-grid">
+                  <input class="input" type="date" [(ngModel)]="editFields.date" name="editDate{{i}}" />
+                  <select class="input select" [(ngModel)]="editFields.type" name="editType{{i}}">
+                    <option *ngFor="let t of workoutTypes" [value]="t">{{ t }}</option>
+                  </select>
+                  <textarea class="input textarea" rows="2" [(ngModel)]="editFields.notes" name="editNotes{{i}}" placeholder="Notas"></textarea>
+                </div>
+                <div class="edit-actions">
                   <button mat-raised-button color="primary" (click)="saveEditedWorkout()">
                     <mat-icon>save</mat-icon>
                     Guardar cambios
@@ -240,9 +286,9 @@
                   </button>
                 </div>
               </div>
-            </mat-card-content>
-          </mat-card>
-        </div>
+            </div>
+          </mat-expansion-panel>
+        </mat-accordion>
       </div>
       </ng-template>
     </mat-tab>

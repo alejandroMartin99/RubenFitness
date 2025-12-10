@@ -8,6 +8,8 @@ export interface UserProfile {
   birthDate?: string; // ISO
   heightCm?: number;
   weightKg?: number;
+  bodyFatPercent?: number;
+  muscleMassKg?: number;
   goal?: string; // e.g., lose weight, gain muscle
   trainingFrequency?: 'lt2' | '2-3' | '4+' | '';
   activityLevel?: 'low' | 'medium' | 'high';
@@ -70,6 +72,8 @@ export class ProfileService {
       birth_date: profile.birthDate,
       height_cm: profile.heightCm,
       weight_kg: profile.weightKg,
+      body_fat_percent: profile.bodyFatPercent,
+      muscle_mass_kg: profile.muscleMassKg,
       goal: profile.goal,
       training_frequency: profile.trainingFrequency,
       activity_level: profile.activityLevel,

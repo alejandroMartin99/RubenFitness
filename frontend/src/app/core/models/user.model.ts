@@ -12,6 +12,10 @@ export interface User {
   fullName?: string;
   /** User's age */
   age?: number;
+  /** Body fat percentage */
+  bodyFatPercent?: number;
+  /** Muscle mass in kg */
+  muscleMassKg?: number;
   /** Fitness experience level: beginner, intermediate, advanced */
   fitnessLevel?: FitnessLevel;
   /** Role-based access control */

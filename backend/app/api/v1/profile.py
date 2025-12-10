@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException
 from app.models.schemas import ProfileRequest, ProfileResponse
 from app.services.supabase_service import supabase_service
-from datetime import datetime
+from datetime import datetime, date
 
 router = APIRouter()
 
@@ -13,13 +13,29 @@ async def get_profile(user_id: str):
       # Return empty profile structure
       now = datetime.utcnow()
       return ProfileResponse(user_id=user_id, created_at=now, updated_at=now)
+
+    latest_body = None
+    try:
+      result = supabase_service.supabase.table("body_composition")\
+        .select("date, muscle, fat, weight")\
+        .eq("user_id", user_id)\
+        .order("date", desc=True)\
+        .limit(1)\
+        .execute()
+      if result.data and len(result.data) > 0:
+        latest_body = result.data[0]
+    except Exception as e:
+      print(f"Warning: could not fetch latest body composition for profile: {e}")
+
     return ProfileResponse(
       user_id=str(data.get("user_id")),
       full_name=data.get("full_name"),
       gender=data.get("gender"),
       birth_date=data.get("birth_date"),
       height_cm=data.get("height_cm"),
-      weight_kg=data.get("weight_kg"),
+      weight_kg= latest_body.get("weight") if latest_body else data.get("weight_kg"),
+      body_fat_percent= latest_body.get("fat") if latest_body else data.get("body_fat_percent"),
+      muscle_mass_kg= latest_body.get("muscle") if latest_body else data.get("muscle_mass_kg"),
       goal=data.get("goal"),
       training_frequency=data.get("training_frequency"),
       activity_level=data.get("activity_level"),
@@ -52,6 +68,23 @@ async def upsert_profile(req: ProfileRequest):
     saved = supabase_service.upsert_profile(req)
     if not saved:
       raise HTTPException(status_code=400, detail="Could not save profile")
+
+    # Also upsert body composition for today if provided
+    try:
+      body_payload = {
+        "user_id": req.user_id,
+        "date": date.today().isoformat(),
+        "muscle": req.muscle_mass_kg if hasattr(req, "muscle_mass_kg") else None,
+        "fat": req.body_fat_percent if hasattr(req, "body_fat_percent") else None,
+        "weight": req.weight_kg
+      }
+      if body_payload["weight"] is not None or body_payload["fat"] is not None or body_payload["muscle"] is not None:
+        supabase_service.supabase.table("body_composition")\
+          .upsert(body_payload, on_conflict="user_id,date")\
+          .execute()
+    except Exception as e:
+      print(f"Warning: could not upsert body composition from profile update: {e}")
+
     return ProfileResponse(
       user_id=str(saved.get("user_id")),
       full_name=saved.get("full_name"),
@@ -59,6 +92,8 @@ async def upsert_profile(req: ProfileRequest):
       birth_date=saved.get("birth_date"),
       height_cm=saved.get("height_cm"),
       weight_kg=saved.get("weight_kg"),
+      body_fat_percent=saved.get("body_fat_percent"),
+      muscle_mass_kg=saved.get("muscle_mass_kg"),
       goal=saved.get("goal"),
       training_frequency=saved.get("training_frequency"),
       activity_level=saved.get("activity_level"),

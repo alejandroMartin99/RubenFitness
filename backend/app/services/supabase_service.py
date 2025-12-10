@@ -259,6 +259,8 @@ class SupabaseService:
                 "birth_date": data.birth_date.isoformat() if data.birth_date else None,
                 "height_cm": data.height_cm,
                 "weight_kg": data.weight_kg,
+                "body_fat_percent": data.body_fat_percent,
+                "muscle_mass_kg": data.muscle_mass_kg,
                 "goal": data.goal,
                 "training_frequency": data.training_frequency,
                 "activity_level": data.activity_level,

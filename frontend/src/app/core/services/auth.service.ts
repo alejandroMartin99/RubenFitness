@@ -8,6 +8,7 @@ import { Observable, BehaviorSubject, from } from 'rxjs';
 import { map, switchMap, catchError } from 'rxjs/operators';
 import { User, LoginCredentials, RegisterData } from '../models/user.model';
 import { SupabaseService } from './supabase.service';
+import { ApiService } from './api.service';
 
 @Injectable({
   providedIn: 'root'
@@ -18,11 +19,11 @@ export class AuthService {
   public currentUser$ = this.currentUserSubject.asObservable();
 
   constructor(
-    private supabaseService: SupabaseService
+    private supabaseService: SupabaseService,
+    private apiService: ApiService
   ) {
-    // Check if user is already logged in
+    this.restoreSession();
     this.checkAuthStatus();
-    // Listen to Supabase auth changes
     this.listenToAuthChanges();
   }
 
@@ -33,6 +34,9 @@ export class AuthService {
     this.supabaseService.getClient().auth.onAuthStateChange(async (event, session) => {
       if (event === 'SIGNED_IN' && session?.user) {
         await this.loadUserProfile(session.user.id);
+        if (session?.access_token) {
+          localStorage.setItem('accessToken', session.access_token);
+        }
       } else if (event === 'SIGNED_OUT') {
         this.currentUserSubject.next(null);
         localStorage.removeItem('currentUser');
@@ -96,10 +100,35 @@ export class AuthService {
     try {
       const { data: { session } } = await this.supabaseService.getClient().auth.getSession();
       if (session?.user) {
+        if (session.access_token) {
+          localStorage.setItem('accessToken', session.access_token);
+        }
         await this.loadUserProfile(session.user.id);
       }
     } catch (error) {
       console.error('Error checking auth status:', error);
+    }
+  }
+
+  /**
+   * Restore session from localStorage
+   */
+  private restoreSession(): void {
+    try {
+      const storedUser = localStorage.getItem('currentUser');
+      const token = localStorage.getItem('accessToken');
+      if (storedUser) {
+        const user: User = JSON.parse(storedUser);
+        this.currentUserSubject.next(user);
+      }
+      // Optionally set token for custom API calls
+      if (token) {
+        // If ApiService had headers, we'd set them here
+      }
+    } catch (e) {
+      console.error('Error restoring session', e);
+      localStorage.removeItem('currentUser');
+      localStorage.removeItem('accessToken');
     }
   }
 
@@ -183,6 +212,9 @@ export class AuthService {
         };
         this.currentUserSubject.next(user);
         localStorage.setItem('currentUser', JSON.stringify(user));
+        if (result.session?.access_token) {
+          localStorage.setItem('accessToken', result.session.access_token);
+        }
         return user;
       }),
       catchError((error) => {

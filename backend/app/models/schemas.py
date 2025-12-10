@@ -102,6 +102,24 @@ class WorkoutLogRequest(BaseModel):
     exercises: List[ExerciseLog]
 
 
+class BodyCompRequest(BaseModel):
+    """Body composition measurement"""
+    user_id: str
+    date: str  # ISO date string (YYYY-MM-DD)
+    muscle: float
+    fat: float
+    weight: float
+    notes: Optional[str] = None
+
+
+class UpdateProgressRequest(BaseModel):
+    """Partial update for progress/workout record"""
+    user_id: str
+    date: Optional[str] = None  # ISO date string (YYYY-MM-DD)
+    type: Optional[str] = None  # Workout type
+    notes: Optional[str] = None
+
+
 # Sleep Models
 class SleepRecord(BaseModel):
     """Individual sleep record"""
@@ -200,6 +218,8 @@ class ProfileRequest(BaseModel):
     birth_date: Optional[date] = None
     height_cm: Optional[int] = None
     weight_kg: Optional[int] = None
+    body_fat_percent: Optional[float] = None
+    muscle_mass_kg: Optional[float] = None
     goal: Optional[str] = None
     training_frequency: Optional[str] = None
     activity_level: Optional[str] = None
@@ -229,6 +249,8 @@ class ProfileResponse(BaseModel):
     birth_date: Optional[date] = None
     height_cm: Optional[int] = None
     weight_kg: Optional[int] = None
+    body_fat_percent: Optional[float] = None
+    muscle_mass_kg: Optional[float] = None
     goal: Optional[str] = None
     training_frequency: Optional[str] = None
     activity_level: Optional[str] = None

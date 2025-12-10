@@ -151,4 +151,19 @@ export interface ChartData {
   }[];
 }
 
+// Detailed workout log (used for register / update)
+export interface WorkoutLogRequest {
+  user_id: string;
+  date: string;
+  type: string;
+  notes?: string;
+  exercises: {
+    name: string;
+    sets: {
+      reps: number;
+      weight: number;
+    }[];
+  }[];
+}
+
 

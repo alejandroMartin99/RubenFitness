@@ -5,8 +5,10 @@ Handles workout progress tracking and statistics
 
 from fastapi import APIRouter, HTTPException
 from datetime import datetime, date, timedelta
-from app.models.schemas import ProgressRequest, ProgressResponse, WorkoutLogRequest, ExerciseLog, ExerciseSet
+import json
+from app.models.schemas import ProgressRequest, ProgressResponse, WorkoutLogRequest, ExerciseLog, ExerciseSet, UpdateProgressRequest, BodyCompRequest
 from app.services.supabase_service import supabase_service
+from typing import Optional
 
 router = APIRouter()
 
@@ -416,5 +418,203 @@ async def delete_progress(progress_id: str):
     except Exception as e:
         print(f"Error deleting progress: {e}")
         raise HTTPException(status_code=500, detail=f"Error deleting progress: {str(e)}")
+
+
+@router.put("/progress/{progress_id}")
+async def update_progress(progress_id: str, request: UpdateProgressRequest):
+    """
+    Update basic fields of a progress/workout record
+    """
+    try:
+        if not supabase_service.is_connected():
+            return {
+                "message": "Progress updated (mock mode)",
+                "progress_id": progress_id
+            }
+
+        # Ensure record exists and belongs to user
+        progress_result = supabase_service.supabase.table("progress")\
+            .select("*")\
+            .eq("id", progress_id)\
+            .single()\
+            .execute()
+
+        if not progress_result.data:
+            raise HTTPException(status_code=404, detail="Progress record not found")
+
+        if progress_result.data.get("user_id") != request.user_id:
+            raise HTTPException(status_code=403, detail="Not authorized to update this record")
+
+        update_data = {}
+        if request.date:
+            update_data["workout_date"] = request.date
+        if request.notes is not None:
+            update_data["notes"] = request.notes
+        if request.type:
+            existing_notes = update_data.get("notes") or progress_result.data.get("notes") or ""
+            try:
+                workout_data = {
+                    "workout_type": request.type
+                }
+                extra = f"\nWORKOUT_DATA: {workout_data}"
+            except Exception:
+                extra = ""
+            update_data["notes"] = f"{existing_notes}{extra}"
+            update_data["workout_id"] = None
+
+        if not update_data:
+            return {
+                "message": "No changes to apply",
+                "progress_id": progress_id
+            }
+
+        supabase_service.supabase.table("progress")\
+            .update(update_data)\
+            .eq("id", progress_id)\
+            .execute()
+
+        return {
+            "message": "Progress record updated successfully",
+            "progress_id": progress_id,
+            "applied": update_data
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Error updating progress: {e}")
+        raise HTTPException(status_code=500, detail=f"Error updating progress: {str(e)}")
+
+
+@router.get("/progress/{user_id}/body-comp")
+async def get_body_comp(user_id: str):
+    """
+    Get body composition history stored in body_composition table
+    """
+    try:
+        if not supabase_service.is_connected():
+            # Mock data
+            return {
+                "history": []
+            }
+
+        result = supabase_service.supabase.table("body_composition")\
+            .select("date, muscle, fat, weight, notes")\
+            .eq("user_id", user_id)\
+            .order("date", desc=False)\
+            .execute()
+
+        history = []
+        for row in result.data or []:
+            history.append({
+                "date": row.get("date"),
+                "muscle": row.get("muscle"),
+                "fat": row.get("fat"),
+                "weight": row.get("weight"),
+                "notes": row.get("notes")
+            })
+
+        return {
+            "history": history
+        }
+    except Exception as e:
+        print(f"Error fetching body comp: {e}")
+        raise HTTPException(status_code=500, detail=f"Error fetching body comp: {str(e)}")
+
+
+@router.post("/progress/body-comp")
+async def save_body_comp(request: BodyCompRequest):
+    """
+    Save a body composition measurement in body_composition table
+    Only one measurement per user/day; if exists, it is overwritten (upsert).
+    """
+    try:
+        if not supabase_service.is_connected():
+            return {
+                "message": "Body comp saved (mock mode)",
+                "record": request.dict()
+            }
+
+        payload = {
+            "user_id": request.user_id,
+            "date": request.date,
+            "muscle": request.muscle,
+            "fat": request.fat,
+            "weight": request.weight,
+            "notes": request.notes or None
+        }
+
+        supabase_service.supabase.table("body_composition")\
+            .upsert(payload, on_conflict="user_id,date", ignore_duplicates=False)\
+            .execute()
+
+        # Keep user_profiles in sync with latest measurement
+        try:
+            supabase_service.supabase.table("user_profiles")\
+                .upsert({
+                    "user_id": request.user_id,
+                    "weight_kg": request.weight,
+                    "body_fat_percent": request.fat,
+                    "muscle_mass_kg": request.muscle,
+                    "updated_at": datetime.utcnow().isoformat()
+                }, on_conflict="user_id")\
+                .execute()
+        except Exception as e:
+            print(f"Warning: could not sync user_profiles with body composition: {e}")
+
+        return {
+            "message": "Body composition saved",
+            "record": payload
+        }
+
+    except Exception as e:
+        print(f"Error saving body comp: {e}")
+        raise HTTPException(status_code=500, detail=f"Error saving body comp: {str(e)}")
+
+
+@router.get("/progress/{user_id}/last")
+async def get_last_workout(user_id: str, type: Optional[str] = None):
+    """
+    Get last workout with detailed exercises (from notes WORKOUT_DATA)
+    Optionally filter by workout type
+    """
+    try:
+        if not supabase_service.is_connected():
+            return {"workout": None}
+
+        query = supabase_service.supabase.table("progress")\
+            .select("id, workout_date, notes")\
+            .eq("user_id", user_id)\
+            .order("workout_date", desc=True)\
+            .limit(50)
+        result = query.execute()
+
+        def parse_workout(row):
+            notes = row.get("notes") or ""
+            marker = "WORKOUT_DATA:"
+            idx = notes.find(marker)
+            if idx == -1:
+                return None
+            try:
+                json_str = notes[idx + len(marker):].strip()
+                data = json.loads(json_str)
+                data["date"] = row.get("workout_date")
+                data["id"] = row.get("id")
+                return data
+            except Exception:
+                return None
+
+        for row in result.data or []:
+            parsed = parse_workout(row)
+            if not parsed:
+                continue
+            if type and parsed.get("workout_type") != type:
+                continue
+            return {"workout": parsed}
+
+        return {"workout": None}
+    except Exception as e:
+        print(f"Error fetching last workout: {e}")
+        raise HTTPException(status_code=500, detail=f"Error fetching last workout: {str(e)}")
 
 

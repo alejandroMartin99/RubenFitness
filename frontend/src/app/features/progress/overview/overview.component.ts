@@ -1,15 +1,16 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, AfterViewInit, OnDestroy } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { FormArray, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ProgressService } from '../../../core/services/progress.service';
 import { ProgressSummary, ProgressStats } from '../../../core/models/progress.model';
+import Chart from 'chart.js/auto';
 
 @Component({
   selector: 'app-overview',
   templateUrl: './overview.component.html',
   styleUrls: ['./overview.component.scss']
 })
-export class OverviewComponent implements OnInit {
+export class OverviewComponent implements OnInit, AfterViewInit, OnDestroy {
   summary: ProgressSummary | null = null;
   stats: ProgressStats | null = null;
   loading = false;
@@ -35,6 +36,16 @@ export class OverviewComponent implements OnInit {
     weight: 72.4
   };
 
+  bodyCompHistory: { date: string; muscle: number; fat: number; weight: number }[] = [
+    // initially empty; will load from backend
+  ];
+
+  bodyCompForm: FormGroup;
+
+  private muscleChart?: Chart;
+  private fatChart?: Chart;
+  private weightChart?: Chart;
+
   exerciseImages: Record<string, string> = {
     'press banca': 'https://images.pexels.com/photos/1552102/pexels-photo-1552102.jpeg?auto=compress&cs=tinysrgb&w=800',
     'sentadilla': 'https://images.pexels.com/photos/2261485/pexels-photo-2261485.jpeg?auto=compress&cs=tinysrgb&w=800',
@@ -46,6 +57,12 @@ export class OverviewComponent implements OnInit {
   selectedMuscles: string[] = [];
   editingWorkoutIndex: number | null = null;
   editingWorkout: any = null;
+  editingProgressId: string | null = null;
+  editFields = {
+    date: '',
+    type: '',
+    notes: ''
+  };
 
   constructor(
     private progressService: ProgressService,
@@ -53,16 +70,26 @@ export class OverviewComponent implements OnInit {
     private route: ActivatedRoute
   ) {
     this.workoutForm = this.buildForm();
+    this.bodyCompForm = this.buildBodyCompForm();
   }
 
   ngOnInit(): void {
     this.loadProgress();
+    this.loadBodyComp();
     this.seedHistory();
     const dateParam = this.route.snapshot.queryParamMap.get('date');
     if (dateParam) {
       this.workoutForm.get('date')?.setValue(dateParam);
     }
     this.handleTypeChanges();
+  }
+
+  ngAfterViewInit(): void {
+    this.refreshBodyCompCharts();
+  }
+
+  ngOnDestroy(): void {
+    this.destroyCharts();
   }
 
   loadProgress(): void {
@@ -106,6 +133,15 @@ export class OverviewComponent implements OnInit {
       type: [this.workoutTypes[0], Validators.required],
       notes: [''],
       exercises: this.fb.array(this.defaultExercises(1))
+    });
+  }
+
+  private buildBodyCompForm(): FormGroup {
+    return this.fb.group({
+      date: [new Date().toISOString().split('T')[0], Validators.required],
+      muscle: [this.bodyComp.muscle, [Validators.required, Validators.min(0)]],
+      fat: [this.bodyComp.fat, [Validators.required, Validators.min(0)]],
+      weight: [this.bodyComp.weight, [Validators.required, Validators.min(0)]]
     });
   }
 
@@ -233,7 +269,164 @@ export class OverviewComponent implements OnInit {
 
   private handleTypeChanges(): void {
     this.updateMuscles();
-    this.workoutForm.get('type')?.valueChanges.subscribe(() => this.updateMuscles());
+    this.workoutForm.get('type')?.valueChanges.subscribe((type) => {
+      this.updateMuscles();
+      if (type) {
+        this.loadLastWorkoutByType(type);
+      }
+    });
+    const currentType = this.workoutForm.get('type')?.value;
+    if (currentType) {
+      this.loadLastWorkoutByType(currentType);
+    }
+  }
+
+  addBodyComposition(): void {
+    if (this.bodyCompForm.invalid) return;
+    const value = this.bodyCompForm.value;
+    this.progressService.saveBodyComposition({
+      date: value.date,
+      muscle: value.muscle,
+      fat: value.fat,
+      weight: value.weight
+    }).subscribe({
+      next: () => {
+        this.loadBodyComp(true);
+      },
+      error: (err) => {
+        console.error('Error saving body comp:', err);
+        alert('No se pudo guardar la medición');
+      }
+    });
+  }
+
+  private loadBodyComp(skipFormUpdate = false): void {
+    this.progressService.getBodyComposition().subscribe({
+      next: (data) => {
+        this.bodyCompHistory = data?.history || [];
+        if (this.bodyCompHistory.length > 0) {
+          this.bodyCompHistory.sort((a: any, b: any) => a.date.localeCompare(b.date));
+          const latest = this.bodyCompHistory[this.bodyCompHistory.length - 1];
+          this.bodyComp = { muscle: latest.muscle, fat: latest.fat, weight: latest.weight };
+          if (!skipFormUpdate) {
+            this.bodyCompForm.patchValue({
+              date: latest.date,
+              muscle: latest.muscle,
+              fat: latest.fat,
+              weight: latest.weight
+            });
+          }
+        }
+        this.refreshBodyCompCharts();
+      },
+      error: (err) => {
+        console.error('Error loading body comp:', err);
+        this.bodyCompHistory = [];
+        this.refreshBodyCompCharts();
+      }
+    });
+  }
+
+
+
+  private refreshBodyCompCharts(): void {
+    setTimeout(() => {
+      this.destroyCharts();
+      if (!this.bodyCompHistory || this.bodyCompHistory.length === 0) {
+        return;
+      }
+      const labels = this.bodyCompHistory.map((h) => h.date);
+      const muscleData = this.bodyCompHistory.map((h) => h.muscle);
+      const fatData = this.bodyCompHistory.map((h) => h.fat);
+      const weightData = this.bodyCompHistory.map((h) => h.weight);
+
+      const commonOptions = {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          x: {
+            ticks: { color: '#8f9ba8' },
+            grid: { color: 'rgba(255,255,255,0.06)' }
+          },
+          y: {
+            ticks: { color: '#8f9ba8' },
+            grid: { color: 'rgba(255,255,255,0.06)' }
+          }
+        },
+        plugins: {
+          legend: { display: false }
+        }
+      };
+
+      const muscleCtx = document.getElementById('muscleChart') as HTMLCanvasElement | null;
+      if (muscleCtx) {
+        this.muscleChart = new Chart(muscleCtx, {
+          type: 'line',
+          data: {
+            labels,
+            datasets: [{
+              label: 'Masa muscular (kg)',
+              data: muscleData,
+              borderColor: '#f6c343',
+              backgroundColor: 'rgba(246,195,67,0.15)',
+              tension: 0.35,
+              fill: true
+            }]
+          },
+          options: commonOptions
+        });
+      }
+
+      const fatCtx = document.getElementById('fatChart') as HTMLCanvasElement | null;
+      if (fatCtx) {
+        this.fatChart = new Chart(fatCtx, {
+          type: 'line',
+          data: {
+            labels,
+            datasets: [{
+              label: 'Grasa corporal (%)',
+              data: fatData,
+              borderColor: '#f88c6b',
+              backgroundColor: 'rgba(248,140,107,0.15)',
+              tension: 0.35,
+              fill: true
+            }]
+          },
+          options: commonOptions
+        });
+      }
+
+      const weightCtx = document.getElementById('weightChart') as HTMLCanvasElement | null;
+      if (weightCtx) {
+        this.weightChart = new Chart(weightCtx, {
+          type: 'line',
+          data: {
+            labels,
+            datasets: [{
+              label: 'Peso (kg)',
+              data: weightData,
+              borderColor: '#5aa9e6',
+              backgroundColor: 'rgba(90,169,230,0.15)',
+              tension: 0.35,
+              fill: true
+            }]
+          },
+          options: commonOptions
+        });
+      }
+    }, 0);
+  }
+
+  private destroyCharts(): void {
+    this.muscleChart?.destroy();
+    this.fatChart?.destroy();
+    this.weightChart?.destroy();
+  }
+
+  private offsetDate(days: number): string {
+    const d = new Date();
+    d.setDate(d.getDate() + days);
+    return d.toISOString().split('T')[0];
   }
 
   private updateMuscles(): void {
@@ -252,71 +445,63 @@ export class OverviewComponent implements OnInit {
   }
 
   editWorkout(workout: any, index: number): void {
+    if (this.editingWorkoutIndex === index) {
+      this.cancelEdit();
+      return;
+    }
     this.editingWorkoutIndex = index;
-    
-    // Try to extract workout data from notes or use available data
-    this.editingWorkout = {
-      type: workout.name,
-      date: workout.date,
-      notes: workout.notes || '',
-      workoutId: workout.workoutId
-    };
-    
-    // Populate form with workout data for editing
+    this.editingWorkout = workout;
+    this.editingProgressId = workout.id || workout.workoutId || null;
+
     const dateStr = workout.date instanceof Date 
       ? workout.date.toISOString().split('T')[0]
       : new Date(workout.date).toISOString().split('T')[0];
-    
-    this.workoutForm.patchValue({
+
+    this.editFields = {
       date: dateStr,
-      type: workout.name,
+      type: workout.name || '',
       notes: workout.notes || ''
-    });
-    
-    this.updateMuscles();
+    };
   }
 
   deleteWorkout(workout: any, index: number): void {
+    if (!workout?.id && !workout?.workoutId) {
+      alert('No se pudo identificar el entrenamiento.');
+      return;
+    }
     if (confirm('¿Estás seguro de que quieres eliminar este entrenamiento?')) {
-      // For now, just remove from the list (backend deletion can be added later)
-      if (this.summary && this.summary.recentWorkouts) {
-        this.summary.recentWorkouts.splice(index, 1);
-        this.summary.totalWorkouts = Math.max(0, this.summary.totalWorkouts - 1);
-      }
-      this.editingWorkoutIndex = null;
-      this.editingWorkout = null;
+      const id = workout.id || workout.workoutId;
+      this.progressService.deleteWorkout(id).subscribe({
+        next: () => {
+          this.loadProgress();
+          this.editingWorkoutIndex = null;
+          this.editingWorkout = null;
+          this.editingProgressId = null;
+        },
+        error: (err) => {
+          console.error('Error deleting workout:', err);
+          alert('No se pudo eliminar el entrenamiento.');
+        }
+      });
     }
   }
 
   saveEditedWorkout(): void {
-    if (this.workoutForm.invalid || !this.editingWorkout) return;
+    if (!this.editingProgressId) return;
+    const payload = {
+      date: this.editFields.date,
+      type: this.editFields.type,
+      notes: this.editFields.notes
+    };
 
-    const payload = this.workoutForm.value;
-    const totalVolume = payload.exercises.reduce((acc: number, ex: any) => {
-      const setsVol = (ex.sets || []).reduce(
-        (s: number, st: any) => s + (st.reps || 0) * (st.weight || 0),
-        0
-      );
-      return acc + setsVol;
-    }, 0);
-
-    this.progressService.logWorkout(payload).subscribe({
+    this.progressService.updateWorkout(this.editingProgressId, payload).subscribe({
       next: () => {
         this.loadProgress();
-        this.editingWorkoutIndex = null;
-        this.editingWorkout = null;
-        // Reset form
-        this.workoutForm.reset({
-          date: new Date().toISOString().split('T')[0],
-          type: this.workoutTypes[0],
-          notes: ''
-        });
-        this.exercises.clear();
-        this.defaultExercises(1).forEach((ex) => this.exercises.push(ex));
-        this.updateMuscles();
+        this.cancelEdit();
       },
       error: (err) => {
-        console.error('Error saving edited workout:', err);
+        console.error('Error updating workout:', err);
+        alert('No se pudo actualizar el entrenamiento.');
       }
     });
   }
@@ -324,14 +509,38 @@ export class OverviewComponent implements OnInit {
   cancelEdit(): void {
     this.editingWorkoutIndex = null;
     this.editingWorkout = null;
-    // Reset form
-    this.workoutForm.reset({
-      date: new Date().toISOString().split('T')[0],
-      type: this.workoutTypes[0],
-      notes: ''
+    this.editingProgressId = null;
+    this.editFields = { date: '', type: '', notes: '' };
+  }
+
+  private loadLastWorkoutByType(type: string): void {
+    this.progressService.getLastWorkoutByType(type).subscribe({
+      next: (res) => {
+        const workout = res?.workout;
+        if (!workout || !workout.exercises) {
+          return;
+        }
+        this.populateExercisesFromHistory(workout.exercises);
+      },
+      error: (err) => {
+        console.error('Error loading last workout by type', err);
+      }
     });
+  }
+
+  private populateExercisesFromHistory(exercises: any[]): void {
+    if (!exercises || exercises.length === 0) return;
     this.exercises.clear();
-    this.defaultExercises(1).forEach((ex) => this.exercises.push(ex));
-    this.updateMuscles();
+    exercises.forEach((ex) => {
+      const setsArray = (ex.sets || []).map((s: any) => this.fb.group({
+        reps: [s.reps || 0, [Validators.required, Validators.min(1)]],
+        weight: [s.weight || 0, [Validators.min(0)]]
+      }));
+      const exerciseGroup = this.fb.group({
+        name: [ex.name || '', Validators.required],
+        sets: this.fb.array(setsArray.length ? setsArray : [this.createSet()])
+      });
+      this.exercises.push(exerciseGroup);
+    });
   }
 }

@@ -54,6 +54,8 @@ export class ProfileComponent implements OnInit {
       birthDate: [null],
       heightCm: [null],
       weightKg: [null],
+      bodyFatPercent: [null],
+      muscleMassKg: [null],
       goal: [null, [Validators.required, Validators.maxLength(200)]],
       trainingFrequency: [null, [Validators.required]],
       activityLevel: [null, [Validators.required]],
@@ -155,26 +157,5 @@ export class ProfileComponent implements OnInit {
       this.form.patchValue(existing);
       this.photoPreview = existing.photoUrl || null;
     }
-
-    // Subscribe to form changes to auto-collapse completed sections
-    this.form.valueChanges.subscribe(() => {
-      if (this.personalValid && this.panelStates.personal) {
-        setTimeout(() => {
-          this.panelStates.personal = false;
-          this.panelStates.habits = true;
-        }, 500);
-      }
-      if (this.habitsValid && this.panelStates.habits) {
-        setTimeout(() => {
-          this.panelStates.habits = false;
-          this.panelStates.training = true;
-        }, 500);
-      }
-      if (this.trainingValid && this.panelStates.training) {
-        setTimeout(() => {
-          this.panelStates.training = false;
-        }, 500);
-      }
-    });
   }
 }

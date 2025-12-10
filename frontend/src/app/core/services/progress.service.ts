@@ -18,6 +18,7 @@ import {
   PerformanceMetric,
   ChartData
 } from '../models/progress.model';
+import { WorkoutLogRequest } from '../models/progress.model';
 import { AuthService } from './auth.service';
 
 @Injectable({
@@ -116,11 +117,13 @@ export class ProgressService {
         // Map recentWorkouts to WorkoutRecord format if needed
         if (summary.recentWorkouts && summary.recentWorkouts.length > 0) {
           summary.recentWorkouts = summary.recentWorkouts.map((w: any) => ({
+            id: w.id || w.workout_id || '',
             workoutId: w.workout_id || w.id || '',
-            name: w.name || 'Workout',
+            name: w.name || w.workout_type || 'Workout',
             completed: w.completed !== undefined ? w.completed : true,
             date: w.date ? (w.date instanceof Date ? w.date : new Date(w.date)) : new Date(),
-            durationMinutes: w.duration_minutes
+            durationMinutes: w.duration_minutes,
+            notes: w.notes || ''
           }));
         }
         
@@ -162,6 +165,61 @@ export class ProgressService {
     }
 
     return this.apiService.delete<any>(`/api/v1/progress/${progressId}`);
+  }
+
+  /**
+   * Update a workout/progress record (partial)
+   */
+  updateWorkout(progressId: string, payload: Partial<WorkoutLogRequest>): Observable<any> {
+    const user = this.authService.getCurrentUser();
+    if (!user) {
+      throw new Error('User not authenticated');
+    }
+
+    return this.apiService.put<any>(`/api/v1/progress/${progressId}`, payload);
+  }
+
+  /**
+   * Body composition history
+   */
+  getBodyComposition(): Observable<any> {
+    const user = this.authService.getCurrentUser();
+    if (!user) {
+      throw new Error('User not authenticated');
+    }
+    return this.apiService.get<any>(`/api/v1/progress/${user.id}/body-comp`);
+  }
+
+  saveBodyComposition(entry: { date: string; muscle: number; fat: number; weight: number }): Observable<any> {
+    const user = this.authService.getCurrentUser();
+    if (!user) {
+      throw new Error('User not authenticated');
+    }
+    const payload = { ...entry, user_id: user.id };
+    return this.apiService.post<any>(`/api/v1/progress/body-comp`, payload).pipe(
+      switchMap((bodyCompRes) =>
+        this.apiService.post<any>('/api/v1/profile', {
+          user_id: user.id,
+          weight_kg: entry.weight,
+          body_fat_percent: entry.fat,
+          muscle_mass_kg: entry.muscle
+        }).pipe(
+          map((profileRes) => ({ bodyComp: bodyCompRes, profile: profileRes }))
+        )
+      )
+    );
+  }
+
+  /**
+   * Last workout by type (with exercises)
+   */
+  getLastWorkoutByType(type: string): Observable<any> {
+    const user = this.authService.getCurrentUser();
+    if (!user) {
+      throw new Error('User not authenticated');
+    }
+    const q = encodeURIComponent(type);
+    return this.apiService.get<any>(`/api/v1/progress/${user.id}/last?type=${q}`);
   }
 
   /**

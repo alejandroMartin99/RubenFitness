@@ -17,12 +17,11 @@
 
     <mat-accordion class="form-accordion">
       <!-- Sección: Datos Personales -->
-      <mat-expansion-panel [(expanded)]="panelStates.personal" [disabled]="false" [class.completed]="personalValid">
+      <mat-expansion-panel [(expanded)]="panelStates.personal">
         <mat-expansion-panel-header>
           <mat-panel-title>
             <span class="panel-title-content">
               <span>Datos Personales</span>
-              <mat-icon class="check-icon" *ngIf="personalValid">check_circle</mat-icon>
             </span>
           </mat-panel-title>
         </mat-expansion-panel-header>
@@ -56,21 +55,29 @@
           <label>Peso (kg)</label>
           <input type="number" formControlName="weightKg" placeholder="70" />
         </div>
+
+        <div class="field">
+          <label>% Grasa corporal</label>
+          <input type="number" step="0.1" formControlName="bodyFatPercent" placeholder="18.0" />
+        </div>
+
+        <div class="field">
+          <label>Masa muscular (kg)</label>
+          <input type="number" step="0.1" formControlName="muscleMassKg" placeholder="34.5" />
+        </div>
       </fieldset>
       </mat-expansion-panel>
 
       <!-- Sección: Hábitos -->
-      <mat-expansion-panel [(expanded)]="panelStates.habits" [disabled]="!personalValid" [class.completed]="habitsValid">
+      <mat-expansion-panel [(expanded)]="panelStates.habits">
         <mat-expansion-panel-header>
           <mat-panel-title>
             <span class="panel-title-content">
               <span>Hábitos</span>
-              <mat-icon class="check-icon" *ngIf="habitsValid">check_circle</mat-icon>
             </span>
           </mat-panel-title>
         </mat-expansion-panel-header>
-        <div class="hint" *ngIf="!personalValid">Completa primero Datos Personales.</div>
-        <fieldset class="grid" [disabled]="!personalValid">
+        <fieldset class="grid">
         <div class="field full">
           <label>Objetivo</label>
           <mat-form-field appearance="outline">
@@ -185,17 +192,15 @@
       </mat-expansion-panel>
 
       <!-- Sección: Entrenamientos -->
-      <mat-expansion-panel [(expanded)]="panelStates.training" [disabled]="!habitsValid" [class.completed]="trainingValid">
+      <mat-expansion-panel [(expanded)]="panelStates.training">
         <mat-expansion-panel-header>
           <mat-panel-title>
             <span class="panel-title-content">
               <span>Entrenamientos</span>
-              <mat-icon class="check-icon" *ngIf="trainingValid">check_circle</mat-icon>
             </span>
           </mat-panel-title>
         </mat-expansion-panel-header>
-        <div class="hint" *ngIf="!habitsValid">Completa primero Hábitos.</div>
-        <fieldset class="grid" [disabled]="!habitsValid">
+        <fieldset class="grid">
         <div class="field">
           <label>Experiencia</label>
           <mat-form-field appearance="outline">
