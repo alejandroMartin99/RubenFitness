@@ -99,6 +99,7 @@
         </div>
       </div>
 
+      <div class="table-scroll" [class.scrollable]="filteredClients.length > 6">
       <div class="table">
         <div class="table-head">
           <span>Usuario</span>
@@ -112,6 +113,7 @@
           <span>Objetivos</span>
           <span>Detalles</span>
           <span>Teléfono</span>
+          <span>Calendario</span>
         </div>
         <div class="table-row" *ngFor="let c of filteredClients">
           <div>
@@ -154,8 +156,23 @@
             </button>
           </div>
           <div class="actions-cell">
-            <button mat-icon-button (click)="openWhatsApp(c); $event.stopPropagation()" title="Contactar por WhatsApp" color="primary" [disabled]="!c.phone">
+            <button mat-icon-button
+                    (click)="openWhatsApp(c); $event.stopPropagation()"
+                    title="Contactar por WhatsApp"
+                    color="primary"
+                    [disabled]="!c.phone"
+                    [class.disabled-muted]="!c.phone">
               <mat-icon>phone</mat-icon>
+            </button>
+          </div>
+          <div class="actions-cell">
+            <button mat-icon-button
+                    title="Crear cita en calendario"
+                    color="accent"
+                    [disabled]="!c.phone"
+                    [class.disabled-muted]="!c.phone"
+                    (click)="openCalendar(c); $event.stopPropagation()">
+              <mat-icon>event</mat-icon>
             </button>
           </div>
         </div>
@@ -163,6 +180,7 @@
           <mat-icon>search_off</mat-icon>
           <p>No se encontraron usuarios</p>
         </div>
+      </div>
       </div>
     </section>
 
@@ -176,7 +194,7 @@
           </div>
         </div>
         <div class="list">
-          <div class="list-item" *ngFor="let c of filteredClients">
+          <div class="list-item" *ngFor="let c of activeClients">
             <div>
               <p class="name">{{ c.name }}</p>
               <p class="muted">{{ c.lastWorkout }}</p>
@@ -188,7 +206,7 @@
               <span class="pill" *ngIf="c.streak === 0">Sin racha</span>
             </div>
           </div>
-          <div class="list-empty" *ngIf="filteredClients.length === 0">
+          <div class="list-empty" *ngIf="activeClients.length === 0">
             <p>No hay datos</p>
           </div>
         </div>
@@ -202,7 +220,7 @@
           </div>
         </div>
         <div class="list">
-          <div class="list-item" *ngFor="let c of filteredClients">
+          <div class="list-item" *ngFor="let c of bodyCompClients">
             <div>
               <p class="name">{{ c.name }}</p>
               <p class="muted">Último registro</p>
@@ -214,11 +232,35 @@
               <span class="pill muted" *ngIf="!c.weight && !c.fat && !c.muscle">Sin datos</span>
             </div>
           </div>
-          <div class="list-empty" *ngIf="filteredClients.length === 0">
+          <div class="list-empty" *ngIf="bodyCompClients.length === 0">
             <p>No hay datos</p>
           </div>
         </div>
       </div>
+    </section>
+
+    <!-- Users without activity -->
+    <section class="panel">
+      <div class="panel-header">
+        <div>
+          <h2>Usuarios sin actividad reciente</h2>
+          <p>Contactar para que completen sus datos</p>
+        </div>
+      </div>
+      <div class="list-missing" *ngIf="missingActivityClients.length > 0; else noMissingActivity">
+        <div class="missing-item" *ngFor="let c of missingActivityClients">
+          <div>
+            <p class="name">{{ c.name }}</p>
+            <p class="muted small">{{ c.email }}</p>
+          </div>
+          <button class="ghost-btn" (click)="openEmail(c)">Contactar por email</button>
+        </div>
+      </div>
+      <ng-template #noMissingActivity>
+        <div class="list-empty">
+          <p>Todos tienen actividad</p>
+        </div>
+      </ng-template>
     </section>
   </div>
 

@@ -252,9 +252,58 @@ export class ClientsComponent implements OnInit, AfterViewInit, OnDestroy {
     );
   }
 
+  get activeClients(): ClientRow[] {
+    return this.filteredClients.filter(c =>
+      (c.workoutsWeek && c.workoutsWeek > 0) ||
+      (c.volumeWeek && c.volumeWeek > 0) ||
+      (c.lastWorkout && c.lastWorkout.toLowerCase() !== 'sin entrenos')
+    );
+  }
+
+  get missingActivityClients(): ClientRow[] {
+    return this.filteredClients.filter(c =>
+      !this.activeClients.includes(c) &&
+      c.streak === 0 &&
+      (!c.volumeWeek || c.volumeWeek === 0) &&
+      (!c.workoutsWeek || c.workoutsWeek === 0) &&
+      (!c.lastWorkout || c.lastWorkout.toLowerCase() === 'sin entrenos')
+    );
+  }
+
+  get bodyCompClients(): ClientRow[] {
+    return this.filteredClients.filter(c =>
+      (c.weight !== null && c.weight !== undefined) ||
+      (c.fat !== null && c.fat !== undefined) ||
+      (c.muscle !== null && c.muscle !== undefined)
+    );
+  }
+
+  get missingBodyCompClients(): ClientRow[] {
+    return this.filteredClients.filter(c =>
+      !this.bodyCompClients.includes(c)
+    );
+  }
+
   formatNumber(value: number | null): string {
     if (value === null || value === undefined) return '-';
     return value.toFixed(1);
+  }
+
+  formatPhone(phone?: string | null): string {
+    if (!phone) return '';
+    // Eliminar todo menos dígitos y +
+    const clean = phone.replace(/[^\d+]/g, '');
+    if (!clean) return '';
+    // Si no empieza por +, asumimos +34
+    const normalized = clean.startsWith('+') ? clean : `+34${clean}`;
+    // Formateo ligero para lectura: +34 600 000 000
+    const digits = normalized.replace(/\D/g, '');
+    if (digits.length >= 11) {
+      const cc = digits.slice(0, 2);
+      const rest = digits.slice(2);
+      return `+${cc} ${rest.replace(/(\d{3})(?=\d)/g, '$1 ').trim()}`;
+    }
+    return normalized;
   }
 
   formatVolume(value: number): string {
@@ -266,6 +315,27 @@ export class ClientsComponent implements OnInit, AfterViewInit, OnDestroy {
 
   openWhatsApp(client: ClientRow): void {
     this.coachService.openWhatsApp(client.phone || '', client.name);
+  }
+
+  openCalendar(client: ClientRow): void {
+    if (!client.phone) {
+      alert('Añade un teléfono para agendar la cita');
+      return;
+    }
+    const title = encodeURIComponent(`Cita con ${client.name || 'cliente'}`);
+    const details = encodeURIComponent(`Teléfono: ${this.formatPhone(client.phone)}`);
+    const url = `https://calendar.google.com/calendar/u/0/r/eventedit?text=${title}&details=${details}`;
+    window.open(url, '_blank');
+  }
+
+  openEmail(client: ClientRow): void {
+    const subject = encodeURIComponent('Completa tus datos en Rubén Fitness');
+    const body = encodeURIComponent(
+      `Hola ${client.name || ''},\n\n` +
+      `¿Puedes completar tus datos (entrenos/composición) para seguir tu progreso?\n\n` +
+      `Gracias,\nRubén Fitness`
+    );
+    window.location.href = `mailto:${client.email}?subject=${subject}&body=${body}`;
   }
 
   viewClientDetails(client: ClientRow): void {
