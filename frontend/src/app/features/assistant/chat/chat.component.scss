@@ -189,6 +189,7 @@
       color: var(--color-text);
       cursor: pointer;
       text-align: left;
+      position: relative;
 
       mat-icon {
         font-size: 18px;
@@ -226,6 +227,62 @@
         border-color: var(--color-primary);
         background: rgba(250, 204, 21, 0.06);
       }
+
+      .delete-btn {
+        margin-left: auto;
+        background: transparent;
+        border: none;
+        color: var(--color-text-secondary);
+        cursor: pointer;
+        padding: 4px;
+        border-radius: var(--radius-sm);
+
+        mat-icon {
+          font-size: 16px;
+          width: 16px;
+          height: 16px;
+        }
+
+        &:hover {
+          color: #ef4444;
+          background: rgba(239, 68, 68, 0.08);
+        }
+      }
+    }
+  }
+}
+
+.confirm-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+
+  .confirm-modal {
+    background: #0f1118;
+    border: 1px solid #1f1f24;
+    border-radius: 12px;
+    padding: 1.25rem;
+    width: min(360px, 90%);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
+
+    h3 {
+      margin: 0 0 0.5rem 0;
+      color: #e5e7eb;
+    }
+
+    p {
+      margin: 0 0 1rem 0;
+      color: rgba(255, 255, 255, 0.7);
+    }
+
+    .confirm-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 0.75rem;
     }
   }
 }

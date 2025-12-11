@@ -40,11 +40,11 @@ class OpenAIService:
             Assistant's response as a string
         """
         if not self.is_connected():
-            return self._get_mock_response(messages)
+            return self._get_mock_response(messages, user_context)
         
         try:
-            # Build system message with context
-            system_message = self._build_system_message(user_context)
+        # Build system message with context
+        system_message = self._build_system_message(user_context)
             
             # Prepare messages for OpenAI
             openai_messages = [system_message] + messages
@@ -92,41 +92,124 @@ SIEMPRE:
 - Prioriza la seguridad del usuario
 - Adapta tus consejos al nivel del usuario
 - Proporciona información basada en evidencia científica
-- Motiva pero sin exagerar
+- Motiva con energía pero sin exagerar
 - Responde en español, de forma natural y profesional"""
         
         if user_context:
             # Add user-specific context
-            context_str = f"\n\nCONTEXTO DEL USUARIO: {user_context}"
+            try:
+                profile = user_context.get("profile") if isinstance(user_context, dict) else None
+            except Exception:
+                profile = None
+            context_parts = []
+            if isinstance(profile, dict):
+                if profile.get("weight_kg"):
+                    context_parts.append(f"peso {profile.get('weight_kg')} kg")
+                if profile.get("body_fat_percent"):
+                    context_parts.append(f"% grasa {profile.get('body_fat_percent')}%")
+                if profile.get("muscle_mass_kg"):
+                    context_parts.append(f"masa muscular {profile.get('muscle_mass_kg')} kg")
+                if profile.get("goal"):
+                    context_parts.append(f"objetivo: {profile.get('goal')}")
+                if profile.get("training_frequency"):
+                    context_parts.append(f"frecuencia: {profile.get('training_frequency')}")
+                if profile.get("activity_level"):
+                    context_parts.append(f"nivel: {profile.get('activity_level')}")
+            context_str = ""
+            if context_parts:
+                context_str = "\n\nDATOS DEL USUARIO (usa para personalizar): " + ", ".join(context_parts)
             base_prompt += context_str
         
         return {"role": "system", "content": base_prompt.strip()}
     
-    def _get_mock_response(self, messages: List[Dict[str, str]]) -> str:
-        """Return mock response for development/testing"""
+    def _get_mock_response(self, messages: List[Dict[str, str]], user_context: Optional[Dict[str, Any]] = None) -> str:
+        """Return mock response for desarrollo (es) con tono pro y motivacional"""
         user_message = messages[-1].get("content", "") if messages else ""
-        
-        mock_responses = [
-            "I understand you're looking for fitness guidance. Let's work on your goals together!",
-            "That's a great question! Based on your fitness level, I'd recommend starting with basic strength training.",
-            "Remember: consistency is key to achieving your fitness goals. Keep pushing forward!",
-            "Let me help you create a personalized workout plan that fits your schedule and goals.",
-        ]
-        
-        # Simple keyword matching for more realistic mock responses
-        user_lower = user_message.lower()
-        if "workout" in user_lower or "exercise" in user_lower:
-            return "I'd be happy to help you create a workout plan! What are your primary fitness goals - strength, endurance, weight loss, or general fitness?"
-        elif "diet" in user_lower or "nutrition" in user_lower or "eating" in user_lower:
-            return "Nutrition is a crucial part of your fitness journey! A balanced diet with adequate protein, carbs, and healthy fats is essential. What specific nutrition questions do you have?"
-        elif "motivation" in user_lower or "struggling" in user_lower:
-            return "I understand how challenging it can be to stay motivated! Remember why you started, and focus on small, consistent progress. Every workout counts - you've got this!"
-        elif "start" in user_lower or "beginner" in user_lower:
-            return "Great that you're ready to start your fitness journey! I recommend beginning with 2-3 full-body workouts per week, focusing on form over intensity. Would you like me to create a beginner-friendly workout plan?"
-        elif "schedule" in user_lower or "time" in user_lower:
-            return "Finding time for fitness can be tough! Even 20-30 minutes of exercise a few times a week can make a huge difference. What does your weekly schedule look like?"
-        else:
-            return "I'm here to support your fitness journey! Whether you need workout plans, nutrition advice, or motivation, I'm ready to help. What specific area would you like to focus on?"
+        lower = user_message.lower()
+
+        profile = None
+        if user_context and isinstance(user_context, dict):
+            profile = user_context.get("profile")
+        profile_str = ""
+        if isinstance(profile, dict):
+            parts = []
+            if profile.get("weight_kg"):
+                parts.append(f"peso {profile.get('weight_kg')} kg")
+            if profile.get("body_fat_percent"):
+                parts.append(f"% grasa {profile.get('body_fat_percent')}%")
+            if profile.get("muscle_mass_kg"):
+                parts.append(f"masa muscular {profile.get('muscle_mass_kg')} kg")
+            if profile.get("goal"):
+                parts.append(f"objetivo {profile.get('goal')}")
+            if parts:
+                profile_str = " | Datos: " + ", ".join(parts)
+
+        # Context strings
+        context_str = ""
+        if user_context:
+            try:
+                context_str = f"\n\nContexto: {user_context}"
+            except Exception:
+                context_str = ""
+
+        if any(k in lower for k in ["fuerza", "hipertrofia", "serie", "repet", "rir", "rpe", "pesas", "gym", "powerlifting"]):
+            return (
+                "Vamos a por un plan enfocado a fuerza/hipertrofia:\n"
+                "- 3-4 días/semana, básicos primero (sentadilla, press banca, peso muerto, press militar).\n"
+                "- 3-4 series de 6-10 reps, RIR 1-2, descanso 2-3 min en básicos.\n"
+                "- Accesorios 2-3 series de 10-15 reps, descanso 60-90s.\n"
+                "- Progresión: sube 2.5-5 kg o 1-2 reps por semana si mantienes técnica.\n"
+                "Mantén técnica limpia y registra cada sesión.\n"
+                f"{context_str}{profile_str}"
+            )
+
+        if any(k in lower for k in ["cardio", "hiit", "liss", "aeróbico", "aerobico"]):
+            return (
+                "Cardio estratégico sin interferir con fuerza:\n"
+                "- 2-3 sesiones LISS de 25-40 min post-entreno o días separados.\n"
+                "- HIIT 1x/semana si recuperas bien (6-10 sprints de 20-30s, 1-2 min pausa).\n"
+                "- Mantén 1-2 días completos de descanso/recuperación activa.\n"
+                f"{context_str}"
+            )
+
+        if any(k in lower for k in ["caloría", "caloria", "déficit", "superávit", "superavit", "macros", "prote", "grasa", "carbo"]):
+            return (
+                "Nutrición orientada a rendimiento/recomp:\n"
+                "- Proteína: 1.6-2.2 g/kg peso.\n"
+                "- Grasas: 0.7-1 g/kg.\n"
+                "- Carbs: resto de calorías; sube en días de pierna/fuerza.\n"
+                "- Timing: pre-entreno 20-40 g prote + 30-60 g carbs; post-entreno similar.\n"
+                "- Si buscas déficit: -10% a -20% calorías; superávit controlado +5-10% para masa.\n"
+                f"{context_str}"
+            )
+
+        if any(k in lower for k in ["recuperación", "recuperacion", "sueño", "fatiga", "lesión", "lesion"]):
+            return (
+                "Recuperación pro:\n"
+                "- Sueño 7.5-9 h; higieniza luz y cafeína (<8h antes de dormir).\n"
+                "- Controla volumen: si hay fatiga, baja un 20-30% series una semana (deload).\n"
+                "- Movilidad ligera y caminatas 20-30 min en días libres.\n"
+                "- Prote 1.8-2 g/kg y 30-40 g en la comida post-entreno.\n"
+                f"{context_str}"
+            )
+
+        if any(k in lower for k in ["principiante", "empezar", "start", "novato"]):
+            return (
+                "Empezamos simple y sólido:\n"
+                "- 3 días full body: sentadilla goblet, press mancuernas, remo, peso muerto rumano, core.\n"
+                "- 3x8-12 reps, RIR 2-3, descanso 90s.\n"
+                "- Sube peso o reps cada semana si mantienes técnica.\n"
+                "- 6-8k pasos/día y 2L agua.\n"
+                f"{context_str}"
+            )
+
+        # Default mock
+        return (
+            "Listo para afinar tu plan. Dame tu objetivo concreto "
+            "(fuerza, recomposición, definición o rendimiento) y te detallo series/reps/RIR, "
+            "progresión y macros con timing. Vamos a por ello."
+            f"{context_str}{profile_str}"
+        )
     
     def get_streaming_response(
         self, 

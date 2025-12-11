@@ -44,9 +44,26 @@ async def chat(request: ChatRequest):
         })
         
         # Get AI response
+        # Build user context with profile data (peso, grasa, músculo, objetivo...)
+        profile_context = None
+        try:
+            prof = supabase_service.get_profile(request.user_id)
+            if prof:
+                profile_context = {
+                    "weight_kg": prof.get("weight_kg"),
+                    "body_fat_percent": prof.get("body_fat_percent"),
+                    "muscle_mass_kg": prof.get("muscle_mass_kg"),
+                    "goal": prof.get("goal"),
+                    "training_frequency": prof.get("training_frequency"),
+                    "activity_level": prof.get("activity_level"),
+                }
+        except Exception as e:
+            print(f"Warning: could not load profile for context: {e}")
+
         user_context = {
             "user_id": request.user_id,
-            "additional_context": request.context
+            "additional_context": request.context,
+            "profile": profile_context
         }
         
         assistant_response = openai_service.get_chat_response(

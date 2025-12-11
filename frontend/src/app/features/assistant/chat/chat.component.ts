@@ -38,23 +38,24 @@ export class ChatComponent implements OnInit, AfterViewChecked {
   // Sidebar conversations (backend)
   sessions: { id: string; title: string; createdAt: string; updatedAt: string }[] = [];
   selectedChatId: string | 'new' = 'new';
+  confirmDeleteId: string | null = null;
 
   // Quick Actions - Main Categories
   quickActions: QuickAction[] = [
     {
       id: 'nutrition',
-      title: 'Alimentación',
+      title: 'Nutrición avanzada',
       icon: 'restaurant',
       category: 'nutrition',
-      message: 'Quiero consejos sobre alimentación y nutrición',
+      message: 'Quiero ajustar mi nutrición para rendimiento y recomposición corporal',
       color: 'nutrition'
     },
     {
       id: 'training',
-      title: 'Entrenamiento',
+      title: 'Entrenamiento pro',
       icon: 'fitness_center',
       category: 'training',
-      message: 'Necesito ayuda con mi entrenamiento y ejercicios',
+      message: 'Necesito optimizar mi entrenamiento para fuerza/hipertrofia con buena técnica',
       color: 'training'
     }
   ];
@@ -63,39 +64,39 @@ export class ChatComponent implements OnInit, AfterViewChecked {
   nutritionActions: SubAction[] = [
     {
       id: 'calories',
-      title: 'Calorías Diarias',
+      title: 'Ajuste calórico',
       icon: 'local_fire_department',
-      message: '¿Cuántas calorías debería consumir al día?'
+      message: 'Calcula y ajusta mis calorías para recomposición o definición manteniendo rendimiento'
     },
     {
       id: 'macros',
-      title: 'Macronutrientes',
+      title: 'Macronutrientes finos',
       icon: 'pie_chart',
-      message: 'Explícame sobre proteínas, carbohidratos y grasas'
+      message: 'Define macros diarios (prote, carbs, grasas) y timing para entrenar fuerte'
     },
     {
       id: 'meal-plan',
-      title: 'Plan de Comidas',
+      title: 'Meal prep eficiente',
       icon: 'restaurant_menu',
-      message: 'Ayúdame a crear un plan de comidas saludable'
+      message: 'Crea un plan de comidas batch (meal prep) optimizado para proteína y micronutrientes'
     },
     {
       id: 'pre-workout',
-      title: 'Alimentación Pre-Entreno',
+      title: 'Pre-entreno',
       icon: 'bolt',
-      message: '¿Qué debo comer antes de entrenar?'
+      message: 'Dame opciones de pre-entreno según hora y tipo de sesión (fuerza o cardio)'
     },
     {
       id: 'post-workout',
-      title: 'Alimentación Post-Entreno',
+      title: 'Post-entreno',
       icon: 'refresh',
-      message: '¿Qué debo comer después de entrenar?'
+      message: 'Optimiza mi post-entreno para recuperación y síntesis proteica'
     },
     {
       id: 'supplements',
-      title: 'Suplementos',
+      title: 'Suplementos útiles',
       icon: 'medication',
-      message: '¿Qué suplementos debería tomar?'
+      message: 'Suplementos con evidencia para fuerza/hipertrofia y timing recomendado'
     }
   ];
 
@@ -103,39 +104,39 @@ export class ChatComponent implements OnInit, AfterViewChecked {
   trainingActions: SubAction[] = [
     {
       id: 'routine',
-      title: 'Rutina de Ejercicios',
+      title: 'Rutina pro',
       icon: 'list_alt',
-      message: 'Crea una rutina de entrenamiento personalizada para mí'
+      message: 'Diseña una rutina de fuerza/hipertrofia con progresión y deloads'
     },
     {
       id: 'sets-reps',
-      title: 'Series y Repeticiones',
+      title: 'Series, RIR y descansos',
       icon: 'repeat',
-      message: 'Explícame sobre series, repeticiones y descansos'
+      message: 'Define series, repeticiones, RIR/RPE y descansos óptimos para mi objetivo'
     },
     {
       id: 'technique',
-      title: 'Técnica de Ejercicios',
+      title: 'Técnica y riesgos',
       icon: 'school',
-      message: 'Enséñame la técnica correcta de ejercicios'
+      message: 'Pautas de técnica y control de fatiga para evitar lesiones en básicos'
     },
     {
       id: 'strength',
-      title: 'Fuerza',
+      title: 'Bloque de fuerza',
       icon: 'sports_gymnastics',
-      message: 'Quiero aumentar mi fuerza'
+      message: 'Planifica un bloque de fuerza (3-6 semanas) con progresión semanal'
     },
     {
       id: 'cardio',
-      title: 'Cardio',
+      title: 'Cardio estratégico',
       icon: 'directions_run',
-      message: 'Necesito consejos sobre ejercicios cardiovasculares'
+      message: 'Integra cardio (LISS/HIIT) sin interferir con mis ganancias de fuerza'
     },
     {
       id: 'recovery',
-      title: 'Recuperación',
+      title: 'Recuperación pro',
       icon: 'healing',
-      message: 'Cómo mejorar mi recuperación después del entrenamiento'
+      message: 'Mejora recuperación: sueño, variabilidad, gestión de volumen y movilidad'
     }
   ];
 
@@ -205,6 +206,35 @@ export class ChatComponent implements OnInit, AfterViewChecked {
         this.showQuickActions = true;
       }
     });
+  }
+
+  deleteConversation(chatId: string, event?: MouseEvent): void {
+    if (event) {
+      event.stopPropagation();
+      event.preventDefault();
+    }
+    this.confirmDeleteId = chatId;
+  }
+
+  confirmDelete(): void {
+    if (!this.confirmDeleteId) return;
+    const chatId = this.confirmDeleteId;
+    this.chatService.deleteConversation(chatId).subscribe({
+      next: () => {
+        this.sessions = this.sessions.filter(s => s.id !== chatId);
+        if (this.selectedChatId === chatId) {
+          this.startNewChat();
+        }
+        this.confirmDeleteId = null;
+      },
+      error: () => {
+        this.confirmDeleteId = null;
+      }
+    });
+  }
+
+  cancelDelete(): void {
+    this.confirmDeleteId = null;
   }
 
   /**
@@ -365,7 +395,12 @@ export class ChatComponent implements OnInit, AfterViewChecked {
 
   private generateSessionTitle(firstMessage: string): string {
     const clean = (firstMessage || '').replace(/\s+/g, ' ').trim();
-    return clean ? clean.slice(0, 40) : 'Nuevo chat';
+    if (!clean) return 'Nuevo chat';
+    // Dar más contexto fitness pro
+    const keywords = ['fuerza', 'hipertrofia', 'rendimiento', 'nutrición', 'suplementos'];
+    const found = keywords.find(k => clean.toLowerCase().includes(k));
+    if (found) return `Plan ${found}: ${clean.slice(0, 32)}`;
+    return clean.slice(0, 50);
   }
 
   /**

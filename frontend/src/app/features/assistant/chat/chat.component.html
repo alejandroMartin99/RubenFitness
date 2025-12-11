@@ -38,29 +38,34 @@
           </button>
         </div>
         <div class="sidebar-list">
-          <button 
+          <div 
             class="sidebar-item"
             [class.active]="selectedChatId === 'new'"
             (click)="startNewChat()"
+            role="button" tabindex="0"
           >
             <mat-icon>chat_bubble_outline</mat-icon>
             <div class="item-text">
               <div class="item-title">Nuevo chat</div>
               <div class="item-sub">Empieza una conversación</div>
             </div>
-          </button>
-          <button 
+          </div>
+          <div 
             class="sidebar-item"
             *ngFor="let chat of sessions"
             [class.active]="selectedChatId === chat.id"
             (click)="openChat(chat.id)"
+            role="button" tabindex="0"
           >
             <mat-icon>history</mat-icon>
             <div class="item-text">
               <div class="item-title">{{ chat.title }}</div>
               <div class="item-sub">{{ chat.updatedAt | date:'short' }}</div>
             </div>
-          </button>
+            <button class="delete-btn" (click)="deleteConversation(chat.id, $event)" title="Eliminar conversación">
+              <mat-icon>delete</mat-icon>
+            </button>
+          </div>
         </div>
       </aside>
 
@@ -218,6 +223,18 @@
         <mat-icon>info</mat-icon>
         Puedes hacer preguntas sobre entrenamiento, nutrición, ejercicios y más
       </p>
+    </div>
+  </div>
+
+  <!-- Confirm Delete Modal -->
+  <div class="confirm-overlay" *ngIf="confirmDeleteId">
+    <div class="confirm-modal">
+      <h3>Eliminar conversación</h3>
+      <p>Esta acción eliminará el historial de este chat.</p>
+      <div class="confirm-actions">
+        <button mat-stroked-button color="primary" (click)="cancelDelete()">Cancelar</button>
+        <button mat-raised-button color="warn" (click)="confirmDelete()">Eliminar</button>
+      </div>
     </div>
   </div>
 </div>

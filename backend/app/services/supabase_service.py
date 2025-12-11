@@ -242,7 +242,23 @@ class SupabaseService:
             return False
 
     def list_messages_by_conversation(self, conversation_id: str, limit: int = 200) -> List[Dict[str, Any]]:
+        """List messages for a given conversation ordered by creation ascending."""
         if not self.is_connected():
+            return []
+        if not self._is_valid_uuid(conversation_id):
+            return []
+        try:
+            result = (
+                self.supabase.table("chat_messages")
+                .select("*")
+                .eq("conversation_id", conversation_id)
+                .order("created_at", desc=False)
+                .limit(limit)
+                .execute()
+            )
+            return result.data or []
+        except Exception as e:
+            print(f"Error listing messages by conversation: {e}")
             return []
 
     # Profile Operations
