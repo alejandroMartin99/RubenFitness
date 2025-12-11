@@ -16,7 +16,16 @@ export class ApiService {
   /** Base API URL */
   private readonly apiUrl = environment.apiUrl;
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) {
+    // Log API URL on initialization for debugging
+    console.log(`[API Service] Initialized with API URL: ${this.apiUrl}`);
+    console.log(`[API Service] Environment: ${environment.production ? 'production' : 'development'}`);
+    
+    // Warn if using localhost in production
+    if (environment.production && this.apiUrl.includes('localhost')) {
+      console.error('[API Service] ⚠️ WARNING: Using localhost URL in production!', this.apiUrl);
+    }
+  }
 
   /**
    * Log error details for debugging
