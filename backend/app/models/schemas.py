@@ -241,6 +241,7 @@ class ProfileRequest(BaseModel):
     notes: Optional[str] = None
     habits: Optional[str] = None
     photo_url: Optional[str] = None
+    phone: Optional[str] = None
 
 class ProfileResponse(BaseModel):
     user_id: str
@@ -271,5 +272,6 @@ class ProfileResponse(BaseModel):
     notes: Optional[str] = None
     habits: Optional[str] = None
     photo_url: Optional[str] = None
+    phone: Optional[str] = None
     created_at: datetime
     updated_at: datetime

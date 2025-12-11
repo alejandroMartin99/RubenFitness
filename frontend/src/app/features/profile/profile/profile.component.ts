@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { AbstractControl, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ProfileService, UserProfile } from '../../../core/services/profile.service';
+import { SupabaseService } from '../../../core/services/supabase.service';
 
 @Component({
   selector: 'app-profile',
@@ -47,7 +48,11 @@ export class ProfileComponent implements OnInit {
   nutritionOptions = ['balanceada', 'vegana', 'vegetariana', 'keto'];
   injuryOptions = ['ninguna', 'espalda', 'rodilla', 'hombro', 'tobillo', 'muñeca', 'codo', 'cuello', 'cadera', 'tendinitis'];
 
-  constructor(private fb: FormBuilder, private profileService: ProfileService) {
+  constructor(
+    private fb: FormBuilder,
+    private profileService: ProfileService,
+    private supabaseService: SupabaseService
+  ) {
     this.form = this.fb.group({
       fullName: ['', [Validators.required, Validators.maxLength(100)]],
       gender: [null, [Validators.required]],
@@ -56,6 +61,7 @@ export class ProfileComponent implements OnInit {
       weightKg: [null],
       bodyFatPercent: [null],
       muscleMassKg: [null],
+      phone: [null, [Validators.maxLength(20)]],
       goal: [null, [Validators.required, Validators.maxLength(200)]],
       trainingFrequency: [null, [Validators.required]],
       activityLevel: [null, [Validators.required]],
@@ -152,10 +158,51 @@ export class ProfileComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    const existing = this.profileService.getProfile();
-    if (existing) {
-      this.form.patchValue(existing);
-      this.photoPreview = existing.photoUrl || null;
+    const cached = this.profileService.getProfile();
+    if (cached) {
+      this.form.patchValue(cached);
+      this.photoPreview = cached.photoUrl || null;
     }
+
+    const backend$ = this.profileService.fetchProfileFromBackend();
+    if (backend$) {
+      backend$.subscribe({
+        next: (profile) => {
+          // Solo parchear campos que vienen con valor para no pisar lo ya mostrado
+          const patch: any = {};
+          Object.entries(profile || {}).forEach(([k, v]) => {
+            if (v !== undefined && v !== null && v !== '') {
+              patch[k] = v;
+            }
+          });
+          if (Object.keys(patch).length) {
+            this.form.patchValue(patch);
+          }
+          if (!this.photoPreview && profile.photoUrl) {
+            this.photoPreview = profile.photoUrl;
+            this.form.patchValue({ photoUrl: profile.photoUrl });
+          }
+        },
+        error: () => {
+          // silencioso
+        }
+      });
+    }
+
+    // Fallback: usar metadatos de auth (Google) para nombre/foto si faltan
+    this.supabaseService.getClient().auth.getSession().then(({ data }) => {
+      const user = data?.session?.user;
+      const meta = user?.user_metadata || {};
+      const authName = meta['full_name'] || meta['name'] || meta['user_name'] || user?.email;
+      const authAvatar = meta['avatar_url'] || meta['picture'] || meta['photo_url'];
+
+      if (!this.form.value.fullName && authName) {
+        this.form.patchValue({ fullName: authName });
+      }
+      if (!this.photoPreview && authAvatar) {
+        this.photoPreview = authAvatar;
+        this.form.patchValue({ photoUrl: authAvatar });
+      }
+    }).catch(() => {});
   }
 }

@@ -282,6 +282,7 @@ class SupabaseService:
                 "notes": data.notes,
                 "habits": data.habits,
                 "photo_url": data.photo_url,
+                "phone": data.phone,
                 "updated_at": datetime.utcnow().isoformat()
             }
             result = self.supabase.table("user_profiles").upsert(payload, on_conflict="user_id").execute()

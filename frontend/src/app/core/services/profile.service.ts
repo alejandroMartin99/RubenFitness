@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { ApiService } from './api.service';
 import { AuthService } from './auth.service';
+import { Observable } from 'rxjs';
 
 export interface UserProfile {
   fullName?: string;
@@ -10,6 +11,7 @@ export interface UserProfile {
   weightKg?: number;
   bodyFatPercent?: number;
   muscleMassKg?: number;
+  phone?: string;
   goal?: string; // e.g., lose weight, gain muscle
   trainingFrequency?: 'lt2' | '2-3' | '4+' | '';
   activityLevel?: 'low' | 'medium' | 'high';
@@ -17,13 +19,13 @@ export interface UserProfile {
   diet?: string;
   sleepHoursTarget?: number;
   waterGoalMl?: number;
-  injuries?: string;
+  injuries?: string[];
   allergies?: string;
   medication?: string;
   trainingExperience?: string;
-  equipment?: string;
-  availabilityDays?: string;
-  availabilityHours?: string;
+  equipment?: string[];
+  availabilityDays?: string[];
+  availabilityHours?: string[];
   stressLevel?: string;
   nutritionPreference?: string;
   smoking?: boolean;
@@ -92,8 +94,83 @@ export class ProfileService {
       alcohol: profile.alcohol,
       notes: profile.notes,
       habits: profile.habits,
-      photo_url: profile.photoUrl
+      photo_url: profile.photoUrl,
+      phone: profile.phone
     }).subscribe({ next: () => {}, error: () => {} });
+  }
+
+  /** Fetch profile from backend and cache locally */
+  fetchProfileFromBackend() {
+    const uid = this.authService.getCurrentUser()?.id;
+    if (!uid) return null;
+
+    const normalize = (data: any): UserProfile => {
+      const profile: UserProfile = {};
+      const setIf = (key: keyof UserProfile, value: any) => {
+        if (value !== undefined && value !== null && value !== '') {
+          (profile as any)[key] = value;
+        }
+      };
+
+      setIf('fullName', data?.full_name);
+      setIf('gender', data?.gender);
+      setIf('birthDate', data?.birth_date);
+      setIf('heightCm', data?.height_cm);
+      setIf('weightKg', data?.weight_kg);
+      setIf('bodyFatPercent', data?.body_fat_percent);
+      setIf('muscleMassKg', data?.muscle_mass_kg);
+      setIf('goal', data?.goal);
+      setIf('trainingFrequency', data?.training_frequency);
+      setIf('activityLevel', data?.activity_level);
+      setIf('diet', data?.diet);
+      setIf('sleepHoursTarget', data?.sleep_hours_target);
+      setIf('waterGoalMl', data?.water_goal_ml);
+
+      const injuries = this.parseCsv(data?.injuries);
+      if (injuries && injuries.length) setIf('injuries', injuries);
+
+      setIf('medication', data?.medication);
+      setIf('trainingExperience', data?.training_experience);
+
+      const equipment = this.parseCsv(data?.equipment);
+      if (equipment && equipment.length) setIf('equipment', equipment);
+
+      const availabilityHours = this.parseCsv(data?.availability_hours);
+      if (availabilityHours && availabilityHours.length) setIf('availabilityHours', availabilityHours);
+
+      setIf('stressLevel', data?.stress_level);
+      setIf('nutritionPreference', data?.nutrition_preference);
+      if (data?.smoking !== undefined && data?.smoking !== null) setIf('smoking', data.smoking);
+      if (data?.alcohol !== undefined && data?.alcohol !== null) setIf('alcohol', data.alcohol);
+      setIf('notes', data?.notes);
+      setIf('habits', data?.habits);
+      setIf('photoUrl', data?.photo_url);
+      setIf('phone', data?.phone);
+
+      return profile;
+    };
+
+    return new Observable<UserProfile>((subscriber) => {
+      this.api.get<any>(`/api/v1/profile/${uid}`).subscribe({
+        next: (data) => {
+          const normalized = normalize(data || {});
+          this.saveProfile(normalized);
+          subscriber.next(normalized);
+          subscriber.complete();
+        },
+        error: (err) => subscriber.error(err)
+      });
+    });
+  }
+
+  private parseCsv(value: any): string[] {
+    if (!value) return [];
+    if (Array.isArray(value)) return value;
+    if (typeof value === 'string') {
+      const parts = value.split(',').map(v => v.trim()).filter(Boolean);
+      return parts;
+    }
+    return [];
   }
 }
 

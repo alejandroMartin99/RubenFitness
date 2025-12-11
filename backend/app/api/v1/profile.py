@@ -56,6 +56,7 @@ async def get_profile(user_id: str):
       notes=data.get("notes"),
       habits=data.get("habits"),
       photo_url=data.get("photo_url"),
+      phone=data.get("phone"),
       created_at=data.get("created_at"),
       updated_at=data.get("updated_at"),
     )

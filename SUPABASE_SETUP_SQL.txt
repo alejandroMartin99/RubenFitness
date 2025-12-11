@@ -85,7 +85,8 @@ CREATE TABLE IF NOT EXISTS public.user_profiles (
   smoking BOOLEAN,
   alcohol BOOLEAN,
   notes TEXT,
-  training_frequency TEXT
+  training_frequency TEXT,
+  phone TEXT
 );
 
 -- =====================================================
