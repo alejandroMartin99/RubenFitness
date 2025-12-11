@@ -329,13 +329,33 @@ export class ClientsComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   openEmail(client: ClientRow): void {
-    const subject = encodeURIComponent('Completa tus datos en Rubén Fitness');
+    const subject = encodeURIComponent('Te ayudo a completar tu perfil');
     const body = encodeURIComponent(
       `Hola ${client.name || ''},\n\n` +
-      `¿Puedes completar tus datos (entrenos/composición) para seguir tu progreso?\n\n` +
-      `Gracias,\nRubén Fitness`
+      `Quiero asegurarme de que tu plan está bien ajustado. ¿Me ayudas completando tus últimos entrenos y tus mediciones (peso, % grasa, músculo)?\n\n` +
+      `Esto nos permitirá:\n` +
+      `• Afinar tus rutinas y cargas.\n` +
+      `• Ver tu progreso real y celebrar logros.\n` +
+      `• Ajustar objetivos y métricas para el siguiente bloque.\n\n` +
+      `Puedes actualizarlo en la app en menos de un minuto.\n\n` +
+      `Gracias,\n` +
+      `Rubén Fitness`
     );
-    window.location.href = `mailto:${client.email}?subject=${subject}&body=${body}`;
+    const mailto = `mailto:${client.email}?subject=${subject}&body=${body}`;
+
+    // Intentar mailto; si el navegador no tiene cliente asociado, fallback a Gmail compose
+    const a = document.createElement('a');
+    a.href = mailto;
+    a.style.display = 'none';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+
+    // Fallback: Gmail compose en una pestaña nueva
+    setTimeout(() => {
+      const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(client.email)}&su=${subject}&body=${body}`;
+      window.open(gmailUrl, '_blank');
+    }, 300);
   }
 
   viewClientDetails(client: ClientRow): void {
