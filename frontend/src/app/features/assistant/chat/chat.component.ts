@@ -31,6 +31,7 @@ export class ChatComponent implements OnInit, AfterViewChecked {
   allHistory: ChatMessage[] = [];
   inputMessage = '';
   loading = false;
+  loadingConversation = false;
   userId: string | null = null;
   showQuickActions = true;
   selectedCategory: 'nutrition' | 'training' | null = null;
@@ -189,6 +190,7 @@ export class ChatComponent implements OnInit, AfterViewChecked {
 
   openChat(chatId: string): void {
     this.selectedChatId = chatId;
+    this.loadingConversation = true;
     this.chatService.listMessagesByConversation(chatId).subscribe({
       next: (res: any) => {
         const msgs = res?.messages || [];
@@ -200,10 +202,12 @@ export class ChatComponent implements OnInit, AfterViewChecked {
         }));
         this.showQuickActions = this.messages.length === 0;
         setTimeout(() => this.scrollToBottom(), 50);
+        this.loadingConversation = false;
       },
       error: () => {
         this.messages = [];
         this.showQuickActions = true;
+        this.loadingConversation = false;
       }
     });
   }

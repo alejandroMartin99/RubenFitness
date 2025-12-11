@@ -167,9 +167,10 @@ class SupabaseService:
                         timestamp = datetime.utcnow()
                     
                     messages.append(ChatMessage(
+                        user_id=user_id,
+                        message=msg.get("content", ""),
                         role=msg.get("role", "user"),
-                        content=msg.get("content", ""),
-                        timestamp=timestamp
+                        created_at=timestamp
                     ))
             
             return messages

@@ -33,7 +33,7 @@ async def chat(request: ChatRequest):
         
         # Convert chat history to OpenAI format
         messages = [
-            {"role": msg.role, "content": msg.content} 
+            {"role": msg.role, "content": msg.message}
             for msg in chat_history
         ]
         

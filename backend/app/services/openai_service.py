@@ -43,8 +43,8 @@ class OpenAIService:
             return self._get_mock_response(messages, user_context)
         
         try:
-        # Build system message with context
-        system_message = self._build_system_message(user_context)
+            # Build system message with context
+            system_message = self._build_system_message(user_context)
             
             # Prepare messages for OpenAI
             openai_messages = [system_message] + messages
@@ -60,7 +60,7 @@ class OpenAIService:
             return response.choices[0].message.content
         except Exception as e:
             print(f"Error calling OpenAI API: {e}")
-            return self._get_mock_response(messages)
+            return self._get_mock_response(messages, user_context)
     
     def _build_system_message(self, user_context: Optional[Dict[str, Any]]) -> Dict[str, str]:
         """Build system message with context"""
@@ -144,14 +144,6 @@ SIEMPRE:
             if parts:
                 profile_str = " | Datos: " + ", ".join(parts)
 
-        # Context strings
-        context_str = ""
-        if user_context:
-            try:
-                context_str = f"\n\nContexto: {user_context}"
-            except Exception:
-                context_str = ""
-
         if any(k in lower for k in ["fuerza", "hipertrofia", "serie", "repet", "rir", "rpe", "pesas", "gym", "powerlifting"]):
             return (
                 "Vamos a por un plan enfocado a fuerza/hipertrofia:\n"
@@ -160,7 +152,7 @@ SIEMPRE:
                 "- Accesorios 2-3 series de 10-15 reps, descanso 60-90s.\n"
                 "- Progresión: sube 2.5-5 kg o 1-2 reps por semana si mantienes técnica.\n"
                 "Mantén técnica limpia y registra cada sesión.\n"
-                f"{context_str}{profile_str}"
+                f"{profile_str}"
             )
 
         if any(k in lower for k in ["cardio", "hiit", "liss", "aeróbico", "aerobico"]):
@@ -208,7 +200,7 @@ SIEMPRE:
             "Listo para afinar tu plan. Dame tu objetivo concreto "
             "(fuerza, recomposición, definición o rendimiento) y te detallo series/reps/RIR, "
             "progresión y macros con timing. Vamos a por ello."
-            f"{context_str}{profile_str}"
+            f"{profile_str}"
         )
     
     def get_streaming_response(

@@ -73,6 +73,11 @@
       <div class="chat-right-column">
         <!-- Messages Area -->
         <div class="chat-messages" #chatContainer>
+
+          <!-- Conversation loader -->
+          <div class="conversation-loader" *ngIf="loadingConversation">
+            <mat-spinner diameter="36"></mat-spinner>
+          </div>
           
           <!-- Welcome Screen with Quick Actions -->
           <div class="welcome-screen" *ngIf="showQuickActions && messages.length === 0">
