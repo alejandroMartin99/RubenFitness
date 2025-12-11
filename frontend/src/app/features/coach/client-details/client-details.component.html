@@ -138,51 +138,6 @@
       </div>
     </section>
 
-    <!-- Workouts Section -->
-    <section class="detail-section" *ngIf="details.workouts && details.workouts.length > 0">
-      <h2>
-        <mat-icon>fitness_center</mat-icon>
-        Entrenamientos completos ({{ details.workouts.length }})
-      </h2>
-      <div class="workouts-list">
-        <div class="workout-card" *ngFor="let workout of details.workouts">
-          <div class="workout-header">
-            <div>
-              <span class="workout-date">{{ workout.workout_date | date:'dd/MM/yyyy' }}</span>
-              <span class="workout-time" *ngIf="workout.duration_minutes">{{ workout.duration_minutes }} min</span>
-            </div>
-            <div class="workout-meta">
-              <span class="badge" *ngIf="workout.total_volume">Vol: {{ formatVolume(workout.total_volume) }} kg</span>
-              <span class="badge" *ngIf="workout.satisfaction_rating">⭐ {{ workout.satisfaction_rating }}/5</span>
-            </div>
-          </div>
-          <div class="workout-content" *ngIf="workout.notes">
-            <div *ngIf="workout.parsedNotes; else rawNotes">
-              <div *ngIf="workout.parsedNotes.type" class="workout-type">
-                <strong>Tipo:</strong> {{ workout.parsedNotes.type }}
-              </div>
-              <div *ngIf="workout.parsedNotes.exercises && workout.parsedNotes.exercises.length > 0" class="exercises-list">
-                <strong>Ejercicios:</strong>
-                <div class="exercise-item" *ngFor="let exercise of workout.parsedNotes.exercises">
-                  <div class="exercise-name">{{ exercise?.name || 'Sin nombre' }}</div>
-                  <div class="exercise-sets" *ngIf="exercise?.sets && exercise.sets.length > 0">
-                    <div class="set-item" *ngFor="let set of exercise.sets; let i = index">
-                      Serie {{ i + 1 }}: {{ set?.reps || 0 }} reps × {{ set?.weight || 0 }} kg
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <ng-template #rawNotes>
-              <div class="workout-notes">
-                <pre>{{ workout.formattedNotes || workout.notes }}</pre>
-              </div>
-            </ng-template>
-          </div>
-        </div>
-      </div>
-    </section>
-
     <!-- Body Composition Section -->
     <section class="detail-section" *ngIf="details.bodyComposition && details.bodyComposition.length > 0">
       <h2>
@@ -217,29 +172,150 @@
           </div>
         </div>
       </div>
-      
-      <div class="body-comp-list">
-        <div class="body-comp-card" *ngFor="let comp of details.bodyComposition">
-          <div class="comp-date">{{ comp.date | date:'dd/MM/yyyy' }}</div>
-          <div class="comp-values">
-            <div class="comp-item" *ngIf="comp.weight">
-              <span class="label">Peso</span>
-              <span class="value">{{ formatNumber(comp.weight) }} kg</span>
-            </div>
-            <div class="comp-item" *ngIf="comp.fat">
-              <span class="label">% Grasa</span>
-              <span class="value">{{ formatNumber(comp.fat) }} %</span>
-            </div>
-            <div class="comp-item" *ngIf="comp.muscle">
-              <span class="label">Músculo</span>
-              <span class="value">{{ formatNumber(comp.muscle) }} kg</span>
-            </div>
+
+      <div class="body-comp-columns">
+        <div class="metric-column">
+          <h4>Peso</h4>
+          <div class="metric-row" *ngFor="let comp of details.bodyComposition">
+            <span class="metric-date">{{ comp.date | date:'dd/MM/yyyy' }}</span>
+            <span class="metric-value" *ngIf="comp.weight !== undefined && comp.weight !== null; else emptyWeight">{{ formatNumber(comp.weight) }} kg</span>
+            <ng-template #emptyWeight><span class="metric-empty">-</span></ng-template>
           </div>
-          <div class="comp-notes" *ngIf="comp.notes">{{ comp.notes }}</div>
+        </div>
+        <div class="metric-column">
+          <h4>% Grasa</h4>
+          <div class="metric-row" *ngFor="let comp of details.bodyComposition">
+            <span class="metric-date">{{ comp.date | date:'dd/MM/yyyy' }}</span>
+            <span class="metric-value" *ngIf="comp.fat !== undefined && comp.fat !== null; else emptyFat">{{ formatNumber(comp.fat) }} %</span>
+            <ng-template #emptyFat><span class="metric-empty">-</span></ng-template>
+          </div>
+        </div>
+        <div class="metric-column">
+          <h4>Músculo</h4>
+          <div class="metric-row" *ngFor="let comp of details.bodyComposition">
+            <span class="metric-date">{{ comp.date | date:'dd/MM/yyyy' }}</span>
+            <span class="metric-value" *ngIf="comp.muscle !== undefined && comp.muscle !== null; else emptyMuscle">{{ formatNumber(comp.muscle) }} kg</span>
+            <ng-template #emptyMuscle><span class="metric-empty">-</span></ng-template>
+          </div>
         </div>
       </div>
     </section>
 
+    <!-- Workouts Section -->
+    <section class="detail-section" *ngIf="validWorkouts.length > 0">
+      <div class="section-header">
+        <h2>
+          <mat-icon>fitness_center</mat-icon>
+          Entrenamientos completos ({{ filteredWorkouts.length }})
+        </h2>
+        <div class="filters-row">
+          <label for="workoutRange">Rango:</label>
+          <select id="workoutRange" [value]="workoutRange" (change)="onWorkoutRangeChange($any($event.target).value)">
+            <option value="30">Últimos 30 días</option>
+            <option value="90">Últimos 90 días</option>
+            <option value="all">Todo</option>
+          </select>
+        </div>
+      </div>
+      
+      <div class="workout-summary" *ngIf="workoutSummary as summary">
+        <div class="summary-cards">
+          <div class="stat-card">
+            <span class="stat-label">Esta semana</span>
+            <span class="stat-value">{{ summary.week.count }} entrenos</span>
+            <span class="stat-subvalue" *ngIf="summary.week.volume">Volumen: {{ formatVolume(summary.week.volume) }} kg</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-label">Este mes</span>
+            <span class="stat-value">{{ summary.month.count }} entrenos</span>
+            <span class="stat-subvalue" *ngIf="summary.month.volume">Volumen: {{ formatVolume(summary.month.volume) }} kg</span>
+          </div>
+        </div>
+
+        <div class="breakdown-grid" *ngIf="summary.weeklyBreakdown?.length">
+          <div class="breakdown-panel">
+            <h3>Desglose semanal</h3>
+            <div class="breakdown-item" *ngFor="let item of summary.weeklyBreakdown">
+              <div>
+                <div class="breakdown-label">{{ item.label }}</div>
+                <div class="breakdown-sub">Entrenos: {{ item.count }}</div>
+              </div>
+              <div class="breakdown-value">Volumen: {{ formatVolume(item.volume) }} kg</div>
+            </div>
+          </div>
+          <div class="breakdown-panel" *ngIf="summary.monthlyBreakdown?.length">
+            <h3>Desglose mensual</h3>
+            <div class="breakdown-item" *ngFor="let item of summary.monthlyBreakdown">
+              <div>
+                <div class="breakdown-label">{{ item.label }}</div>
+                <div class="breakdown-sub">Entrenos: {{ item.count }}</div>
+              </div>
+              <div class="breakdown-value">Volumen: {{ formatVolume(item.volume) }} kg</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="workouts-list">
+        <div class="workout-card clickable" *ngFor="let workout of filteredWorkouts; let i = index" (click)="toggleWorkout(workout, i)">
+          <div class="workout-header">
+            <div>
+              <span class="workout-date">{{ workout.workout_date | date:'dd/MM/yyyy' }}</span>
+              <span class="workout-time" *ngIf="workout.duration_minutes">{{ workout.duration_minutes }} min</span>
+            </div>
+            <div class="workout-meta">
+              <span class="badge" *ngIf="workout.total_volume">Vol: {{ formatVolume(workout.total_volume) }} kg</span>
+              <span class="badge" *ngIf="workout.satisfaction_rating">⭐ {{ workout.satisfaction_rating }}/5</span>
+            </div>
+          </div>
+          <div class="workout-brief">
+            <div class="workout-type highlight" *ngIf="workout.parsedNotes?.type || workout.workout_type">
+              <span class="pill pill-type">Tipo</span>
+              <span class="type-text">{{ workout.parsedNotes?.type || workout.workout_type }}</span>
+            </div>
+            <div class="workout-exercises" *ngIf="workout.parsedNotes?.exercises?.length">
+              <span class="pill pill-exercises">Ejercicios</span>
+              <span class="type-text">{{ workout.parsedNotes.exercises.length }}</span>
+            </div>
+            <div class="workout-hint">Click para ver ejercicios y series</div>
+          </div>
+
+          <div class="workout-content" *ngIf="isWorkoutExpanded(workout, i) && workout.notes">
+            <div *ngIf="workout.parsedNotes; else rawNotes">
+              <div class="workout-info-row">
+                <div class="info-pill" *ngIf="workout.parsedNotes.type">
+                  <span class="label">Tipo</span>
+                  <span class="value">{{ workout.parsedNotes.type }}</span>
+                </div>
+                <div class="info-pill" *ngIf="workout.parsedNotes.exercises?.length">
+                  <span class="label">Ejercicios</span>
+                  <span class="value">{{ workout.parsedNotes.exercises.length }}</span>
+                </div>
+              </div>
+              <div *ngIf="workout.parsedNotes.exercises && workout.parsedNotes.exercises.length > 0" class="exercises-grid">
+                <div class="exercise-card" *ngFor="let exercise of workout.parsedNotes.exercises">
+                  <div class="exercise-header">
+                    <div class="exercise-name">{{ exercise?.name || 'Sin nombre' }}</div>
+                    <span class="pill small" *ngIf="exercise?.sets?.length">{{ exercise.sets.length }} series</span>
+                  </div>
+                  <div class="sets-row" *ngIf="exercise?.sets && exercise.sets.length > 0">
+                    <div class="set-chip" *ngFor="let set of exercise.sets; let si = index">
+                      <div class="set-title">Serie {{ si + 1 }}</div>
+                      <div class="set-values">{{ set?.reps || 0 }} reps · {{ set?.weight || 0 }} kg</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <ng-template #rawNotes>
+              <div class="workout-notes">
+                <pre>{{ workout.formattedNotes || workout.notes }}</pre>
+              </div>
+            </ng-template>
+          </div>
+        </div>
+      </div>
+    </section>
     <!-- Progress Photos Section -->
     <section class="detail-section" *ngIf="details.photos && details.photos.length > 0">
       <h2>
@@ -341,18 +417,6 @@
       </div>
     </section>
 
-    <!-- Workout Days Section -->
-    <section class="detail-section" *ngIf="details.workoutDays && details.workoutDays.length > 0">
-      <h2>
-        <mat-icon>calendar_today</mat-icon>
-        Días de entrenamiento (últimos 90 días)
-      </h2>
-      <div class="workout-days-calendar">
-        <div class="day-item" *ngFor="let day of details.workoutDays">
-          {{ day.date | date:'dd/MM/yyyy' }}
-        </div>
-      </div>
-    </section>
   </div>
 </div>
 

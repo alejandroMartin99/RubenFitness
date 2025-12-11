@@ -26,6 +26,17 @@ export class ClientDetailsComponent implements OnInit, AfterViewInit, OnDestroy 
   volumeChart: Chart | null = null;
   bodyCompChart: Chart | null = null;
 
+  expandedWorkouts = new Set<string>();
+  validWorkouts: any[] = [];
+  filteredWorkouts: any[] = [];
+  workoutSummary: {
+    week: { count: number; volume: number };
+    month: { count: number; volume: number };
+    weeklyBreakdown: Array<{ key: string; label: string; count: number; volume: number }>;
+    monthlyBreakdown: Array<{ key: string; label: string; count: number; volume: number }>;
+  } | null = null;
+  workoutRange: '30' | '90' | 'all' = '30';
+
   private destroy$ = new Subject<void>();
 
   constructor(
@@ -141,7 +152,13 @@ export class ClientDetailsComponent implements OnInit, AfterViewInit, OnDestroy 
               this.details = {
                 ...data,
                 workouts: processedWorkouts,
-                bodyComposition: Array.isArray(data.bodyComposition) ? data.bodyComposition : [],
+                bodyComposition: Array.isArray(data.bodyComposition)
+                  ? [...data.bodyComposition].sort((a, b) => {
+                      const da = a.date ? new Date(a.date).getTime() : 0;
+                      const db = b.date ? new Date(b.date).getTime() : 0;
+                      return db - da; // más recientes primero
+                    })
+                  : [],
                 photos: Array.isArray(data.photos) ? data.photos : [],
                 achievements: Array.isArray(data.achievements) ? data.achievements : [],
                 habits: Array.isArray(data.habits) ? data.habits : [],
@@ -154,6 +171,12 @@ export class ClientDetailsComponent implements OnInit, AfterViewInit, OnDestroy 
               };
               this.loading = false;
               this.isLoadingDetails = false;
+              this.validWorkouts = this.getValidWorkouts().sort((a, b) => {
+                const da = a.workout_date ? new Date(a.workout_date).getTime() : 0;
+                const db = b.workout_date ? new Date(b.workout_date).getTime() : 0;
+                return db - da;
+              });
+              this.applyWorkoutFilter();
               console.log('Details loaded successfully');
               
               // Esperar a que la vista se actualice antes de crear charts
@@ -436,11 +459,29 @@ export class ClientDetailsComponent implements OnInit, AfterViewInit, OnDestroy 
         return null; // Devolver null para que se muestre como texto plano
       }
       
+      // Intentar extraer JSON embebido aunque haya texto alrededor
+      const jsonMatch = cleaned.match(/{[\s\S]+}/);
+      const jsonCandidate = jsonMatch ? jsonMatch[0] : cleaned;
+
       // Intentar parsear como JSON primero
       try {
-        const parsed = JSON.parse(cleaned);
-        // Si es un objeto válido, devolverlo
-        if (typeof parsed === 'object' && parsed !== null) {
+        const parsed = JSON.parse(jsonCandidate);
+        if (parsed && typeof parsed === 'object') {
+          // Normalizar claves comunes
+          if (parsed.workout_type && !parsed.type) {
+            parsed.type = parsed.workout_type;
+          }
+          if (Array.isArray(parsed.exercises)) {
+            parsed.exercises = parsed.exercises.map((ex: any) => ({
+              name: ex?.name || '',
+              sets: Array.isArray(ex?.sets)
+                ? ex.sets.map((s: any) => ({
+                    reps: Number(s?.reps || 0),
+                    weight: Number(s?.weight || 0)
+                  }))
+                : []
+            }));
+          }
           return parsed;
         }
       } catch {
@@ -587,6 +628,139 @@ export class ClientDetailsComponent implements OnInit, AfterViewInit, OnDestroy 
     }
     
     return notes;
+  }
+
+  getValidWorkouts(): any[] {
+    if (!this.details?.workouts) return [];
+    return this.details.workouts.filter((workout: any) => {
+      const type = workout.parsedNotes?.type || workout.workout_type;
+      return !!type;
+    });
+  }
+
+  private getISOWeek(date: Date): number {
+    const tmp = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+    const dayNum = tmp.getUTCDay() || 7;
+    tmp.setUTCDate(tmp.getUTCDate() + 4 - dayNum);
+    const yearStart = new Date(Date.UTC(tmp.getUTCFullYear(), 0, 1));
+    return Math.ceil((((tmp as any) - (yearStart as any)) / 86400000 + 1) / 7);
+  }
+
+  private getWeekStart(date: Date): Date {
+    const d = new Date(date);
+    const day = d.getDay();
+    const diff = d.getDate() - day + (day === 0 ? -6 : 1); // lunes como inicio
+    d.setDate(diff);
+    d.setHours(0, 0, 0, 0);
+    return d;
+  }
+
+  computeWorkoutSummary(workouts: any[]) {
+    if (!workouts.length) return null;
+
+    const now = new Date();
+    const weekStart = this.getWeekStart(now);
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+
+    let weekCount = 0;
+    let weekVolume = 0;
+    let monthCount = 0;
+    let monthVolume = 0;
+
+    const weeklyMap = new Map<string, { key: string; label: string; count: number; volume: number }>();
+    const monthlyMap = new Map<string, { key: string; label: string; count: number; volume: number }>();
+
+    workouts.forEach((workout: any) => {
+      const date = workout.workout_date ? new Date(workout.workout_date) : null;
+      if (!date || isNaN(date.getTime())) return;
+      const volume = Number(workout.total_volume || 0);
+
+      if (date >= weekStart) {
+        weekCount += 1;
+        weekVolume += volume;
+      }
+
+      if (date >= monthStart) {
+        monthCount += 1;
+        monthVolume += volume;
+      }
+
+      // Weekly breakdown
+      const weekKey = `${date.getFullYear()}-W${this.getISOWeek(date)}`;
+      const ws = this.getWeekStart(date);
+      const we = new Date(ws);
+      we.setDate(ws.getDate() + 6);
+      const weekLabel = `${ws.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit' })} - ${we.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit' })}`;
+
+      const currentWeek = weeklyMap.get(weekKey) || { key: weekKey, label: weekLabel, count: 0, volume: 0 };
+      currentWeek.count += 1;
+      currentWeek.volume += volume;
+      weeklyMap.set(weekKey, currentWeek);
+
+      // Monthly breakdown
+      const monthKey = `${date.getFullYear()}-${date.getMonth() + 1}`;
+      const monthLabel = date.toLocaleDateString('es-ES', { month: 'short', year: 'numeric' });
+      const currentMonth = monthlyMap.get(monthKey) || { key: monthKey, label: monthLabel, count: 0, volume: 0 };
+      currentMonth.count += 1;
+      currentMonth.volume += volume;
+      monthlyMap.set(monthKey, currentMonth);
+    });
+
+    const weeklyBreakdown = Array.from(weeklyMap.values()).sort((a, b) => (a.key < b.key ? 1 : -1));
+    const monthlyBreakdown = Array.from(monthlyMap.values()).sort((a, b) => (a.key < b.key ? 1 : -1));
+
+    return {
+      week: { count: weekCount, volume: weekVolume },
+      month: { count: monthCount, volume: monthVolume },
+      weeklyBreakdown,
+      monthlyBreakdown
+    };
+  }
+
+  toggleWorkout(workout: any, index: number): void {
+    const key = this.getWorkoutKey(workout, index);
+    if (this.expandedWorkouts.has(key)) {
+      this.expandedWorkouts.delete(key);
+    } else {
+      this.expandedWorkouts.add(key);
+    }
+  }
+
+  onWorkoutRangeChange(value: '30' | '90' | 'all'): void {
+    this.workoutRange = value;
+    this.applyWorkoutFilter();
+  }
+
+  private applyWorkoutFilter(): void {
+    const now = new Date();
+    let filtered = this.validWorkouts;
+
+    if (this.workoutRange === '30') {
+      const from = new Date(now);
+      from.setDate(from.getDate() - 30);
+      filtered = this.validWorkouts.filter(w => {
+        const d = w.workout_date ? new Date(w.workout_date) : null;
+        return d && !isNaN(d.getTime()) && d >= from;
+      });
+    } else if (this.workoutRange === '90') {
+      const from = new Date(now);
+      from.setDate(from.getDate() - 90);
+      filtered = this.validWorkouts.filter(w => {
+        const d = w.workout_date ? new Date(w.workout_date) : null;
+        return d && !isNaN(d.getTime()) && d >= from;
+      });
+    }
+
+    this.filteredWorkouts = filtered;
+    this.workoutSummary = this.computeWorkoutSummary(filtered);
+  }
+
+  isWorkoutExpanded(workout: any, index: number): boolean {
+    return this.expandedWorkouts.has(this.getWorkoutKey(workout, index));
+  }
+
+  private getWorkoutKey(workout: any, index: number): string {
+    return workout.id || `${workout.workout_date || 'workout'}-${index}`;
   }
 
   openWhatsApp(phone: string, name: string): void {
