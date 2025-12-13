@@ -100,11 +100,15 @@
       </div>
       <div class="stat-card">
         <div class="stat-icon">
-          <mat-icon>local_fire_department</mat-icon>
+          <mat-icon>check_circle</mat-icon>
         </div>
         <div class="stat-content">
-          <div class="stat-value">{{ stats.caloriesBurned !== null ? stats.caloriesBurned : '-' }}</div>
-          <div class="stat-label">Calories Burned</div>
+          <div class="stat-value">
+            <ng-container *ngIf="stats.workoutsWeek !== null; else dash">{{ stats.workoutsWeek }}</ng-container>
+            /
+            <ng-container *ngIf="stats.weeklyTarget !== null; else dash">{{ stats.weeklyTarget }}</ng-container>
+          </div>
+          <div class="stat-label">Workouts esta semana</div>
         </div>
       </div>
       <div class="stat-card">
@@ -115,20 +119,22 @@
           <div class="stat-value">
             {{ stats.goalCompletion !== null ? (stats.goalCompletion + '%') : '-' }}
           </div>
-          <div class="stat-label">Goal Completion</div>
+          <div class="stat-label">Cumplimiento semanal</div>
         </div>
       </div>
       <div class="stat-card">
         <div class="stat-icon">
-          <mat-icon>whatshot</mat-icon>
+          <mat-icon>schedule</mat-icon>
         </div>
         <div class="stat-content">
-          <div class="stat-value">{{ stats.dayStreak !== null ? stats.dayStreak : '-' }}</div>
-          <div class="stat-label">Day Streak</div>
+          <div class="stat-value">{{ stats.lastWorkout || '-' }}</div>
+          <div class="stat-label">Último entreno</div>
         </div>
       </div>
     </div>
   </div>
+
+  <ng-template #dash>-</ng-template>
 </div>
 
 <!-- ADMIN/COACH DASHBOARD -->

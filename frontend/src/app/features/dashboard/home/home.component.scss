@@ -242,6 +242,9 @@
     .stat-icon {
       transform: scale(1.1) rotate(5deg);
       background: var(--gradient-primary);
+      mat-icon {
+        color: #0b0b0e;
+      }
     }
   }
   
