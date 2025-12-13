@@ -1,65 +1,62 @@
 <div class="sleep-card-expanded">
-  <!-- Compact Header Top Right -->
-  <div class="sleep-header-compact-top">
-    <div class="sleep-icon-wrapper-small">
-      <mat-icon class="sleep-icon">bedtime</mat-icon>
+  <!-- Header -->
+  <div class="sleep-header">
+    <div class="sleep-message">
+      El descanso óptimo mejora la recuperación y el rendimiento físico.
     </div>
-    <div class="sleep-value-small">{{ formatSleepDisplay(todaySleepHours, todaySleepMinutes) }}</div>
-    <div class="sleep-label-small">Sueño hoy</div>
   </div>
-  
-  <!-- Simple Input Controls -->
-  <div class="sleep-input-compact">
-    <button mat-icon-button class="sleep-btn minus-btn" (click)="adjustSleep('hours', -1)" [disabled]="loadingSleep || todaySleepHours <= 0">
-      <mat-icon>remove</mat-icon>
-    </button>
-    
-    <div class="sleep-time-display-compact">
-      <span class="time-number">{{ todaySleepHours }}</span>
-      <span class="time-sep">h</span>
-      <span class="time-number">{{ todaySleepMinutes.toString().padStart(2, '0') }}</span>
-      <span class="time-sep">m</span>
+
+  <!-- Main Content: Controls + Chart -->
+  <div class="sleep-content">
+    <!-- Left: Sleep Controls -->
+    <div class="sleep-controls-section">
+      <!-- Icon and Value Display -->
+      <div class="sleep-display-compact">
+        <div class="sleep-icon-compact">
+          <mat-icon>bedtime</mat-icon>
+        </div>
+        <div class="sleep-value-compact">{{ todaySleepHours }}h {{ todaySleepMinutes.toString().padStart(2, '0') }}m</div>
+      </div>
+
+      <!-- Compact Input Controls -->
+      <div class="sleep-input-row">
+        <button mat-icon-button class="sleep-btn-small" (click)="adjustSleep('hours', -1)" [disabled]="loadingSleep || todaySleepHours <= 0">
+          <mat-icon>remove</mat-icon>
+        </button>
+        <div class="sleep-time-display">
+          <span class="time-number">{{ todaySleepHours }}</span>
+          <span class="time-sep">h</span>
+          <span class="time-number-small">{{ todaySleepMinutes.toString().padStart(2, '0') }}</span>
+          <span class="time-sep-small">m</span>
+        </div>
+        <button mat-icon-button class="sleep-btn-small" (click)="adjustSleep('hours', 1)" [disabled]="loadingSleep || todaySleepHours >= 24">
+          <mat-icon>add</mat-icon>
+        </button>
+      </div>
+
+      <!-- Minutes Quick Adjust - Compact -->
+      <div class="sleep-minutes-grid">
+        <button mat-stroked-button class="minute-btn-small" (click)="adjustSleep('minutes', -30)" [disabled]="loadingSleep">-30m</button>
+        <button mat-stroked-button class="minute-btn-small" (click)="adjustSleep('minutes', -15)" [disabled]="loadingSleep">-15m</button>
+        <button mat-stroked-button class="minute-btn-small" (click)="adjustSleep('minutes', 15)" [disabled]="loadingSleep">+15m</button>
+        <button mat-stroked-button class="minute-btn-small" (click)="adjustSleep('minutes', 30)" [disabled]="loadingSleep">+30m</button>
+      </div>
+
+      <!-- Save Button - Compact -->
+      <button mat-raised-button color="primary" class="save-sleep-btn-compact" (click)="saveSleep()" [disabled]="loadingSleep || (todaySleepHours === 0 && todaySleepMinutes === 0)">
+        <mat-icon>save</mat-icon>
+        Guardar
+      </button>
     </div>
-    
-    <button mat-icon-button class="sleep-btn plus-btn" (click)="adjustSleep('hours', 1)" [disabled]="loadingSleep || todaySleepHours >= 24">
-      <mat-icon>add</mat-icon>
-    </button>
-  </div>
-  
-  <!-- Minutes Quick Adjust -->
-  <div class="sleep-minutes-controls">
-    <button mat-stroked-button class="minute-btn" (click)="adjustSleep('minutes', -30)" [disabled]="loadingSleep">
-      -30m
-    </button>
-    <button mat-stroked-button class="minute-btn" (click)="adjustSleep('minutes', -15)" [disabled]="loadingSleep">
-      -15m
-    </button>
-    <button mat-stroked-button class="minute-btn" (click)="adjustSleep('minutes', 15)" [disabled]="loadingSleep">
-      +15m
-    </button>
-    <button mat-stroked-button class="minute-btn" (click)="adjustSleep('minutes', 30)" [disabled]="loadingSleep">
-      +30m
-    </button>
-  </div>
-  
-  <!-- Save Button -->
-  <button mat-raised-button color="primary" class="save-sleep-btn-compact" (click)="saveSleep()" [disabled]="loadingSleep || (todaySleepHours === 0 && todaySleepMinutes === 0)">
-    <mat-icon>save</mat-icon>
-    Guardar
-  </button>
-  
-  <!-- Sleep History Chart -->
-  <div class="sleep-history-compact">
-    <div class="history-header-compact">
-      <span class="history-label-compact">Últimos 7 días</span>
-      <span class="history-average-compact" *ngIf="averageSleep > 0">{{ formatSleepHours(averageSleep) }} avg</span>
-    </div>
-    <div class="sleep-bars-compact">
-      <div *ngFor="let day of sleepHistory; let i = index" class="sleep-bar-compact">
-        <div class="bar-compact" [style.height.px]="getSleepBarHeight(day.hours)" [class.has-data]="day.hours > 0"></div>
-        <span class="bar-label-compact">{{ i === sleepHistory.length - 1 ? 'Hoy' : (sleepHistory.length - 1 - i) }}</span>
+
+    <!-- Right: Chart -->
+    <div class="sleep-chart-section">
+      <div class="chart-container">
+        <canvas #sleepChart></canvas>
+        <div class="chart-loading-overlay" *ngIf="loadingSleep">
+          <mat-spinner diameter="24"></mat-spinner>
+        </div>
       </div>
     </div>
   </div>
 </div>
-
