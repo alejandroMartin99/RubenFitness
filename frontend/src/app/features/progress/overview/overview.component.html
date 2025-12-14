@@ -226,12 +226,11 @@
       </mat-card-content>
     </mat-card>
 
-  <!-- Tabs Navigation -->
+  <!-- Tabs: Historial, Analytics, Before & After -->
   <mat-tab-group class="progress-tabs" animationDuration="300ms">
-    <!-- Overview Tab -->
-    <mat-tab label="Overview">
+    <!-- Tab Historial -->
+    <mat-tab label="Historial">
       <ng-template matTabContent>
-        <!-- Historial de Entrenamientos -->
         <div class="history-section" *ngIf="summary">
           <div class="history-header">
             <h3>Historial</h3>
@@ -331,14 +330,14 @@
       </ng-template>
     </mat-tab>
 
-    <!-- Charts Tab -->
+    <!-- Tab Analytics -->
     <mat-tab label="Analytics">
       <ng-template matTabContent>
         <app-progress-charts></app-progress-charts>
       </ng-template>
     </mat-tab>
 
-    <!-- Before & After Tab -->
+    <!-- Tab Before & After -->
     <mat-tab label="Before & After">
       <ng-template matTabContent>
         <app-before-after></app-before-after>

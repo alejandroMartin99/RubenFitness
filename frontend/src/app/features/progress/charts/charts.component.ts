@@ -33,10 +33,10 @@ export class ChartsComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   ngAfterViewInit(): void {
-    // Wait a bit for the DOM to be ready, especially when using matTabContent
+    // Wait a bit for the DOM to be ready
     setTimeout(() => {
       this.loadCharts();
-    }, 100);
+    }, 300);
   }
 
   ngOnDestroy(): void {

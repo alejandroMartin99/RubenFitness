@@ -547,6 +547,27 @@ export class ProgressService {
   getWorkoutsChartData(days: number = 30): Observable<ChartData> {
     return this.getPerformanceMetrics(days).pipe(
       map((metrics) => {
+        // Si no hay datos, devolver ejemplo
+        if (metrics.length === 0) {
+          const labels = [];
+          const data = [];
+          for (let i = days - 1; i >= 0; i--) {
+            const d = new Date();
+            d.setDate(d.getDate() - i);
+            labels.push(d.toLocaleDateString('es-ES', { month: 'short', day: 'numeric' }));
+            data.push(0);
+          }
+          return {
+            labels,
+            datasets: [{
+              label: 'Workouts',
+              data,
+              backgroundColor: 'rgba(102, 126, 234, 0.6)',
+              borderColor: 'rgba(102, 126, 234, 1)',
+              borderWidth: 2
+            }]
+          };
+        }
         return {
           labels: metrics.map(m => m.date.toLocaleDateString('es-ES', { month: 'short', day: 'numeric' })),
           datasets: [{
@@ -557,6 +578,19 @@ export class ProgressService {
             borderWidth: 2
           }]
         };
+      }),
+      catchError(() => {
+        // En caso de error, devolver datos vacíos
+        return of({
+          labels: ['Sin datos'],
+          datasets: [{
+            label: 'Workouts',
+            data: [0],
+            backgroundColor: 'rgba(102, 126, 234, 0.6)',
+            borderColor: 'rgba(102, 126, 234, 1)',
+            borderWidth: 2
+          }]
+        });
       })
     );
   }
@@ -567,6 +601,18 @@ export class ProgressService {
   getDurationChartData(days: number = 30): Observable<ChartData> {
     return this.getPerformanceMetrics(days).pipe(
       map((metrics) => {
+        if (metrics.length === 0) {
+          return {
+            labels: ['Sin datos'],
+            datasets: [{
+              label: 'Duration (minutes)',
+              data: [0],
+              backgroundColor: 'rgba(118, 75, 162, 0.6)',
+              borderColor: 'rgba(118, 75, 162, 1)',
+              borderWidth: 2
+            }]
+          };
+        }
         return {
           labels: metrics.map(m => m.date.toLocaleDateString('es-ES', { month: 'short', day: 'numeric' })),
           datasets: [{
@@ -577,7 +623,17 @@ export class ProgressService {
             borderWidth: 2
           }]
         };
-      })
+      }),
+      catchError(() => of({
+        labels: ['Sin datos'],
+        datasets: [{
+          label: 'Duration (minutes)',
+          data: [0],
+          backgroundColor: 'rgba(118, 75, 162, 0.6)',
+          borderColor: 'rgba(118, 75, 162, 1)',
+          borderWidth: 2
+        }]
+      }))
     );
   }
 

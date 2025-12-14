@@ -14,13 +14,7 @@
     </mat-form-field>
   </div>
 
-  <!-- Loading State -->
-  <div class="loading-state" *ngIf="loading">
-    <mat-spinner diameter="50"></mat-spinner>
-    <p>Cargando gráficas...</p>
-  </div>
-
-  <div class="charts-sections" *ngIf="!loading">
+  <div class="charts-sections">
     <!-- Section 1: Entrenamientos -->
     <div class="chart-section">
       <h4 class="section-title">
@@ -112,10 +106,4 @@
     </div>
   </div>
 
-  <!-- Empty State -->
-  <div class="empty-state" *ngIf="!loading && !workoutsChart">
-    <mat-icon>bar_chart</mat-icon>
-    <h4>No hay datos disponibles</h4>
-    <p>Completa algunos entrenamientos para ver tus gráficas de progreso!</p>
-  </div>
 </div>
