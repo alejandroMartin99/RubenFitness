@@ -1,107 +1,194 @@
-.visualizer-card {
-  background: #121214;
-  border: 1px solid #1f1f24;
+.muscle-card {
+  background: #0d0d10;
+  border: 1px solid #1a1a1f;
   border-radius: 16px;
-  padding: 1.25rem;
-  color: #fff;
+  padding: 1rem;
 }
 
-.visualizer-header {
-  margin-bottom: 1rem;
-}
-
-.title-row {
+.card-header {
   display: flex;
+  justify-content: space-between;
   align-items: center;
-  gap: 0.5rem;
-  font-weight: 700;
-  font-size: 1rem;
+  margin-bottom: 0.75rem;
 
-  mat-icon {
-    color: var(--color-primary);
-    font-size: 20px;
-    width: 20px;
-    height: 20px;
+  .title {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #fff;
   }
 }
 
-.body-svg-container {
+.view-btns {
+  display: flex;
+  gap: 4px;
+  background: #111114;
+  border-radius: 8px;
+  padding: 3px;
+
+  button {
+    background: transparent;
+    border: none;
+    color: #666;
+    font-size: 0.7rem;
+    font-weight: 500;
+    padding: 4px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+
+    &:hover {
+      color: #999;
+    }
+
+    &.active {
+      background: #1a1a1f;
+      color: var(--color-primary);
+    }
+  }
+}
+
+.model-container {
+  position: relative;
+  height: 320px;
+  background: linear-gradient(180deg, #0a0a0c 0%, #060608 100%);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.model-view {
+  position: absolute;
+  top: 0;
+  left: 0;
   width: 100%;
+  height: 100%;
   display: flex;
   justify-content: center;
   align-items: center;
-  background: radial-gradient(circle at 20% 20%, rgba(250, 204, 21, 0.08), transparent 35%), #0b0b0c;
-  border-radius: 16px;
-  padding: 1.25rem;
-  min-height: 360px;
-  border: 1px solid #1f1f24;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.35);
-}
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
 
-.body-svg {
-  width: 100%;
-  max-width: 260px;
-  height: auto;
-}
-
-.muscle-path {
-  fill: #18181c;
-  stroke: #2f2f37;
-  stroke-width: 1.25;
-  transition: all 0.3s ease;
-  cursor: pointer;
-
-  &:hover {
-    fill: #22222a;
+  &.visible {
+    opacity: 1;
+    pointer-events: auto;
   }
+}
+
+.muscle-map {
+  position: relative;
+  width: 140px;
+  height: 300px;
+
+  // Silueta base
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100%;
+    height: 100%;
+    background: #151518;
+    clip-path: polygon(
+      50% 0%, 60% 2%, 65% 8%, 65% 12%, 60% 14%, // cabeza
+      62% 15%, 78% 18%, 85% 22%, 88% 30%, 85% 45%, 80% 55%, 78% 65%, 80% 70%, // brazo der
+      72% 28%, 70% 45%, 68% 55%, 65% 75%, 60% 100%, // pierna der
+      50% 95%, // entrepierna
+      40% 100%, 35% 75%, 32% 55%, 30% 45%, 28% 28%, // pierna izq
+      20% 70%, 22% 65%, 20% 55%, 15% 45%, 12% 30%, 15% 22%, 22% 18%, 38% 15%, // brazo izq
+      40% 14%, 35% 12%, 35% 8%, 40% 2% // cabeza
+    );
+    border: 1px solid #1f1f24;
+  }
+}
+
+// Cada músculo es un div posicionado absolutamente
+.muscle {
+  position: absolute;
+  background: #1e1e24;
+  border-radius: 4px;
+  transition: all 0.3s ease;
 
   &.active {
-    fill: #facc15;
-    stroke: #facc15;
-    stroke-width: 2;
-    filter: drop-shadow(0 0 10px rgba(250, 204, 21, 0.6));
-    animation: pulse 2s ease-in-out infinite;
+    background: var(--color-primary);
+    box-shadow: 0 0 20px rgba(250, 204, 21, 0.4);
   }
 }
 
-@keyframes pulse {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.8;
-  }
+// === VISTA FRONTAL ===
+.front {
+  .shoulder-l { top: 50px; left: 15px; width: 18px; height: 22px; border-radius: 50%; }
+  .shoulder-r { top: 50px; right: 15px; width: 18px; height: 22px; border-radius: 50%; }
+
+  .chest-l { top: 58px; left: 38px; width: 28px; height: 35px; border-radius: 8px 2px 8px 8px; }
+  .chest-r { top: 58px; right: 38px; width: 28px; height: 35px; border-radius: 2px 8px 8px 8px; }
+
+  .biceps-l { top: 75px; left: 8px; width: 14px; height: 40px; border-radius: 6px; }
+  .biceps-r { top: 75px; right: 8px; width: 14px; height: 40px; border-radius: 6px; }
+
+  .forearm-l { top: 120px; left: 5px; width: 12px; height: 45px; border-radius: 5px; }
+  .forearm-r { top: 120px; right: 5px; width: 12px; height: 45px; border-radius: 5px; }
+
+  .abs { top: 98px; left: 50%; transform: translateX(-50%); width: 35px; height: 60px; border-radius: 4px; }
+
+  .oblique-l { top: 105px; left: 32px; width: 12px; height: 45px; border-radius: 4px; transform: skewY(-5deg); }
+  .oblique-r { top: 105px; right: 32px; width: 12px; height: 45px; border-radius: 4px; transform: skewY(5deg); }
+
+  .quad-l { top: 165px; left: 35px; width: 26px; height: 70px; border-radius: 6px; }
+  .quad-r { top: 165px; right: 35px; width: 26px; height: 70px; border-radius: 6px; }
+
+  .calf-l { top: 245px; left: 40px; width: 18px; height: 45px; border-radius: 5px; }
+  .calf-r { top: 245px; right: 40px; width: 18px; height: 45px; border-radius: 5px; }
 }
 
-.body-outline {
-  pointer-events: none;
-  fill: none;
-  stroke-linejoin: round;
+// === VISTA POSTERIOR ===
+.back {
+  .traps { top: 42px; left: 50%; transform: translateX(-50%); width: 50px; height: 25px; border-radius: 4px 4px 12px 12px; }
+
+  .rear-delt-l { top: 50px; left: 15px; width: 18px; height: 20px; border-radius: 50%; }
+  .rear-delt-r { top: 50px; right: 15px; width: 18px; height: 20px; border-radius: 50%; }
+
+  .lat-l { top: 68px; left: 30px; width: 24px; height: 55px; border-radius: 12px 4px 4px 12px; }
+  .lat-r { top: 68px; right: 30px; width: 24px; height: 55px; border-radius: 4px 12px 12px 4px; }
+
+  .lower-back { top: 125px; left: 50%; transform: translateX(-50%); width: 40px; height: 30px; border-radius: 4px; }
+
+  .triceps-l { top: 72px; left: 8px; width: 14px; height: 38px; border-radius: 6px; }
+  .triceps-r { top: 72px; right: 8px; width: 14px; height: 38px; border-radius: 6px; }
+
+  .glute-l { top: 155px; left: 42px; width: 26px; height: 28px; border-radius: 50%; }
+  .glute-r { top: 155px; right: 42px; width: 26px; height: 28px; border-radius: 50%; }
+
+  .ham-l { top: 188px; left: 38px; width: 24px; height: 55px; border-radius: 6px; }
+  .ham-r { top: 188px; right: 38px; width: 24px; height: 55px; border-radius: 6px; }
+
+  .calf-back-l { top: 250px; left: 42px; width: 18px; height: 40px; border-radius: 8px 8px 4px 4px; }
+  .calf-back-r { top: 250px; right: 42px; width: 18px; height: 40px; border-radius: 8px 8px 4px 4px; }
 }
 
-.legend {
-  margin-top: 1rem;
+.active-list {
   display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  color: #ccc;
-  font-size: 0.875rem;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid #1a1a1f;
+}
 
-  .legend-item {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-  }
+.chip {
+  background: rgba(250, 204, 21, 0.1);
+  border: 1px solid rgba(250, 204, 21, 0.2);
+  color: var(--color-primary);
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 12px;
+}
 
-  .dot {
-    width: 12px;
-    height: 12px;
-    border-radius: 50%;
-    border: 1px solid #facc15;
-
-    &.active {
-      background: #facc15;
-      box-shadow: 0 0 8px rgba(250, 204, 21, 0.6);
-    }
-  }
+.empty-state {
+  text-align: center;
+  color: #444;
+  font-size: 0.75rem;
+  margin-top: 0.75rem;
+  padding: 0.5rem;
 }

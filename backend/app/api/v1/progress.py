@@ -209,11 +209,27 @@ async def get_progress(user_id: str):
                     except:
                         pass
             
+            # Parse exercises from notes JSON
+            exercises = []
+            try:
+                # Look for JSON after "--- Datos detallados ---"
+                datos_marker = "--- Datos detallados ---"
+                if datos_marker in notes:
+                    json_part = notes.split(datos_marker)[1].strip()
+                    workout_data = json.loads(json_part)
+                    exercises = workout_data.get("exercises", [])
+            except:
+                pass
+            
             recent_workouts.append(WorkoutRecord(
+                id=w.get("id", ""),
                 workout_id=w.get("workout_id") or w.get("id", ""),
                 name=workout_name,
                 completed=w.get("completed", True),
-                date=workout_datetime
+                date=workout_datetime,
+                duration_minutes=w.get("duration_minutes"),
+                notes=notes,
+                exercises=exercises
             ))
         
         return ProgressResponse(

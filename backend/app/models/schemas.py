@@ -56,11 +56,14 @@ class ChatResponse(BaseModel):
 # Progress Models
 class WorkoutRecord(BaseModel):
     """Individual workout record"""
+    id: Optional[str] = None
     workout_id: str
     name: str
     completed: bool
     duration_minutes: Optional[int] = None
     date: datetime
+    notes: Optional[str] = None
+    exercises: Optional[List[dict]] = None
 
 
 class ProgressRequest(BaseModel):

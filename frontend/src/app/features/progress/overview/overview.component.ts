@@ -133,6 +133,11 @@ export class OverviewComponent implements OnInit, AfterViewInit, OnDestroy {
     notes: ''
   };
   expandedExerciseIndex: number = 0;
+  
+  // Historial expandible y editable
+  expandedHistoryIndex: number | null = null;
+  isEditingHistory = false;
+  editExercises: { name: string; sets: { reps: number; weight: number }[] }[] = [];
 
   // Ejercicios predefinidos por tipo de entrenamiento (CORREGIDOS)
   exercisesByType: Record<string, string[]> = {
@@ -737,6 +742,121 @@ export class OverviewComponent implements OnInit, AfterViewInit, OnDestroy {
     this.editingWorkout = null;
     this.editingProgressId = null;
     this.editFields = { date: '', type: '', notes: '' };
+  }
+
+  // === HISTORIAL EXPANDIBLE Y EDITABLE ===
+  
+  toggleHistoryExpand(index: number): void {
+    if (this.expandedHistoryIndex === index) {
+      this.expandedHistoryIndex = null;
+      this.isEditingHistory = false;
+    } else {
+      this.expandedHistoryIndex = index;
+      this.isEditingHistory = false;
+    }
+  }
+
+  getWorkoutExercises(workout: any): { name: string; sets: { reps: number; weight: number }[] }[] {
+    // Intentar parsear ejercicios desde notes o exercises
+    if (workout.exercises && Array.isArray(workout.exercises)) {
+      return workout.exercises;
+    }
+    
+    // Intentar parsear desde notes si es JSON
+    if (workout.notes) {
+      try {
+        let parsed: any = null;
+        const notes = workout.notes;
+        
+        // Buscar JSON en el texto
+        const jsonMatch = notes.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          parsed = JSON.parse(jsonMatch[0]);
+        }
+        
+        if (parsed && parsed.exercises) {
+          return parsed.exercises.map((ex: any) => ({
+            name: ex.name || ex.exercise || '',
+            sets: (ex.sets || []).map((s: any) => ({
+              reps: s.reps || 0,
+              weight: s.weight || 0
+            }))
+          }));
+        }
+      } catch (e) {
+        // No es JSON válido
+      }
+    }
+    
+    return [];
+  }
+
+  startEditHistory(workout: any, index: number): void {
+    this.isEditingHistory = true;
+    this.editingProgressId = workout.id || workout.workoutId || null;
+    
+    const exercises = this.getWorkoutExercises(workout);
+    this.editExercises = exercises.length > 0 
+      ? exercises.map(ex => ({
+          name: ex.name,
+          sets: ex.sets.map(s => ({ reps: s.reps, weight: s.weight }))
+        }))
+      : [{ name: '', sets: [{ reps: 10, weight: 0 }] }];
+    
+    this.editFields = {
+      date: workout.date instanceof Date 
+        ? workout.date.toISOString().split('T')[0]
+        : new Date(workout.date).toISOString().split('T')[0],
+      type: workout.name || '',
+      notes: ''
+    };
+  }
+
+  cancelEditHistory(): void {
+    this.isEditingHistory = false;
+    this.editExercises = [];
+    this.editingProgressId = null;
+  }
+
+  saveEditHistory(): void {
+    if (!this.editingProgressId) return;
+
+    const payload = {
+      date: this.editFields.date,
+      type: this.editFields.type,
+      exercises: this.editExercises
+    };
+
+    this.progressService.updateWorkout(this.editingProgressId, payload).subscribe({
+      next: () => {
+        this.loadProgress();
+        this.cancelEditHistory();
+      },
+      error: (err) => {
+        console.error('Error updating workout:', err);
+        alert('No se pudo actualizar el entrenamiento.');
+      }
+    });
+  }
+
+  addEditExercise(): void {
+    this.editExercises.push({ name: '', sets: [{ reps: 10, weight: 0 }] });
+  }
+
+  removeEditExercise(index: number): void {
+    if (this.editExercises.length > 1) {
+      this.editExercises.splice(index, 1);
+    }
+  }
+
+  addEditSet(exIndex: number): void {
+    this.editExercises[exIndex].sets.push({ reps: 10, weight: 0 });
+  }
+
+  removeEditSet(exIndex: number, setIndex: number): void {
+    if (this.editExercises[exIndex].sets.length > 1) {
+      this.editExercises[exIndex].sets.splice(setIndex, 1);
+    }
   }
 
   private loadLastWorkoutByType(type: string): void {

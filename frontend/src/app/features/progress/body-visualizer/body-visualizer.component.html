@@ -1,189 +1,83 @@
-<div class="visualizer-card">
-  <div class="visualizer-header">
-    <div class="title-row">
-      <mat-icon>self_improvement</mat-icon>
-      <span>Músculos trabajados</span>
+<div class="muscle-card">
+  <!-- Header con controles -->
+  <div class="card-header">
+    <span class="title">Músculos</span>
+    <div class="view-btns">
+      <button [class.active]="currentView === 'front'" (click)="setView('front')">
+        Frontal
+      </button>
+      <button [class.active]="currentView === 'back'" (click)="setView('back')">
+        Posterior
+      </button>
     </div>
+  </div>
+
+  <!-- Contenedor del modelo -->
+  <div class="model-container">
+    <!-- Vista Frontal -->
+    <div class="model-view" [class.visible]="currentView === 'front'">
+      <div class="muscle-map front">
+        <!-- Hombros -->
+        <div class="muscle shoulder-l" [class.active]="isActive('shoulders')"></div>
+        <div class="muscle shoulder-r" [class.active]="isActive('shoulders')"></div>
+        <!-- Pecho -->
+        <div class="muscle chest-l" [class.active]="isActive('chest')"></div>
+        <div class="muscle chest-r" [class.active]="isActive('chest')"></div>
+        <!-- Bíceps -->
+        <div class="muscle biceps-l" [class.active]="isActive('biceps')"></div>
+        <div class="muscle biceps-r" [class.active]="isActive('biceps')"></div>
+        <!-- Antebrazos -->
+        <div class="muscle forearm-l" [class.active]="isActive('forearms')"></div>
+        <div class="muscle forearm-r" [class.active]="isActive('forearms')"></div>
+        <!-- Abdominales -->
+        <div class="muscle abs" [class.active]="isActive('abs')"></div>
+        <!-- Oblicuos -->
+        <div class="muscle oblique-l" [class.active]="isActive('obliques')"></div>
+        <div class="muscle oblique-r" [class.active]="isActive('obliques')"></div>
+        <!-- Cuádriceps -->
+        <div class="muscle quad-l" [class.active]="isActive('quadriceps')"></div>
+        <div class="muscle quad-r" [class.active]="isActive('quadriceps')"></div>
+        <!-- Tibiales -->
+        <div class="muscle calf-l" [class.active]="isActive('calves')"></div>
+        <div class="muscle calf-r" [class.active]="isActive('calves')"></div>
+      </div>
+    </div>
+
+    <!-- Vista Posterior -->
+    <div class="model-view" [class.visible]="currentView === 'back'">
+      <div class="muscle-map back">
+        <!-- Trapecio/Espalda alta -->
+        <div class="muscle traps" [class.active]="isActive('back')"></div>
+        <!-- Hombros posteriores -->
+        <div class="muscle rear-delt-l" [class.active]="isActive('shoulders')"></div>
+        <div class="muscle rear-delt-r" [class.active]="isActive('shoulders')"></div>
+        <!-- Dorsales -->
+        <div class="muscle lat-l" [class.active]="isActive('back')"></div>
+        <div class="muscle lat-r" [class.active]="isActive('back')"></div>
+        <!-- Espalda baja -->
+        <div class="muscle lower-back" [class.active]="isActive('back')"></div>
+        <!-- Tríceps -->
+        <div class="muscle triceps-l" [class.active]="isActive('triceps')"></div>
+        <div class="muscle triceps-r" [class.active]="isActive('triceps')"></div>
+        <!-- Glúteos -->
+        <div class="muscle glute-l" [class.active]="isActive('glutes')"></div>
+        <div class="muscle glute-r" [class.active]="isActive('glutes')"></div>
+        <!-- Isquiotibiales -->
+        <div class="muscle ham-l" [class.active]="isActive('hamstrings')"></div>
+        <div class="muscle ham-r" [class.active]="isActive('hamstrings')"></div>
+        <!-- Gemelos -->
+        <div class="muscle calf-back-l" [class.active]="isActive('calves')"></div>
+        <div class="muscle calf-back-r" [class.active]="isActive('calves')"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Lista de músculos activos -->
+  <div class="active-list" *ngIf="activeMuscles.size > 0">
+    <span class="chip" *ngFor="let name of getActiveMuscleNames()">{{ name }}</span>
   </div>
   
-  <div class="body-svg-container">
-    <svg viewBox="0 0 260 520" class="body-svg" xmlns="http://www.w3.org/2000/svg">
-      <!-- Background glow -->
-      <defs>
-        <radialGradient id="bodyGlow" cx="50%" cy="35%" r="65%">
-          <stop offset="0%" stop-color="rgba(250, 204, 21, 0.18)"/>
-          <stop offset="100%" stop-color="rgba(250, 204, 21, 0)"/>
-        </radialGradient>
-        <linearGradient id="bodyBase" x1="0%" y1="0%" x2="0%" y2="100%">
-          <stop offset="0%" stop-color="#1c1c21"/>
-          <stop offset="100%" stop-color="#101014"/>
-        </linearGradient>
-      </defs>
-      <ellipse cx="130" cy="180" rx="118" ry="180" fill="url(#bodyGlow)" />
-
-      <!-- Body silhouette -->
-      <g id="body-silhouette" stroke="#2f2f37" stroke-width="2" fill="url(#bodyBase)">
-        <!-- Head -->
-        <path d="M110 25 Q130 5 150 25 L150 55 Q130 75 110 55 Z" class="body-outline" />
-        <!-- Neck -->
-        <path d="M118 55 L142 55 L146 75 Q130 82 114 75 Z" class="body-outline" />
-        <!-- Torso -->
-        <path d="M92 75 Q130 70 168 75 L182 95 Q190 140 188 195 Q186 235 170 270 Q150 310 130 315 Q110 310 90 270 Q74 235 72 195 Q70 140 78 95 Z" class="body-outline" />
-      </g>
-
-      <!-- Muscles (front) -->
-      <g id="muscles-front">
-        <!-- Chest -->
-        <path
-          id="chest"
-          d="M90 105 Q130 95 170 105 L176 140 Q130 150 84 140 Z"
-          [class.active]="isActive('chest')"
-          class="muscle-path"
-        />
-
-        <!-- Shoulders -->
-        <path
-          id="shoulders"
-          d="M78 90 Q130 82 182 90 L186 108 Q130 102 74 108 Z"
-          [class.active]="isActive('shoulders')"
-          class="muscle-path"
-        />
-
-        <!-- Abs -->
-        <path
-          id="abs"
-          d="M96 150 Q130 156 164 150 L170 195 Q130 205 90 195 Z"
-          [class.active]="isActive('abs')"
-          class="muscle-path"
-        />
-
-        <!-- Obliques -->
-        <path
-          id="obliques"
-          d="M82 165 Q130 172 178 165 L184 205 Q130 212 76 205 Z"
-          [class.active]="isActive('obliques')"
-          class="muscle-path"
-        />
-      </g>
-
-      <!-- Arms -->
-      <g id="arms-group">
-        <!-- Left arm -->
-        <path
-          id="biceps-left"
-          d="M52 108 Q64 132 60 188 Q56 228 52 252 Q46 232 44 200 Q42 168 44 140 Z"
-          [class.active]="isActive('biceps')"
-          class="muscle-path"
-        />
-        <path
-          id="triceps-left"
-          d="M44 132 Q48 152 46 200 Q44 230 40 248 Q36 224 36 190 Q36 160 38 140 Z"
-          [class.active]="isActive('triceps')"
-          class="muscle-path"
-        />
-        <path
-          id="forearms-left"
-          d="M40 248 Q44 268 50 312 L46 334 Q40 310 38 280 Z"
-          [class.active]="isActive('forearms')"
-          class="muscle-path"
-        />
-
-        <!-- Right arm -->
-        <path
-          id="biceps-right"
-          d="M208 108 Q196 132 200 188 Q204 228 208 252 Q214 232 216 200 Q218 168 216 140 Z"
-          [class.active]="isActive('biceps')"
-          class="muscle-path"
-        />
-        <path
-          id="triceps-right"
-          d="M216 132 Q212 152 214 200 Q216 230 220 248 Q224 224 224 190 Q224 160 222 140 Z"
-          [class.active]="isActive('triceps')"
-          class="muscle-path"
-        />
-        <path
-          id="forearms-right"
-          d="M220 248 Q216 268 210 312 L214 334 Q220 310 222 280 Z"
-          [class.active]="isActive('forearms')"
-          class="muscle-path"
-        />
-      </g>
-
-      <!-- Back (broad area) -->
-      <g id="back-group">
-        <path
-          id="back"
-          d="M82 112 Q130 118 178 112 L184 205 Q130 215 76 205 Z"
-          [class.active]="isActive('back')"
-          class="muscle-path"
-        />
-      </g>
-
-      <!-- Legs -->
-      <g id="legs-group">
-        <!-- Glutes -->
-        <path
-          id="glutes-left"
-          d="M92 240 Q116 248 132 240 L136 260 Q116 268 92 260 Z"
-          [class.active]="isActive('glutes')"
-          class="muscle-path"
-        />
-        <path
-          id="glutes-right"
-          d="M168 240 Q144 248 128 240 L124 260 Q144 268 168 260 Z"
-          [class.active]="isActive('glutes')"
-          class="muscle-path"
-        />
-
-        <!-- Quads -->
-        <path
-          id="quadriceps-left"
-          d="M96 258 Q118 268 134 258 L140 350 Q118 364 98 350 Z"
-          [class.active]="isActive('quadriceps')"
-          class="muscle-path"
-        />
-        <path
-          id="quadriceps-right"
-          d="M164 258 Q142 268 126 258 L120 350 Q142 364 162 350 Z"
-          [class.active]="isActive('quadriceps')"
-          class="muscle-path"
-        />
-
-        <!-- Hamstrings -->
-        <path
-          id="hamstrings-left"
-          d="M88 258 Q118 270 148 258 L154 350 Q118 356 88 346 Z"
-          [class.active]="isActive('hamstrings')"
-          class="muscle-path"
-        />
-        <path
-          id="hamstrings-right"
-          d="M172 258 Q142 270 112 258 L106 350 Q142 356 172 346 Z"
-          [class.active]="isActive('hamstrings')"
-          class="muscle-path"
-        />
-
-        <!-- Calves -->
-        <path
-          id="calves-left"
-          d="M100 350 Q120 362 140 350 L146 430 Q120 444 98 432 Z"
-          [class.active]="isActive('calves')"
-          class="muscle-path"
-        />
-        <path
-          id="calves-right"
-          d="M160 350 Q140 362 120 350 L114 430 Q140 444 162 432 Z"
-          [class.active]="isActive('calves')"
-          class="muscle-path"
-        />
-      </g>
-    </svg>
-  </div>
-
-  <div class="legend" *ngIf="activeMuscles.size > 0">
-    <div class="legend-item">
-      <div class="dot active"></div>
-      <span>Músculos activados</span>
-    </div>
+  <div class="empty-state" *ngIf="activeMuscles.size === 0">
+    Selecciona un tipo de entrenamiento
   </div>
 </div>

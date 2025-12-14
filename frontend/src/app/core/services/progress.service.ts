@@ -123,7 +123,8 @@ export class ProgressService {
             completed: w.completed !== undefined ? w.completed : true,
             date: w.date ? (w.date instanceof Date ? w.date : new Date(w.date)) : new Date(),
             durationMinutes: w.duration_minutes,
-            notes: w.notes || ''
+            notes: w.notes || '',
+            exercises: this.parseExercisesFromWorkout(w)
           }));
         }
         
@@ -141,6 +142,57 @@ export class ProgressService {
         });
       })
     );
+  }
+
+  /**
+   * Parse exercises from workout data (from notes JSON or exercises field)
+   */
+  private parseExercisesFromWorkout(workout: any): any[] {
+    // Si ya tiene exercises como array, usarlo directamente
+    if (workout.exercises && Array.isArray(workout.exercises)) {
+      return workout.exercises;
+    }
+    
+    // Intentar parsear desde notes si contiene JSON
+    if (workout.notes) {
+      try {
+        const notes = workout.notes;
+        
+        // Buscar patrón WORKOUT_DATA: {...}
+        const workoutDataMatch = notes.match(/WORKOUT_DATA:\s*(\{[\s\S]*\})/);
+        if (workoutDataMatch && workoutDataMatch[1]) {
+          const parsed = JSON.parse(workoutDataMatch[1]);
+          if (parsed.exercises && Array.isArray(parsed.exercises)) {
+            return parsed.exercises.map((ex: any) => ({
+              name: ex.name || ex.exercise || '',
+              sets: (ex.sets || []).map((s: any) => ({
+                reps: s.reps || 0,
+                weight: s.weight || 0
+              }))
+            }));
+          }
+        }
+        
+        // Buscar cualquier JSON en el texto
+        const jsonMatch = notes.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          const parsed = JSON.parse(jsonMatch[0]);
+          if (parsed.exercises && Array.isArray(parsed.exercises)) {
+            return parsed.exercises.map((ex: any) => ({
+              name: ex.name || ex.exercise || '',
+              sets: (ex.sets || []).map((s: any) => ({
+                reps: s.reps || 0,
+                weight: s.weight || 0
+              }))
+            }));
+          }
+        }
+      } catch (e) {
+        // No es JSON válido, ignorar
+      }
+    }
+    
+    return [];
   }
 
   /**
