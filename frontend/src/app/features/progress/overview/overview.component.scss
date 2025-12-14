@@ -1002,26 +1002,32 @@
   }
 
 
-  .exercise-name-autocomplete {
+  .exercise-select {
     flex: 1;
-    position: relative;
     min-width: 0;
-  }
-
-  .exercise-name-input {
-    width: 100%;
-    background: transparent;
-    border: none;
-    padding: 0.5rem 0;
+    background: #0a0a0c;
+    border: 1px solid #1f1f26;
+    border-radius: 6px;
+    padding: 0.5rem 0.75rem;
     color: var(--color-primary);
-    font-size: 1rem;
+    font-size: 0.9rem;
     font-weight: 500;
     outline: none;
+    cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23facc15' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.5rem center;
+    padding-right: 1.5rem;
 
-    &::placeholder {
-      color: var(--color-primary);
-      opacity: 0.7;
-      font-weight: 400;
+    &:focus {
+      border-color: var(--color-primary);
+    }
+
+    option {
+      background: #0a0a0c;
+      color: #fff;
+      padding: 0.5rem;
     }
   }
 }

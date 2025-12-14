@@ -109,28 +109,16 @@
                   <mat-panel-title>
                     <div class="exercise-header">
                       <span class="exercise-index">{{ i + 1 }}</span>
-                      <div class="exercise-name-autocomplete">
-                        <input 
-                          class="exercise-name-input" 
-                          type="text" 
-                          formControlName="name" 
-                          placeholder="Nombre del ejercicio"
-                          (click)="onExerciseInputClick(i); $event.stopPropagation()"
-                          (focus)="onExerciseInputFocus(i)"
-                          (input)="onExerciseNameInput(i, $any($event.target).value || '')"
-                          [matAutocomplete]="auto"
-                        />
-                        <mat-autocomplete 
-                          #auto="matAutocomplete"
-                          (optionSelected)="onExerciseNameSelected(i, $event.option.value)"
-                          class="exercise-autocomplete"
-                          [displayWith]="null"
-                        >
-                          <mat-option *ngFor="let exercise of filteredExercises[i] || []" [value]="exercise">
-                            {{ exercise }}
-                          </mat-option>
-                        </mat-autocomplete>
-                      </div>
+                      <select 
+                        class="exercise-select" 
+                        formControlName="name"
+                        (click)="$event.stopPropagation()"
+                      >
+                        <option value="" disabled>Selecciona ejercicio</option>
+                        <option *ngFor="let exercise of getAvailableExercises(i)" [value]="exercise">
+                          {{ exercise }}
+                        </option>
+                      </select>
                     </div>
                   </mat-panel-title>
                   <mat-panel-description>
@@ -182,7 +170,8 @@
                             type="number" 
                             formControlName="reps" 
                             placeholder="Reps"
-                            min="1"
+                            min="0.5"
+                            step="0.5"
                           />
                           <span class="set-separator">×</span>
                           <input 

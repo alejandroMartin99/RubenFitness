@@ -14,7 +14,7 @@ Chart.register(...registerables);
 })
 export class ChartsComponent implements OnInit, OnDestroy, AfterViewInit {
   workoutsChart: Chart | null = null;
-  durationChart: Chart | null = null;
+  setsChart: Chart | null = null;
   volumeChart: Chart | null = null;
   muscleGroupChart: Chart | null = null;
   muscleFrequencyChart: Chart | null = null;
@@ -68,15 +68,15 @@ export class ChartsComponent implements OnInit, OnDestroy, AfterViewInit {
         }
       });
 
-    this.progressService.getDurationChartData(days)
+    this.progressService.getSetsChartData(days)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (data) => {
-          this.createDurationChart(data);
+          this.createSetsChart(data);
           this.checkLoadingComplete();
         },
         error: (err) => {
-          console.error('Error loading duration chart:', err);
+          console.error('Error loading sets chart:', err);
           this.checkLoadingComplete();
         }
       });
@@ -204,30 +204,23 @@ export class ChartsComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   /**
-   * Create duration chart
+   * Create sets chart
    */
-  private createDurationChart(data: ChartData): void {
+  private createSetsChart(data: ChartData): void {
     setTimeout(() => {
-      const canvas = document.getElementById('durationChart') as HTMLCanvasElement;
+      const canvas = document.getElementById('setsChart') as HTMLCanvasElement;
       if (!canvas) {
-        console.warn('Duration chart canvas not found');
+        console.warn('Sets chart canvas not found');
         return;
       }
 
-    if (this.durationChart) {
-      this.durationChart.destroy();
+    if (this.setsChart) {
+      this.setsChart.destroy();
     }
 
     const config: ChartConfiguration = {
-      type: 'line',
-      data: {
-        ...data,
-        datasets: [{
-          ...data.datasets[0],
-          fill: true,
-          tension: 0.4
-        }]
-      },
+      type: 'bar',
+      data: data,
       options: {
         responsive: true,
         maintainAspectRatio: false,
@@ -235,19 +228,19 @@ export class ChartsComponent implements OnInit, OnDestroy, AfterViewInit {
           legend: { display: false },
           title: {
             display: true,
-            text: 'Duración Total (minutos)',
+            text: 'Series Totales',
             font: { size: 16, weight: 'bold' as const },
             color: '#ffffff'
           }
         },
         scales: {
           x: { ticks: { color: '#ffffff' }, grid: { color: 'rgba(255,255,255,0.1)' } },
-          y: { beginAtZero: true, ticks: { color: '#ffffff' }, grid: { color: 'rgba(255,255,255,0.1)' } }
+          y: { beginAtZero: true, ticks: { color: '#ffffff', stepSize: 1 }, grid: { color: 'rgba(255,255,255,0.1)' } }
         }
       }
     };
 
-      this.durationChart = new Chart(canvas, config);
+      this.setsChart = new Chart(canvas, config);
     }, 50);
   }
 
@@ -465,7 +458,7 @@ export class ChartsComponent implements OnInit, OnDestroy, AfterViewInit {
    * Destroy all charts
    */
   private destroyCharts(): void {
-    [this.workoutsChart, this.durationChart, this.volumeChart, 
+    [this.workoutsChart, this.setsChart, this.volumeChart, 
      this.muscleGroupChart, this.muscleFrequencyChart, 
      this.exerciseVolumeChart, this.exerciseProgressChart].forEach(chart => {
       if (chart) {

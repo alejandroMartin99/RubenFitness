@@ -598,14 +598,56 @@ export class ProgressService {
   /**
    * Get chart data for duration over time
    */
-  getDurationChartData(days: number = 30): Observable<ChartData> {
-    return this.getPerformanceMetrics(days).pipe(
-      map((metrics) => {
-        if (metrics.length === 0) {
+  getSetsChartData(days: number = 30): Observable<ChartData> {
+    const user = this.authService.getCurrentUser();
+    if (!user) {
+      return of({
+        labels: ['Sin datos'],
+        datasets: [{
+          label: 'Series',
+          data: [0],
+          backgroundColor: 'rgba(118, 75, 162, 0.6)',
+          borderColor: 'rgba(118, 75, 162, 1)',
+          borderWidth: 2
+        }]
+      });
+    }
+
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - days);
+
+    return from(
+      this.supabaseService.getClient()
+        .from('progress')
+        .select('workout_date, notes')
+        .eq('user_id', user.id)
+        .gte('workout_date', startDate.toISOString().split('T')[0])
+        .order('workout_date', { ascending: true })
+    ).pipe(
+      map(({ data, error }) => {
+        if (error) throw error;
+        
+        const setsByDate: { [key: string]: number } = {};
+        
+        (data || []).forEach((item: any) => {
+          const date = item.workout_date;
+          const parsed = this.parseWorkoutNotes(item.notes || '');
+          if (parsed && parsed.total_sets) {
+            setsByDate[date] = (setsByDate[date] || 0) + parsed.total_sets;
+          } else if (parsed && parsed.exercises) {
+            // Calcular series desde exercises si total_sets no existe
+            const totalSets = parsed.exercises.reduce((acc: number, ex: any) => 
+              acc + (ex.sets?.length || 0), 0);
+            setsByDate[date] = (setsByDate[date] || 0) + totalSets;
+          }
+        });
+
+        const dates = Object.keys(setsByDate).sort();
+        if (dates.length === 0) {
           return {
             labels: ['Sin datos'],
             datasets: [{
-              label: 'Duration (minutes)',
+              label: 'Series',
               data: [0],
               backgroundColor: 'rgba(118, 75, 162, 0.6)',
               borderColor: 'rgba(118, 75, 162, 1)',
@@ -613,11 +655,12 @@ export class ProgressService {
             }]
           };
         }
+        
         return {
-          labels: metrics.map(m => m.date.toLocaleDateString('es-ES', { month: 'short', day: 'numeric' })),
+          labels: dates.map(d => new Date(d).toLocaleDateString('es-ES', { month: 'short', day: 'numeric' })),
           datasets: [{
-            label: 'Duration (minutes)',
-            data: metrics.map(m => m.totalDuration),
+            label: 'Series Totales',
+            data: dates.map(d => setsByDate[d]),
             backgroundColor: 'rgba(118, 75, 162, 0.6)',
             borderColor: 'rgba(118, 75, 162, 1)',
             borderWidth: 2
@@ -627,7 +670,7 @@ export class ProgressService {
       catchError(() => of({
         labels: ['Sin datos'],
         datasets: [{
-          label: 'Duration (minutes)',
+          label: 'Series',
           data: [0],
           backgroundColor: 'rgba(118, 75, 162, 0.6)',
           borderColor: 'rgba(118, 75, 162, 1)',

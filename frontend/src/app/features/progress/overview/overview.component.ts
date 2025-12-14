@@ -324,7 +324,7 @@ export class OverviewComponent implements OnInit, AfterViewInit, OnDestroy {
 
   private createSet(): FormGroup {
     return this.fb.group({
-      reps: [10, [Validators.required, Validators.min(1)]],
+      reps: [10, [Validators.required, Validators.min(0.5)]],
       weight: [0, [Validators.min(0)]]
     });
   }
@@ -876,17 +876,58 @@ export class OverviewComponent implements OnInit, AfterViewInit, OnDestroy {
 
   private populateExercisesFromHistory(exercises: any[]): void {
     if (!exercises || exercises.length === 0) return;
+    
+    console.log('Cargando ejercicios del último entrenamiento:', exercises);
+    
+    // Obtener el tipo de entrenamiento actual para buscar ejercicios válidos
+    const currentType = this.workoutForm.get('type')?.value || '';
+    const availableExercises = this.exercisesByType[currentType] || [];
+    
+    // Función para normalizar nombres (quitar espacios, acentos, minúsculas)
+    const normalize = (str: string) => {
+      return str
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '') // quitar acentos
+        .replace(/\s+/g, '') // quitar espacios
+        .trim();
+    };
+    
     this.exercises.clear();
-    exercises.forEach((ex) => {
+    exercises.forEach((ex, index) => {
+      let exerciseName = ex.name || '';
+      const normalizedInput = normalize(exerciseName);
+      
+      // Buscar coincidencia por nombre normalizado
+      const matchedExercise = availableExercises.find((e: string) => {
+        const normalizedOption = normalize(e);
+        return normalizedOption === normalizedInput || 
+               e.toLowerCase() === exerciseName.toLowerCase();
+      });
+      
+      // Si encontramos coincidencia, usar el nombre exacto del selector
+      if (matchedExercise) {
+        exerciseName = matchedExercise;
+        console.log(`Matched: "${ex.name}" -> "${matchedExercise}"`);
+      } else {
+        console.log(`No match found for: "${ex.name}"`);
+      }
+      
       const setsArray = (ex.sets || []).map((s: any) => this.fb.group({
-        reps: [s.reps || 0, [Validators.required, Validators.min(1)]],
+        reps: [s.reps || 10, [Validators.required, Validators.min(0.5)]],
         weight: [s.weight || 0, [Validators.min(0)]]
       }));
       const exerciseGroup = this.fb.group({
-        name: [ex.name || '', Validators.required],
+        name: [exerciseName, Validators.required],
         sets: this.fb.array(setsArray.length ? setsArray : [this.createSet()])
       });
       this.exercises.push(exerciseGroup);
+      
+      // Actualizar filteredExercises para este índice
+      this.updateFilteredExercises(index);
     });
+    
+    // Expandir el primer ejercicio
+    this.expandedExerciseIndex = 0;
   }
 }

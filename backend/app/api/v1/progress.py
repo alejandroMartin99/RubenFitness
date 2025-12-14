@@ -591,7 +591,7 @@ async def save_body_comp(request: BodyCompRequest):
 @router.get("/progress/{user_id}/last")
 async def get_last_workout(user_id: str, type: Optional[str] = None):
     """
-    Get last workout with detailed exercises (from notes WORKOUT_DATA)
+    Get last workout with detailed exercises (from notes JSON)
     Optionally filter by workout type
     """
     try:
@@ -607,17 +607,37 @@ async def get_last_workout(user_id: str, type: Optional[str] = None):
 
         def parse_workout(row):
             notes = row.get("notes") or ""
-            marker = "WORKOUT_DATA:"
-            idx = notes.find(marker)
-            if idx == -1:
-                return None
+            
+            # Intentar varios formatos de parseo
             try:
-                json_str = notes[idx + len(marker):].strip()
-                data = json.loads(json_str)
-                data["date"] = row.get("workout_date")
-                data["id"] = row.get("id")
-                return data
-            except Exception:
+                # Formato 1: "--- Datos detallados ---" seguido de JSON
+                if "--- Datos detallados ---" in notes:
+                    json_part = notes.split("--- Datos detallados ---")[1].strip()
+                    data = json.loads(json_part)
+                    data["date"] = row.get("workout_date")
+                    data["id"] = row.get("id")
+                    return data
+                
+                # Formato 2: "WORKOUT_DATA:" seguido de JSON
+                if "WORKOUT_DATA:" in notes:
+                    idx = notes.find("WORKOUT_DATA:")
+                    json_str = notes[idx + len("WORKOUT_DATA:"):].strip()
+                    data = json.loads(json_str)
+                    data["date"] = row.get("workout_date")
+                    data["id"] = row.get("id")
+                    return data
+                
+                # Formato 3: JSON directo en cualquier parte
+                json_match = re.search(r'\{[\s\S]+\}', notes)
+                if json_match:
+                    data = json.loads(json_match.group())
+                    if data.get("exercises") or data.get("workout_type"):
+                        data["date"] = row.get("workout_date")
+                        data["id"] = row.get("id")
+                        return data
+                
+                return None
+            except Exception as e:
                 return None
 
         for row in result.data or []:
