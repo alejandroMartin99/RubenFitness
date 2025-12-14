@@ -383,6 +383,52 @@ export class ProgressService {
   }
 
   /**
+   * Helper method to parse workout notes and extract JSON data
+   */
+  private parseWorkoutNotes(notes: string): any {
+    if (!notes) return null;
+    
+    try {
+      let cleaned = notes.trim();
+      
+      // Remove quotes if present
+      if ((cleaned.startsWith('"') && cleaned.endsWith('"')) || 
+          (cleaned.startsWith("'") && cleaned.endsWith("'"))) {
+        cleaned = cleaned.slice(1, -1);
+      }
+      
+      // Replace escaped newlines
+      cleaned = cleaned.replace(/\\n/g, '\n').replace(/\\r/g, '').replace(/\\"/g, '"');
+      
+      // Skip body composition records
+      if (cleaned.includes('BODY_COMP:')) {
+        return null;
+      }
+      
+      // Try to extract JSON embedded in text (supports both "--- Datos detallados ---" and "WORKOUT_DATA:" formats)
+      const jsonMatch = cleaned.match(/{[\s\S]+}/);
+      const jsonCandidate = jsonMatch ? jsonMatch[0] : cleaned;
+
+      try {
+        const parsed = JSON.parse(jsonCandidate);
+        if (parsed && typeof parsed === 'object') {
+          // Normalize keys
+          if (parsed.workout_type && !parsed.type) {
+            parsed.type = parsed.workout_type;
+          }
+          return parsed;
+        }
+      } catch {
+        // Not valid JSON, continue
+      }
+      
+      return null;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  /**
    * Get performance metrics over time
    * @param days Number of days to retrieve (default: 30)
    */
@@ -398,7 +444,7 @@ export class ProgressService {
     return from(
       this.supabaseService.getClient()
         .from('progress')
-        .select('workout_date, duration_minutes, satisfaction_rating')
+        .select('workout_date, duration_minutes, satisfaction_rating, notes')
         .eq('user_id', user.id)
         .gte('workout_date', startDate.toISOString().split('T')[0])
         .order('workout_date', { ascending: true })
@@ -406,8 +452,14 @@ export class ProgressService {
       map(({ data, error }) => {
         if (error) throw error;
         
-        // Group by date
+        // Group by date, only count workouts with valid workout_type
         const grouped = (data || []).reduce((acc: any, item: any) => {
+          const parsed = this.parseWorkoutNotes(item.notes || '');
+          // Only count if it has a workout_type
+          if (!parsed || !parsed.workout_type) {
+            return acc;
+          }
+          
           const date = item.workout_date;
           if (!acc[date]) {
             acc[date] = {
@@ -504,18 +556,9 @@ export class ProgressService {
         
         (data || []).forEach((item: any) => {
           const date = item.workout_date;
-          try {
-            // Try to extract volume from notes JSON
-            const notes = item.notes || '';
-            const jsonMatch = notes.match(/WORKOUT_DATA:\s*({[\s\S]*?})/);
-            if (jsonMatch) {
-              const workoutData = JSON.parse(jsonMatch[1]);
-              if (workoutData.total_volume) {
-                volumeByDate[date] = (volumeByDate[date] || 0) + workoutData.total_volume;
-              }
-            }
-          } catch (e) {
-            // Ignore parsing errors
+          const parsed = this.parseWorkoutNotes(item.notes || '');
+          if (parsed && parsed.total_volume) {
+            volumeByDate[date] = (volumeByDate[date] || 0) + parsed.total_volume;
           }
         });
 
@@ -559,7 +602,6 @@ export class ProgressService {
         if (error) throw error;
         
         const muscleGroupMap: { [key: string]: number } = {};
-        const muscleGroupFrequency: { [key: string]: number } = {};
         
         // Map workout types to muscle groups
         const typeToMuscles: { [key: string]: string[] } = {
@@ -571,23 +613,16 @@ export class ProgressService {
         };
 
         (data || []).forEach((item: any) => {
-          try {
-            const notes = item.notes || '';
-            const jsonMatch = notes.match(/WORKOUT_DATA:\s*({[\s\S]*?})/);
-            if (jsonMatch) {
-              const workoutData = JSON.parse(jsonMatch[1]);
-              const workoutType = workoutData.workout_type || '';
-              const volume = workoutData.total_volume || 0;
-              
-              const muscles = typeToMuscles[workoutType] || [workoutType];
-              muscles.forEach(muscle => {
-                muscleGroupMap[muscle] = (muscleGroupMap[muscle] || 0) + volume;
-                muscleGroupFrequency[muscle] = (muscleGroupFrequency[muscle] || 0) + 1;
-              });
-            }
-          } catch (e) {
-            // Ignore parsing errors
-          }
+          const parsed = this.parseWorkoutNotes(item.notes || '');
+          if (!parsed || !parsed.workout_type) return;
+          
+          const workoutType = parsed.workout_type || '';
+          const volume = parsed.total_volume || 0;
+          
+          const muscles = typeToMuscles[workoutType] || [workoutType];
+          muscles.forEach(muscle => {
+            muscleGroupMap[muscle] = (muscleGroupMap[muscle] || 0) + volume;
+          });
         });
 
         const labels = Object.keys(muscleGroupMap);
@@ -651,20 +686,14 @@ export class ProgressService {
         };
 
         (data || []).forEach((item: any) => {
-          try {
-            const notes = item.notes || '';
-            const jsonMatch = notes.match(/WORKOUT_DATA:\s*({[\s\S]*?})/);
-            if (jsonMatch) {
-              const workoutData = JSON.parse(jsonMatch[1]);
-              const workoutType = workoutData.workout_type || '';
-              const muscles = typeToMuscles[workoutType] || [workoutType];
-              muscles.forEach(muscle => {
-                muscleGroupFrequency[muscle] = (muscleGroupFrequency[muscle] || 0) + 1;
-              });
-            }
-          } catch (e) {
-            // Ignore parsing errors
-          }
+          const parsed = this.parseWorkoutNotes(item.notes || '');
+          if (!parsed || !parsed.workout_type) return;
+          
+          const workoutType = parsed.workout_type || '';
+          const muscles = typeToMuscles[workoutType] || [workoutType];
+          muscles.forEach(muscle => {
+            muscleGroupFrequency[muscle] = (muscleGroupFrequency[muscle] || 0) + 1;
+          });
         });
 
         const labels = Object.keys(muscleGroupFrequency);
@@ -707,22 +736,16 @@ export class ProgressService {
         const exerciseVolume: { [key: string]: number } = {};
 
         (data || []).forEach((item: any) => {
-          try {
-            const notes = item.notes || '';
-            const jsonMatch = notes.match(/WORKOUT_DATA:\s*({[\s\S]*?})/);
-            if (jsonMatch) {
-              const workoutData = JSON.parse(jsonMatch[1]);
-              const exercises = workoutData.exercises || [];
-              exercises.forEach((ex: any) => {
-                const exerciseName = ex.name || 'Sin nombre';
-                const exVolume = ex.sets?.reduce((acc: number, s: any) => 
-                  acc + (s.reps || 0) * (s.weight || 0), 0) || 0;
-                exerciseVolume[exerciseName] = (exerciseVolume[exerciseName] || 0) + exVolume;
-              });
-            }
-          } catch (e) {
-            // Ignore parsing errors
-          }
+          const parsed = this.parseWorkoutNotes(item.notes || '');
+          if (!parsed || !parsed.exercises) return;
+          
+          const exercises = parsed.exercises || [];
+          exercises.forEach((ex: any) => {
+            const exerciseName = ex.name || 'Sin nombre';
+            const exVolume = ex.sets?.reduce((acc: number, s: any) => 
+              acc + (s.reps || 0) * (s.weight || 0), 0) || 0;
+            exerciseVolume[exerciseName] = (exerciseVolume[exerciseName] || 0) + exVolume;
+          });
         });
 
         // Get top 10 exercises by volume
@@ -767,26 +790,27 @@ export class ProgressService {
       map(({ data, error }) => {
         if (error) throw error;
         
-        // Get all unique exercises
-        const exerciseNames = new Set<string>();
+        // Get all unique exercises with their total volume
+        const exerciseVolume: { [key: string]: number } = {};
         (data || []).forEach((item: any) => {
-          try {
-            const notes = item.notes || '';
-            const jsonMatch = notes.match(/WORKOUT_DATA:\s*({[\s\S]*?})/);
-            if (jsonMatch) {
-              const workoutData = JSON.parse(jsonMatch[1]);
-              const exercises = workoutData.exercises || [];
-              exercises.forEach((ex: any) => {
-                if (ex.name) exerciseNames.add(ex.name);
-              });
+          const parsed = this.parseWorkoutNotes(item.notes || '');
+          if (!parsed || !parsed.exercises) return;
+          
+          const exercises = parsed.exercises || [];
+          exercises.forEach((ex: any) => {
+            if (ex.name) {
+              const exVolume = ex.sets?.reduce((acc: number, s: any) => 
+                acc + (s.reps || 0) * (s.weight || 0), 0) || 0;
+              exerciseVolume[ex.name] = (exerciseVolume[ex.name] || 0) + exVolume;
             }
-          } catch (e) {
-            // Ignore
-          }
+          });
         });
 
-        // Get top 5 exercises
-        const topExercises = Array.from(exerciseNames).slice(0, 5);
+        // Get top 5 exercises by total volume
+        const topExercises = Object.entries(exerciseVolume)
+          .sort((a, b) => b[1] - a[1])
+          .slice(0, 5)
+          .map(([name]) => name);
         
         // Build data by date for each exercise
         const exerciseData: { [key: string]: { [date: string]: number } } = {};
@@ -796,23 +820,17 @@ export class ProgressService {
 
         (data || []).forEach((item: any) => {
           const date = item.workout_date;
-          try {
-            const notes = item.notes || '';
-            const jsonMatch = notes.match(/WORKOUT_DATA:\s*({[\s\S]*?})/);
-            if (jsonMatch) {
-              const workoutData = JSON.parse(jsonMatch[1]);
-              const exercises = workoutData.exercises || [];
-              exercises.forEach((ex: any) => {
-                if (topExercises.includes(ex.name)) {
-                  const volume = ex.sets?.reduce((acc: number, s: any) => 
-                    acc + (s.reps || 0) * (s.weight || 0), 0) || 0;
-                  exerciseData[ex.name][date] = (exerciseData[ex.name][date] || 0) + volume;
-                }
-              });
+          const parsed = this.parseWorkoutNotes(item.notes || '');
+          if (!parsed || !parsed.exercises) return;
+          
+          const exercises = parsed.exercises || [];
+          exercises.forEach((ex: any) => {
+            if (topExercises.includes(ex.name)) {
+              const volume = ex.sets?.reduce((acc: number, s: any) => 
+                acc + (s.reps || 0) * (s.weight || 0), 0) || 0;
+              exerciseData[ex.name][date] = (exerciseData[ex.name][date] || 0) + volume;
             }
-          } catch (e) {
-            // Ignore
-          }
+          });
         });
 
         const dates = Array.from(new Set((data || []).map((item: any) => item.workout_date))).sort();

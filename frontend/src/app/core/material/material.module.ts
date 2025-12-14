@@ -36,6 +36,7 @@ import { MatExpansionModule } from '@angular/material/expansion';
 import { MatTableModule } from '@angular/material/table';
 import { MatSortModule } from '@angular/material/sort';
 import { MatPaginatorModule } from '@angular/material/paginator';
+import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { MatStepperModule } from '@angular/material/stepper';
 
 const MaterialModules = [
@@ -65,9 +66,10 @@ const MaterialModules = [
   MatTooltipModule,
   MatTabsModule,
   MatExpansionModule,
-  MatTableModule,
-  MatSortModule,
-  MatPaginatorModule,
+    MatTableModule,
+    MatSortModule,
+    MatPaginatorModule,
+    MatAutocompleteModule,
   MatStepperModule,
 ];
 

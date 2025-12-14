@@ -46,12 +46,81 @@ export class OverviewComponent implements OnInit, AfterViewInit, OnDestroy {
   private fatChart?: Chart;
   private weightChart?: Chart;
 
+  // GIFs animados de ejercicios - archivos locales en assets/exercises/
+  private readonly GIF_PATH = 'assets/exercises/';
+  
   exerciseImages: Record<string, string> = {
-    'press banca': 'https://images.pexels.com/photos/1552102/pexels-photo-1552102.jpeg?auto=compress&cs=tinysrgb&w=800',
-    'sentadilla': 'https://images.pexels.com/photos/2261485/pexels-photo-2261485.jpeg?auto=compress&cs=tinysrgb&w=800',
-    'peso muerto': 'https://images.pexels.com/photos/4761669/pexels-photo-4761669.jpeg?auto=compress&cs=tinysrgb&w=800',
-    'remo': 'https://images.pexels.com/photos/3839022/pexels-photo-3839022.jpeg?auto=compress&cs=tinysrgb&w=800',
-    'dominadas': 'https://images.pexels.com/photos/3837758/pexels-photo-3837758.jpeg?auto=compress&cs=tinysrgb&w=800'
+    // ESPALDA - BÍCEPS
+    'Dominadas': 'pull-up.gif',
+    'Jalón al Pecho': 'lat-pulldown.gif',
+    'Jalón Agarre Cerrado': 'lat-pulldown.gif',
+    'Remo con Barra': 'barbell-bent-over-row.gif',
+    'Remo con Mancuerna': 'dumbbell-row.gif',
+    'Remo en Polea Baja': 'seated-cable-row.gif',
+    'Remo en Máquina': 'seated-cable-row.gif',
+    'Peso Muerto': 'barbell-deadlift.gif',
+    'Hiperextensiones': 'hyperextension.gif',
+    'Face Pull': 'face-pull.gif',
+    'Pullover': 'dumbbell-pullover.gif',
+    'Curl con Barra': 'barbell-curl.gif',
+    'Curl con Mancuernas': 'dumbbell-curl.gif',
+    'Curl Martillo': 'hammer-curl.gif',
+    'Curl Concentrado': 'concentration-curl.gif',
+    'Curl en Banco Scott': 'barbell-curl.gif',
+    'Curl en Polea': 'barbell-curl.gif',
+    'Curl Inclinado': 'dumbbell-curl.gif',
+    'Curl Spider': 'concentration-curl.gif',
+    'Encogimientos': 'barbell-shrug.gif',
+    // PECHO - TRÍCEPS
+    'Press Banca': 'barbell-bench-press.gif',
+    'Press Banca Inclinado': 'incline-barbell-bench-press.gif',
+    'Press Banca Declinado': 'barbell-bench-press.gif',
+    'Press con Mancuernas': 'dumbbell-press.gif',
+    'Press Inclinado con Mancuernas': 'incline-dumbbell-press.gif',
+    'Aperturas con Mancuernas': 'dumbbell-fly.gif',
+    'Aperturas en Polea': 'cable-crossover.gif',
+    'Fondos en Paralelas': 'chest-dips.gif',
+    'Cruce de Poleas': 'cable-crossover.gif',
+    'Flexiones': 'push-up.gif',
+    'Press Francés': 'pushdown.gif',
+    'Extensiones de Tríceps': 'pushdown.gif',
+    'Fondos en Banco': 'chest-dips.gif',
+    'Patada de Tríceps': 'dumbbell-kickback.gif',
+    'Tríceps en Polea': 'pushdown.gif',
+    'Press Cerrado': 'close-grip-bench-press.gif',
+    'Flexiones Diamante': 'diamond-push-up.gif',
+    'Dips en Máquina': 'chest-dips.gif',
+    'Press con Barra': 'barbell-bench-press.gif',
+    // PIERNA
+    'Sentadilla': 'barbell-squat.gif',
+    'Sentadilla con Barra': 'barbell-squat.gif',
+    'Sentadilla Frontal': 'barbell-squat.gif',
+    'Prensa': 'leg-extension.gif',
+    'Peso Muerto Rumano': 'barbell-romanian-deadlift.gif',
+    'Zancadas': 'dumbbell-lunge.gif',
+    'Sentadilla Búlgara': 'dumbbell-lunge.gif',
+    'Extensión de Cuádriceps': 'leg-extension.gif',
+    'Curl de Femoral': 'barbell-romanian-deadlift.gif',
+    'Elevación de Gemelos': 'barbell-squat.gif',
+    'Prensa de Gemelos': 'barbell-squat.gif',
+    'Hip Thrust': 'barbell-hip-thrust.gif',
+    'Step Up': 'dumbbell-lunge.gif',
+    'Sentadilla Hack': 'barbell-squat.gif',
+    'Prensa Horizontal': 'leg-extension.gif',
+    'Aductores': 'dumbbell-lunge.gif',
+    'Abductores': 'dumbbell-lunge.gif',
+    'Good Morning': 'barbell-romanian-deadlift.gif',
+    'Caminata de Granjero': 'barbell-deadlift.gif',
+    // HOMBRO - BRAZO
+    'Press Militar': 'barbell-shoulder-press.gif',
+    'Press de Hombros': 'dumbbell-shoulder-press.gif',
+    'Press Arnold': 'arnold-press.gif',
+    'Elevaciones Laterales': 'dumbbell-lateral-raise.gif',
+    'Elevaciones Frontales': 'dumbbell-front-raise.gif',
+    'Elevaciones Posteriores': 'dumbbell-lateral-raise.gif',
+    'Remo al Mentón': 'barbell-upright-row.gif',
+    'Pájaros': 'dumbbell-lateral-raise.gif',
+    'Press de Hombros con Mancuernas': 'dumbbell-shoulder-press.gif'
   };
 
   selectedMuscles: string[] = [];
@@ -63,6 +132,101 @@ export class OverviewComponent implements OnInit, AfterViewInit, OnDestroy {
     type: '',
     notes: ''
   };
+  expandedExerciseIndex: number = 0;
+
+  // Ejercicios predefinidos por tipo de entrenamiento (CORREGIDOS)
+  exercisesByType: Record<string, string[]> = {
+    'Espalda - Bíceps': [
+      'Dominadas',
+      'Jalón al Pecho',
+      'Jalón Agarre Cerrado',
+      'Remo con Barra',
+      'Remo con Mancuerna',
+      'Remo en Polea Baja',
+      'Remo en Máquina',
+      'Peso Muerto',
+      'Hiperextensiones',
+      'Face Pull',
+      'Pullover',
+      'Curl con Barra',
+      'Curl con Mancuernas',
+      'Curl Martillo',
+      'Curl Concentrado',
+      'Curl en Banco Scott',
+      'Curl en Polea',
+      'Curl Inclinado',
+      'Curl Spider',
+      'Encogimientos'
+    ],
+    'Pecho - Tríceps': [
+      'Press Banca',
+      'Press Banca Inclinado',
+      'Press Banca Declinado',
+      'Press con Mancuernas',
+      'Press Inclinado con Mancuernas',
+      'Aperturas con Mancuernas',
+      'Aperturas en Polea',
+      'Fondos en Paralelas',
+      'Cruce de Poleas',
+      'Pullover',
+      'Flexiones',
+      'Press Francés',
+      'Extensiones de Tríceps',
+      'Fondos en Banco',
+      'Patada de Tríceps',
+      'Tríceps en Polea',
+      'Press Cerrado',
+      'Flexiones Diamante',
+      'Dips en Máquina',
+      'Press con Barra'
+    ],
+    'Pierna': [
+      'Sentadilla',
+      'Sentadilla con Barra',
+      'Sentadilla Frontal',
+      'Prensa',
+      'Peso Muerto',
+      'Peso Muerto Rumano',
+      'Zancadas',
+      'Sentadilla Búlgara',
+      'Extensión de Cuádriceps',
+      'Curl de Femoral',
+      'Elevación de Gemelos',
+      'Prensa de Gemelos',
+      'Hip Thrust',
+      'Step Up',
+      'Sentadilla Hack',
+      'Prensa Horizontal',
+      'Aductores',
+      'Abductores',
+      'Good Morning',
+      'Caminata de Granjero'
+    ],
+    'Hombro - Brazo': [
+      'Press Militar',
+      'Press de Hombros',
+      'Press Arnold',
+      'Elevaciones Laterales',
+      'Elevaciones Frontales',
+      'Elevaciones Posteriores',
+      'Remo al Mentón',
+      'Face Pull',
+      'Pájaros',
+      'Encogimientos',
+      'Curl con Barra',
+      'Curl con Mancuernas',
+      'Curl Martillo',
+      'Curl Concentrado',
+      'Press Francés',
+      'Extensiones de Tríceps',
+      'Patada de Tríceps',
+      'Fondos en Banco',
+      'Tríceps en Polea',
+      'Press de Hombros con Mancuernas'
+    ]
+  };
+
+  filteredExercises: { [key: number]: string[] } = {};
 
   constructor(
     private progressService: ProgressService,
@@ -177,7 +341,49 @@ export class OverviewComponent implements OnInit, AfterViewInit, OnDestroy {
 
   addExercise(): void {
     this.exercises.push(this.createExercise());
+    // Expandir el nuevo ejercicio cuando se añade
+    this.expandedExerciseIndex = this.exercises.length - 1;
+    // Inicializar ejercicios filtrados para el nuevo ejercicio
+    this.updateFilteredExercises(this.exercises.length - 1);
   }
+
+  getAvailableExercises(exerciseIndex: number): string[] {
+    const workoutType = this.workoutForm.get('type')?.value || '';
+    return this.exercisesByType[workoutType] || [];
+  }
+
+  filterExercises(exerciseIndex: number, value: string): void {
+    const allExercises = this.getAvailableExercises(exerciseIndex);
+    const filterValue = value.toLowerCase();
+    this.filteredExercises[exerciseIndex] = allExercises.filter(ex =>
+      ex.toLowerCase().includes(filterValue)
+    );
+  }
+
+  updateFilteredExercises(exerciseIndex: number): void {
+    const allExercises = this.getAvailableExercises(exerciseIndex);
+    this.filteredExercises[exerciseIndex] = allExercises;
+  }
+
+  onExerciseInputClick(exerciseIndex: number): void {
+    // Al hacer clic, mostrar todos los ejercicios disponibles
+    this.updateFilteredExercises(exerciseIndex);
+  }
+
+  onExerciseInputFocus(exerciseIndex: number): void {
+    // Al enfocar, asegurarse de que todos los ejercicios estén disponibles
+    this.updateFilteredExercises(exerciseIndex);
+  }
+
+  onExerciseNameInput(exerciseIndex: number, value: string): void {
+    this.filterExercises(exerciseIndex, value);
+  }
+
+  onExerciseNameSelected(exerciseIndex: number, exerciseName: string): void {
+    const exerciseControl = this.exercises.at(exerciseIndex);
+    exerciseControl.get('name')?.setValue(exerciseName);
+  }
+
 
   removeExercise(index: number): void {
     if (this.exercises.length > 1) {
@@ -198,8 +404,24 @@ export class OverviewComponent implements OnInit, AfterViewInit, OnDestroy {
 
   exerciseImage(name: string): string | null {
     if (!name) return null;
-    const key = name.toLowerCase();
-    return this.exerciseImages[key] || null;
+    
+    let gifFile: string | null = null;
+    
+    // Buscar exacto primero
+    if (this.exerciseImages[name]) {
+      gifFile = this.exerciseImages[name];
+    } else {
+      // Buscar case-insensitive
+      const foundKey = Object.keys(this.exerciseImages).find(k => 
+        k.toLowerCase() === name.toLowerCase()
+      );
+      if (foundKey) {
+        gifFile = this.exerciseImages[foundKey];
+      }
+    }
+    
+    // Añadir el path de assets
+    return gifFile ? this.GIF_PATH + gifFile : null;
   }
 
   getExerciseStats(index: number): { sets: number; volume: number } {
@@ -271,6 +493,10 @@ export class OverviewComponent implements OnInit, AfterViewInit, OnDestroy {
     this.updateMuscles();
     this.workoutForm.get('type')?.valueChanges.subscribe((type) => {
       this.updateMuscles();
+      // Actualizar ejercicios filtrados cuando cambia el tipo
+      this.exercises.controls.forEach((_, index) => {
+        this.updateFilteredExercises(index);
+      });
       if (type) {
         this.loadLastWorkoutByType(type);
       }

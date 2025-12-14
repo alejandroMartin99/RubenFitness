@@ -88,8 +88,6 @@
             <option *ngFor="let t of workoutTypes" [value]="t">{{ t }}</option>
           </select>
 
-          <textarea class="input textarea" rows="3" formControlName="notes" placeholder="Notas (opcional)"></textarea>
-
           <div class="exercises-section">
             <div class="exercises-header">
               <div class="title-row small">
@@ -102,99 +100,126 @@
               </button>
             </div>
 
-            <div class="exercise-list" formArrayName="exercises">
+            <mat-accordion class="exercise-list" formArrayName="exercises" [multi]="false">
               <mat-expansion-panel 
                 *ngFor="let ex of exercises.controls; let i = index" 
                 [formGroupName]="i"
                 class="exercise-panel"
-                [expanded]="i === 0"
+                [expanded]="i === expandedExerciseIndex"
               >
                 <mat-expansion-panel-header>
                   <mat-panel-title>
-                    <div class="exercise-header-content">
-                      <span class="exercise-number">{{ i + 1 }}</span>
-                      <input 
-                        class="exercise-name-input" 
-                        formControlName="name" 
-                        placeholder="Nombre del ejercicio"
-                        (click)="$event.stopPropagation()"
-                      />
-                      <div class="exercise-stats" *ngIf="getExerciseStats(i).sets > 0">
-                        <span class="stat-badge">{{ getExerciseStats(i).sets }} series</span>
-                        <span class="stat-badge" *ngIf="getExerciseStats(i).volume > 0">
-                          {{ getExerciseStats(i).volume }} kg
-                        </span>
+                    <div class="exercise-header">
+                      <span class="exercise-index">{{ i + 1 }}</span>
+                      <div class="exercise-name-autocomplete">
+                        <input 
+                          class="exercise-name-input" 
+                          type="text" 
+                          formControlName="name" 
+                          placeholder="Nombre del ejercicio"
+                          (click)="onExerciseInputClick(i); $event.stopPropagation()"
+                          (focus)="onExerciseInputFocus(i)"
+                          (input)="onExerciseNameInput(i, $any($event.target).value || '')"
+                          [matAutocomplete]="auto"
+                        />
+                        <mat-autocomplete 
+                          #auto="matAutocomplete"
+                          (optionSelected)="onExerciseNameSelected(i, $event.option.value)"
+                          class="exercise-autocomplete"
+                          [displayWith]="null"
+                        >
+                          <mat-option *ngFor="let exercise of filteredExercises[i] || []" [value]="exercise">
+                            {{ exercise }}
+                          </mat-option>
+                        </mat-autocomplete>
                       </div>
                     </div>
                   </mat-panel-title>
+                  <mat-panel-description>
+                    <div class="exercise-summary" *ngIf="getExerciseStats(i).sets > 0">
+                      {{ getExerciseStats(i).sets }} series
+                      <span *ngIf="getExerciseStats(i).volume > 0">• {{ getExerciseStats(i).volume }} kg</span>
+                    </div>
+                    <button 
+                      mat-icon-button 
+                      type="button" 
+                      (click)="removeExercise(i); $event.stopPropagation()" 
+                      [disabled]="exercises.length === 1"
+                      class="remove-exercise-btn-header"
+                      matTooltip="Eliminar ejercicio"
+                    >
+                      <mat-icon>delete</mat-icon>
+                    </button>
+                  </mat-panel-description>
                 </mat-expansion-panel-header>
 
                 <div class="exercise-content">
-                  <div class="exercise-image-container" *ngIf="exerciseImage(ex.get('name')?.value)">
-                    <img [src]="exerciseImage(ex.get('name')?.value)!" alt="exercise" />
-                  </div>
-
-                  <div class="sets-section">
-                    <div class="sets-table" formArrayName="sets">
-                      <div class="sets-header">
-                        <span>#</span>
-                        <span>Reps</span>
-                        <span>Peso (kg)</span>
-                        <span></span>
+                  <div class="exercise-content-layout">
+                    <!-- Imagen del ejercicio a la izquierda (siempre reservado) -->
+                    <div class="exercise-image-container">
+                      <img 
+                        *ngIf="exerciseImage(ex.get('name')?.value)" 
+                        [src]="exerciseImage(ex.get('name')?.value)!" 
+                        alt="exercise" 
+                        class="exercise-image-large"
+                        (error)="$any($event.target).style.display='none'"
+                      />
+                      <div *ngIf="!exerciseImage(ex.get('name')?.value)" class="exercise-image-placeholder">
+                        <mat-icon>fitness_center</mat-icon>
                       </div>
-                      <div 
-                        class="set-row" 
-                        *ngFor="let st of getSets(i).controls; let j = index" 
-                        [formGroupName]="j"
-                      >
-                        <span class="index">{{ j + 1 }}</span>
-                        <input 
-                          class="input small" 
-                          type="number" 
-                          formControlName="reps" 
-                          placeholder="Reps"
-                          min="1"
-                        />
-                        <input 
-                          class="input small" 
-                          type="number" 
-                          formControlName="weight" 
-                          placeholder="Peso"
-                          min="0"
-                          step="0.5"
-                        />
+                    </div>
+                    
+                    <!-- Series a la derecha -->
+                    <div class="exercise-sets-col" formArrayName="sets">
+                      <div class="sets-grid">
+                        <div 
+                          class="set-row" 
+                          *ngFor="let st of getSets(i).controls; let j = index" 
+                          [formGroupName]="j"
+                        >
+                          <span class="set-label">{{ j + 1 }}</span>
+                        <div class="set-inputs">
+                          <input 
+                            class="input set-input" 
+                            type="number" 
+                            formControlName="reps" 
+                            placeholder="Reps"
+                            min="1"
+                          />
+                          <span class="set-separator">×</span>
+                          <input 
+                            class="input set-input" 
+                            type="number" 
+                            formControlName="weight" 
+                            placeholder="kg"
+                            min="0"
+                            step="0.5"
+                          />
+                        </div>
                         <button 
                           mat-icon-button 
                           type="button" 
                           (click)="removeSet(i, j)" 
                           [disabled]="getSets(i).length === 1"
-                          class="remove-btn"
+                          class="remove-set-btn"
+                          matTooltip="Eliminar serie"
                         >
                           <mat-icon>close</mat-icon>
                         </button>
                       </div>
                     </div>
-                    <div class="sets-actions">
-                      <button mat-stroked-button color="primary" type="button" (click)="addSet(i)">
+                      <button mat-stroked-button color="primary" type="button" (click)="addSet(i)" class="add-set-btn">
                         <mat-icon>add</mat-icon>
                         Añadir serie
-                      </button>
-                      <button 
-                        mat-stroked-button 
-                        type="button" 
-                        (click)="removeExercise(i)" 
-                        [disabled]="exercises.length === 1"
-                        class="remove-exercise-btn"
-                      >
-                        <mat-icon>delete</mat-icon>
-                        Eliminar ejercicio
                       </button>
                     </div>
                   </div>
                 </div>
               </mat-expansion-panel>
-            </div>
+            </mat-accordion>
           </div>
+
+          <textarea class="input textarea" rows="3" formControlName="notes" placeholder="Notas (opcional)"></textarea>
 
           <div class="actions">
             <button mat-raised-button color="primary" type="submit" [disabled]="workoutForm.invalid">Guardar entrenamiento</button>
