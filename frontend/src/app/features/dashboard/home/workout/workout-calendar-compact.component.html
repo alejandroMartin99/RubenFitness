@@ -28,8 +28,8 @@
         [class.other-month]="calendarDay.isOtherMonth"
         [class.future]="isFutureDate(calendarDay.date)"
         [title]="calendarDay.day ? (calendarDay.dayName + ' ' + calendarDay.day) : ''"
-        (click)="markDayAsWorkout(calendarDay)"
-        [class.clickable]="calendarDay.day !== null && !calendarDay.hasWorkout && !loading && !isFutureDate(calendarDay.date)"
+        (click)="onDayClick(calendarDay)"
+        [class.clickable]="calendarDay.day !== null && !isFutureDate(calendarDay.date)"
       >
         <div class="day-number-compact" *ngIf="calendarDay.day !== null">
           {{ calendarDay.day }}

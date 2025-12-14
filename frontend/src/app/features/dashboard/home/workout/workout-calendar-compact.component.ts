@@ -113,139 +113,48 @@ export class WorkoutCalendarCompactComponent implements OnInit, OnChanges {
   loadWorkoutDays(): void {
     if (!this.user) return;
 
-    // Don't set loading for month changes, just silently load
     const year = this.currentDate.getFullYear();
     const month = this.currentDate.getMonth() + 1;
-    
-    // Always load current month data too to check if today is completed
     const today = new Date();
-    const currentYear = today.getFullYear();
-    const currentMonth = today.getMonth() + 1;
+    const todayStr = this.formatDate(today);
     
-    // If viewing a different month, load both months
-    if (year !== currentYear || month !== currentMonth) {
-      // Load current month first to check today
-      this.workoutService.getWorkoutDays(currentYear, currentMonth).subscribe({
-        next: (currentResponse: any) => {
-          const currentWorkoutDaysArray: string[] = (currentResponse.workout_days || []) as string[];
-          const currentWorkoutDays = new Set<string>(currentWorkoutDaysArray);
-          const todayStr = this.formatDate(today);
-          
-          // Update today status based on current month data
-          this.todayWorkoutCompleted = currentWorkoutDays.has(todayStr);
-          
-          // Now load the month being viewed
-          this.workoutService.getWorkoutDays(year, month).subscribe({
-            next: (response: any) => {
-              console.log('🏋️ Workout days loaded:', response);
-              
-              // Merge both sets
-              const viewedMonthDays: string[] = (response.workout_days || []) as string[];
-              this.workoutDays = new Set<string>([...currentWorkoutDays, ...viewedMonthDays]);
-              
-              // Refresh calendar
-              this.initCalendar();
-            },
-            error: (err) => {
-              console.error('❌ Error loading workout days:', err);
-              this.workoutDays = new Set<string>(currentWorkoutDays);
-              this.initCalendar();
-            }
-          });
-        },
-        error: (err) => {
-          console.error('❌ Error loading current month workout days:', err);
-          // Try to load just the viewed month
-          this.workoutService.getWorkoutDays(year, month).subscribe({
-            next: (response: any) => {
-              const workoutDaysArray: string[] = (response.workout_days || []) as string[];
-              this.workoutDays = new Set<string>(workoutDaysArray);
-              const todayStr = this.formatDate(today);
-              this.todayWorkoutCompleted = this.workoutDays.has(todayStr);
-              this.initCalendar();
-            },
-            error: (err2) => {
-              console.error('❌ Error loading workout days:', err2);
-              this.workoutDays = new Set<string>();
-              this.todayWorkoutCompleted = false;
-              this.initCalendar();
-            }
-          });
-        }
-      });
-    } else {
-      // Viewing current month, just load it
-      this.workoutService.getWorkoutDays(year, month).subscribe({
-        next: (response: any) => {
-          console.log('🏋️ Workout days loaded:', response);
-          
-          const workoutDaysArray: string[] = (response.workout_days || []) as string[];
-          this.workoutDays = new Set<string>(workoutDaysArray);
-          
-          // Update today status
-          const todayStr = this.formatDate(today);
-          this.todayWorkoutCompleted = this.workoutDays.has(todayStr);
-          
-          // Refresh calendar
-          this.initCalendar();
-        },
-        error: (err) => {
-          console.error('❌ Error loading workout days:', err);
-          this.workoutDays = new Set<string>();
-          this.todayWorkoutCompleted = false;
-          this.initCalendar();
-        }
-      });
-    }
-  }
-
-  markDayAsWorkout(calendarDay: CalendarDay): void {
-    if (!this.user || !calendarDay.date || calendarDay.hasWorkout || this.loading) return;
-    
-    const date = calendarDay.date;
-    const dateStr = this.formatDate(date);
-    
-    // Don't allow marking future dates
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const selectedDate = new Date(date);
-    selectedDate.setHours(0, 0, 0, 0);
-    
-    if (selectedDate > today) {
-      console.log('⚠️ Cannot mark future dates');
-      return; // Can't mark future dates
-    }
-    
-    this.loading = true;
-    this.workoutService.markWorkoutDay(date).subscribe({
+    this.workoutService.getWorkoutDays(year, month).subscribe({
       next: (response: any) => {
-        console.log('🏋️ Workout marked for date:', dateStr, response);
+        const workoutDaysArray: string[] = (response.workout_days || []) as string[];
+        this.workoutDays = new Set<string>(workoutDaysArray);
         
-        this.workoutDays.add(dateStr);
-        
-        // Update today status if marking today
-        const today = new Date();
-        const todayStr = this.formatDate(today);
-        if (dateStr === todayStr) {
-          this.todayWorkoutCompleted = true;
-        }
+        // Check if today has workout
+        this.todayWorkoutCompleted = this.workoutDays.has(todayStr);
         
         // Refresh calendar
         this.initCalendar();
-        
-        this.loading = false;
-
-        // Prompt to log workout in Progress
-        const goLog = window.confirm(`¿Quieres registrar un entrenamiento el ${dateStr}?`);
-        if (goLog) {
-          this.router.navigate(['/progress'], { queryParams: { date: dateStr } });
-        }
       },
       error: (err) => {
-        console.error('❌ Error marking workout:', err);
-        this.loading = false;
+        console.error('Error loading workout days:', err);
+        this.workoutDays = new Set<string>();
+        this.todayWorkoutCompleted = false;
+        this.initCalendar();
       }
     });
+  }
+
+  onDayClick(calendarDay: CalendarDay): void {
+    if (!calendarDay.date) return;
+    
+    const dateStr = this.formatDate(calendarDay.date);
+    
+    // Don't allow future dates
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const selectedDate = new Date(calendarDay.date);
+    selectedDate.setHours(0, 0, 0, 0);
+    
+    if (selectedDate > today) {
+      return;
+    }
+    
+    // Navigate to Progress to log a workout for this date
+    this.router.navigate(['/progress'], { queryParams: { date: dateStr } });
   }
 
   previousMonth(): void {

@@ -712,18 +712,13 @@ class SupabaseService:
                 return None
     
     def get_workout_days(self, user_id: str, year: int, month: int) -> List[date]:
-        """Get user's workout days for a specific month"""
+        """Get user's workout days for a specific month from progress table"""
         if not self.is_connected():
             return []
         
         # Validate UUID format
         if not self._is_valid_uuid(user_id):
             print(f"Warning: Invalid user_id format: {user_id}. Returning empty workout days.")
-            return []
-        
-        # Check if user exists
-        user_exists = self.get_user(user_id) is not None
-        if not user_exists:
             return []
         
         try:
@@ -734,34 +729,30 @@ class SupabaseService:
             else:
                 last_day = date(year, month + 1, 1) - timedelta(days=1)
             
-            result = self.supabase.table("workout_days")\
-                .select("date")\
+            # Read from progress table instead of workout_days
+            result = self.supabase.table("progress")\
+                .select("workout_date")\
                 .eq("user_id", user_id)\
-                .gte("date", first_day.isoformat())\
-                .lte("date", last_day.isoformat())\
+                .gte("workout_date", first_day.isoformat())\
+                .lte("workout_date", last_day.isoformat())\
                 .execute()
             
-            # Extract dates and convert to date objects
-            workout_dates = []
+            # Extract unique dates and convert to date objects
+            workout_dates_set = set()
             if result.data:
                 for record in result.data:
-                    record_date = record.get("date")
+                    record_date = record.get("workout_date")
                     if isinstance(record_date, str):
                         record_date = record_date.split('T')[0] if 'T' in record_date else record_date
                         try:
-                            workout_dates.append(date.fromisoformat(record_date))
+                            workout_dates_set.add(date.fromisoformat(record_date))
                         except:
                             pass
             
-            return workout_dates
+            return list(workout_dates_set)
         except Exception as e:
-            error_str = str(e)
-            if 'does not exist' in error_str or '42703' in error_str:
-                print(f"Info: workout_days table not found. Returning empty workout days.")
-                return []
-            else:
-                print(f"Error getting workout days: {e}")
-                return []
+            print(f"Error getting workout days from progress: {e}")
+            return []
 
 
 # Global instance

@@ -246,10 +246,14 @@ export class OverviewComponent implements OnInit, AfterViewInit, OnDestroy {
     this.loadProgress();
     this.loadBodyComp();
     this.seedHistory();
-    const dateParam = this.route.snapshot.queryParamMap.get('date');
-    if (dateParam) {
-      this.workoutForm.get('date')?.setValue(dateParam);
-    }
+    
+    // Leer fecha del query param (cuando viene del calendario)
+    this.route.queryParams.subscribe(params => {
+      if (params['date']) {
+        this.workoutForm.get('date')?.setValue(params['date']);
+      }
+    });
+    
     this.handleTypeChanges();
   }
 
