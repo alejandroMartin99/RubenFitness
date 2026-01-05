@@ -36,8 +36,8 @@ const routes: Routes = [
     canActivate: [AuthGuard, UserOnlyGuard]
   },
   {
-    path: 'motivation',
-    loadChildren: () => import('./features/motivation/motivation.module').then(m => m.MotivationModule),
+    path: 'nutrition',
+    loadChildren: () => import('./features/nutrition/nutrition.module').then(m => m.NutritionModule),
     canActivate: [AuthGuard, UserOnlyGuard]
   },
   {

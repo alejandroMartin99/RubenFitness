@@ -1,10 +1,17 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { RouterModule, Routes } from '@angular/router';
+
+// Material
+import { MatIconModule } from '@angular/material/icon';
+import { MatButtonModule } from '@angular/material/button';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatCardModule } from '@angular/material/card';
+
+// Components
 import { ClientsComponent } from './clients/clients.component';
 import { ClientDetailsComponent } from './client-details/client-details.component';
-import { MaterialModule } from '../../core/material/material.module';
 
 const routes: Routes = [
   { path: '', component: ClientsComponent },
@@ -12,14 +19,19 @@ const routes: Routes = [
 ];
 
 @NgModule({
-  declarations: [ClientsComponent, ClientDetailsComponent],
+  declarations: [
+    ClientsComponent, 
+    ClientDetailsComponent
+  ],
   imports: [
     CommonModule,
     FormsModule,
+    ReactiveFormsModule,
     RouterModule.forChild(routes),
-    MaterialModule
+    MatIconModule,
+    MatButtonModule,
+    MatProgressSpinnerModule,
+    MatCardModule
   ]
 })
 export class CoachModule { }
-
-

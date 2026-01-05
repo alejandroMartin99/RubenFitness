@@ -1,0 +1,174 @@
+<div class="nutrition-page">
+  <!-- Header -->
+  <header class="page-header">
+    <div class="header-content">
+      <div class="header-text">
+        <p class="eyebrow">Plan personalizado</p>
+        <h1>{{ plan?.name || 'Tu Plan Nutricional' }}</h1>
+        <p class="subtitle" *ngIf="plan?.description">{{ plan?.description }}</p>
+      </div>
+      <button class="chat-toggle" (click)="toggleChat()" [class.has-unread]="unreadCount > 0">
+        <mat-icon>chat</mat-icon>
+        <span class="unread-badge" *ngIf="unreadCount > 0">{{ unreadCount }}</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Loading -->
+  <div class="loading-container" *ngIf="loading">
+    <mat-spinner diameter="40"></mat-spinner>
+  </div>
+
+  <!-- No Plan -->
+  <div class="empty-state" *ngIf="!loading && !plan">
+    <mat-icon>restaurant_menu</mat-icon>
+    <h2>Sin plan asignado</h2>
+    <p>Tu coach aún no ha creado un plan nutricional para ti.</p>
+    <button class="btn-primary" (click)="toggleChat()">
+      <mat-icon>chat</mat-icon>
+      Contactar con tu coach
+    </button>
+  </div>
+
+  <!-- Plan Content -->
+  <div class="plan-content" *ngIf="!loading && plan">
+    <!-- Macros Summary -->
+    <section class="macros-section" *ngIf="plan.daily_calories || plan.protein_grams || plan.carbs_grams || plan.fat_grams">
+      <div class="macros-grid">
+        <div class="macro-card calories" *ngIf="plan.daily_calories">
+          <div class="macro-icon"><mat-icon>local_fire_department</mat-icon></div>
+          <div class="macro-info">
+            <span class="macro-value">{{ plan.daily_calories }}</span>
+            <span class="macro-label">kcal</span>
+          </div>
+        </div>
+        <div class="macro-card protein" *ngIf="plan.protein_grams">
+          <div class="macro-icon"><mat-icon>egg</mat-icon></div>
+          <div class="macro-info">
+            <span class="macro-value">{{ plan.protein_grams }}g</span>
+            <span class="macro-label">Proteína</span>
+          </div>
+        </div>
+        <div class="macro-card carbs" *ngIf="plan.carbs_grams">
+          <div class="macro-icon"><mat-icon>grain</mat-icon></div>
+          <div class="macro-info">
+            <span class="macro-value">{{ plan.carbs_grams }}g</span>
+            <span class="macro-label">Carbos</span>
+          </div>
+        </div>
+        <div class="macro-card fat" *ngIf="plan.fat_grams">
+          <div class="macro-icon"><mat-icon>water_drop</mat-icon></div>
+          <div class="macro-info">
+            <span class="macro-value">{{ plan.fat_grams }}g</span>
+            <span class="macro-label">Grasas</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Meals -->
+    <section class="meals-section">
+      <div class="meals-list" *ngIf="meals.length > 0">
+        <div class="meal-group" *ngFor="let type of getMealTypes()">
+          <div class="meal-type-header">
+            <mat-icon>{{ mealTypeIcons[type] }}</mat-icon>
+            <span>{{ mealTypeLabels[type] }}</span>
+          </div>
+          
+          <div class="meal-cards">
+            <div class="meal-card" *ngFor="let meal of getMealsByType(type); trackBy: trackByMeal">
+              <div class="meal-header">
+                <h3>{{ meal.name }}</h3>
+                <span class="meal-time" *ngIf="meal.time_suggestion">{{ formatTime(meal.time_suggestion) }}</span>
+              </div>
+              
+              <p class="meal-description" *ngIf="meal.description">{{ meal.description }}</p>
+              
+              <!-- Foods list -->
+              <div class="foods-list" *ngIf="meal.foods && meal.foods.length > 0">
+                <div class="food-item" *ngFor="let food of meal.foods">
+                  <span class="food-name">{{ food.name }}</span>
+                  <span class="food-portion">{{ food.portion }}</span>
+                </div>
+              </div>
+              
+              <!-- Meal macros -->
+              <div class="meal-macros" *ngIf="meal.calories || meal.protein_grams || meal.carbs_grams || meal.fat_grams">
+                <span *ngIf="meal.calories">{{ meal.calories }} kcal</span>
+                <span *ngIf="meal.protein_grams">P: {{ meal.protein_grams }}g</span>
+                <span *ngIf="meal.carbs_grams">C: {{ meal.carbs_grams }}g</span>
+                <span *ngIf="meal.fat_grams">G: {{ meal.fat_grams }}g</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="no-meals" *ngIf="meals.length === 0">
+        <mat-icon>lunch_dining</mat-icon>
+        <p>Las comidas se añadirán pronto</p>
+      </div>
+    </section>
+
+    <!-- Notes -->
+    <section class="notes-section" *ngIf="plan.notes">
+      <div class="notes-card">
+        <div class="notes-header">
+          <mat-icon>sticky_note_2</mat-icon>
+          <span>Notas del coach</span>
+        </div>
+        <p>{{ plan.notes }}</p>
+      </div>
+    </section>
+  </div>
+
+  <!-- Chat Panel -->
+  <div class="chat-overlay" *ngIf="showChat" (click)="toggleChat()">
+    <div class="chat-panel" (click)="$event.stopPropagation()">
+      <div class="chat-header">
+        <div class="chat-title">
+          <mat-icon>support_agent</mat-icon>
+          <span>Chat con tu Coach</span>
+        </div>
+        <button class="close-btn" (click)="toggleChat()">
+          <mat-icon>close</mat-icon>
+        </button>
+      </div>
+
+      <div class="chat-messages" #chatContainer>
+        <div class="chat-loading" *ngIf="chatLoading">
+          <mat-spinner diameter="30"></mat-spinner>
+        </div>
+
+        <div class="no-messages" *ngIf="!chatLoading && messages.length === 0">
+          <mat-icon>chat_bubble_outline</mat-icon>
+          <p>Envía un mensaje a tu coach</p>
+        </div>
+
+        <div class="message" 
+             *ngFor="let msg of messages; trackBy: trackByMessage"
+             [class.own]="msg.sender_role === 'user'"
+             [class.coach]="msg.sender_role === 'coach'">
+          <div class="message-content">
+            <p>{{ msg.message }}</p>
+            <span class="message-time">{{ formatDate(msg.created_at!) }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="chat-input">
+        <input 
+          type="text" 
+          [(ngModel)]="newMessage" 
+          placeholder="Escribe tu mensaje..."
+          (keyup.enter)="sendMessage()"
+          [disabled]="sendingMessage"
+        />
+        <button class="send-btn" (click)="sendMessage()" [disabled]="!newMessage.trim() || sendingMessage">
+          <mat-icon>send</mat-icon>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+

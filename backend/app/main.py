@@ -7,7 +7,7 @@ import os
 from datetime import datetime
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.api.v1 import chat, progress, auth, sleep, water, workout, profile, motivation, admin
+from app.api.v1 import chat, progress, auth, sleep, water, workout, profile, motivation, admin, nutrition
 from app.core.config import settings
 from app.services.supabase_service import supabase_service
 
@@ -50,6 +50,7 @@ app.include_router(water.router, prefix="/api/v1", tags=["Water"])
 app.include_router(workout.router, prefix="/api/v1", tags=["Workout"])
 app.include_router(profile.router, prefix="/api/v1", tags=["Profile"])
 app.include_router(motivation.router, prefix="/api/v1", tags=["Motivation"])
+app.include_router(nutrition.router, prefix="/api/v1", tags=["Nutrition"])
 app.include_router(admin.router, prefix="/api/v1", tags=["Admin"])
 
 
