@@ -3,12 +3,139 @@
   <div class="progress-header">
     <h2>
       <mat-icon>bar_chart</mat-icon>
-      Your Progress
+      Tu Progreso
     </h2>
-    <p>Track your fitness journey and celebrate your achievements</p>
+    <p>Registra y sigue tu evolución fitness</p>
   </div>
 
-  <!-- Body Composition block -->
+  <!-- 1. Registro de entrenamiento (PRIMERO) -->
+  <mat-card class="panel-card">
+    <mat-card-header>
+      <mat-card-title>
+        <div class="title-row">
+          <mat-icon>playlist_add_check</mat-icon>
+          Registrar entrenamiento
+        </div>
+      </mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <form [formGroup]="workoutForm" class="log-form" (ngSubmit)="submitWorkout()">
+        <div class="form-row">
+          <input class="input" type="date" formControlName="date" />
+          <select class="input select" formControlName="type">
+            <option *ngFor="let t of workoutTypes" [value]="t">{{ t }}</option>
+          </select>
+        </div>
+
+        <div class="exercises-section">
+          <div class="exercises-header">
+            <div class="title-row small">
+              <mat-icon>fitness_center</mat-icon>
+              Ejercicios
+            </div>
+            <button mat-stroked-button color="primary" type="button" (click)="addExercise()">
+              <mat-icon>add</mat-icon>
+              <span class="btn-text">Añadir</span>
+            </button>
+          </div>
+
+          <mat-accordion class="exercise-list" formArrayName="exercises" [multi]="false">
+            <mat-expansion-panel 
+              *ngFor="let ex of exercises.controls; let i = index" 
+              [formGroupName]="i"
+              class="exercise-panel"
+              [expanded]="i === expandedExerciseIndex"
+            >
+              <mat-expansion-panel-header>
+                <mat-panel-title>
+                  <div class="exercise-header">
+                    <span class="exercise-index">{{ i + 1 }}</span>
+                    <select 
+                      class="exercise-select" 
+                      formControlName="name"
+                      (click)="$event.stopPropagation()"
+                    >
+                      <option value="" disabled>Selecciona</option>
+                      <option *ngFor="let exercise of getAvailableExercises(i)" [value]="exercise">
+                        {{ exercise }}
+                      </option>
+                    </select>
+                  </div>
+                </mat-panel-title>
+                <mat-panel-description>
+                  <div class="exercise-summary" *ngIf="getExerciseStats(i).sets > 0">
+                    {{ getExerciseStats(i).sets }}s
+                  </div>
+                  <button 
+                    mat-icon-button 
+                    type="button" 
+                    (click)="removeExercise(i); $event.stopPropagation()" 
+                    [disabled]="exercises.length === 1"
+                    class="remove-exercise-btn-header"
+                  >
+                    <mat-icon>delete</mat-icon>
+                  </button>
+                </mat-panel-description>
+              </mat-expansion-panel-header>
+
+              <div class="exercise-content">
+                <div class="exercise-content-layout">
+                  <!-- Imagen del ejercicio -->
+                  <div class="exercise-image-container">
+                    <img 
+                      *ngIf="exerciseImage(ex.get('name')?.value)" 
+                      [src]="exerciseImage(ex.get('name')?.value)!" 
+                      alt="exercise" 
+                      class="exercise-image-large"
+                      loading="lazy"
+                    />
+                    <div *ngIf="!exerciseImage(ex.get('name')?.value)" class="exercise-image-placeholder">
+                      <mat-icon>fitness_center</mat-icon>
+                    </div>
+                  </div>
+                  
+                  <!-- Series -->
+                  <div class="exercise-sets-col" formArrayName="sets">
+                    <div class="sets-grid">
+                      <div 
+                        class="set-row" 
+                        *ngFor="let st of getSets(i).controls; let j = index" 
+                        [formGroupName]="j"
+                      >
+                        <span class="set-label">{{ j + 1 }}</span>
+                        <div class="set-inputs">
+                          <input class="input set-input" type="number" formControlName="reps" placeholder="Reps" min="0.5" step="0.5" />
+                          <span class="set-separator">×</span>
+                          <input class="input set-input" type="number" formControlName="weight" placeholder="kg" min="0" step="0.5" />
+                        </div>
+                        <button mat-icon-button type="button" (click)="removeSet(i, j)" [disabled]="getSets(i).length === 1" class="remove-set-btn">
+                          <mat-icon>close</mat-icon>
+                        </button>
+                      </div>
+                    </div>
+                    <button mat-stroked-button color="primary" type="button" (click)="addSet(i)" class="add-set-btn">
+                      <mat-icon>add</mat-icon> Serie
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </mat-expansion-panel>
+          </mat-accordion>
+        </div>
+
+        <textarea class="input textarea" rows="2" formControlName="notes" placeholder="Notas (opcional)"></textarea>
+
+        <div class="actions">
+          <button mat-raised-button color="primary" type="submit" [disabled]="workoutForm.invalid">
+            <mat-icon>save</mat-icon>
+            Guardar
+          </button>
+        </div>
+      </form>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- 2. Composición corporal (SEGUNDO) -->
   <mat-card class="panel-card body-comp-card">
     <mat-card-header>
       <mat-card-title>
@@ -22,11 +149,11 @@
       <div class="body-comp-top">
         <div class="body-grid">
           <div class="body-item">
-            <div class="label">Masa muscular</div>
+            <div class="label">Músculo</div>
             <div class="value">{{ bodyComp.muscle }} kg</div>
           </div>
           <div class="body-item">
-            <div class="label">Grasa corporal</div>
+            <div class="label">Grasa</div>
             <div class="value">{{ bodyComp.fat }} %</div>
           </div>
           <div class="body-item">
@@ -36,21 +163,21 @@
         </div>
         <form [formGroup]="bodyCompForm" class="body-form" (ngSubmit)="addBodyComposition()">
           <input class="input" type="date" formControlName="date" />
-          <input class="input" type="number" step="0.1" min="0" formControlName="muscle" placeholder="Masa (kg)" />
+          <input class="input" type="number" step="0.1" min="0" formControlName="muscle" placeholder="Músculo (kg)" />
           <input class="input" type="number" step="0.1" min="0" formControlName="fat" placeholder="Grasa (%)" />
           <input class="input" type="number" step="0.1" min="0" formControlName="weight" placeholder="Peso (kg)" />
-          <button mat-raised-button color="primary" type="submit">Guardar medida</button>
+          <button mat-raised-button color="primary" type="submit">Guardar</button>
         </form>
       </div>
 
       <div class="body-charts">
         <ng-container *ngIf="bodyCompHistory.length > 0; else noBodyComp">
           <div class="chart-card">
-            <div class="chart-title">Masa muscular</div>
+            <div class="chart-title">Músculo</div>
             <canvas id="muscleChart"></canvas>
           </div>
           <div class="chart-card">
-            <div class="chart-title">Grasa corporal</div>
+            <div class="chart-title">Grasa</div>
             <canvas id="fatChart"></canvas>
           </div>
           <div class="chart-card">
@@ -68,248 +195,71 @@
     </mat-card-content>
   </mat-card>
 
-  <!-- Registro de entrenamiento -->
-  <mat-card class="panel-card full-width">
-      <mat-card-header>
-        <mat-card-title>
-          <div class="title-row">
-            <mat-icon>playlist_add_check</mat-icon>
-            Registrar entrenamiento
-          </div>
-        </mat-card-title>
-      </mat-card-header>
-      <mat-card-content>
-        <form [formGroup]="workoutForm" class="log-form simple" (ngSubmit)="submitWorkout()">
-          <input class="input" type="date" formControlName="date" />
-
-          <select class="input select" formControlName="type">
-            <option *ngFor="let t of workoutTypes" [value]="t">{{ t }}</option>
-          </select>
-
-          <div class="exercises-section">
-            <div class="exercises-header">
-              <div class="title-row small">
-                <mat-icon>fitness_center</mat-icon>
-                Ejercicios (mín. 1)
-              </div>
-              <button mat-stroked-button color="primary" type="button" (click)="addExercise()">
-                <mat-icon>add</mat-icon>
-                Añadir ejercicio
-              </button>
-            </div>
-
-            <mat-accordion class="exercise-list" formArrayName="exercises" [multi]="false">
-              <mat-expansion-panel 
-                *ngFor="let ex of exercises.controls; let i = index" 
-                [formGroupName]="i"
-                class="exercise-panel"
-                [expanded]="i === expandedExerciseIndex"
-              >
-                <mat-expansion-panel-header>
-                  <mat-panel-title>
-                    <div class="exercise-header">
-                      <span class="exercise-index">{{ i + 1 }}</span>
-                      <select 
-                        class="exercise-select" 
-                        formControlName="name"
-                        (click)="$event.stopPropagation()"
-                      >
-                        <option value="" disabled>Selecciona ejercicio</option>
-                        <option *ngFor="let exercise of getAvailableExercises(i)" [value]="exercise">
-                          {{ exercise }}
-                        </option>
-                      </select>
-                    </div>
-                  </mat-panel-title>
-                  <mat-panel-description>
-                    <div class="exercise-summary" *ngIf="getExerciseStats(i).sets > 0">
-                      {{ getExerciseStats(i).sets }} series
-                      <span *ngIf="getExerciseStats(i).volume > 0">• {{ getExerciseStats(i).volume }} kg</span>
-                    </div>
-                    <button 
-                      mat-icon-button 
-                      type="button" 
-                      (click)="removeExercise(i); $event.stopPropagation()" 
-                      [disabled]="exercises.length === 1"
-                      class="remove-exercise-btn-header"
-                      matTooltip="Eliminar ejercicio"
-                    >
-                      <mat-icon>delete</mat-icon>
-                    </button>
-                  </mat-panel-description>
-                </mat-expansion-panel-header>
-
-                <div class="exercise-content">
-                  <div class="exercise-content-layout">
-                    <!-- Imagen del ejercicio a la izquierda (siempre reservado) -->
-                    <div class="exercise-image-container">
-                      <img 
-                        *ngIf="exerciseImage(ex.get('name')?.value)" 
-                        [src]="exerciseImage(ex.get('name')?.value)!" 
-                        alt="exercise" 
-                        class="exercise-image-large"
-                        (error)="$any($event.target).style.display='none'"
-                      />
-                      <div *ngIf="!exerciseImage(ex.get('name')?.value)" class="exercise-image-placeholder">
-                        <mat-icon>fitness_center</mat-icon>
-                      </div>
-                    </div>
-                    
-                    <!-- Series a la derecha -->
-                    <div class="exercise-sets-col" formArrayName="sets">
-                      <div class="sets-grid">
-                        <div 
-                          class="set-row" 
-                          *ngFor="let st of getSets(i).controls; let j = index" 
-                          [formGroupName]="j"
-                        >
-                          <span class="set-label">{{ j + 1 }}</span>
-                        <div class="set-inputs">
-                          <input 
-                            class="input set-input" 
-                            type="number" 
-                            formControlName="reps" 
-                            placeholder="Reps"
-                            min="0.5"
-                            step="0.5"
-                          />
-                          <span class="set-separator">×</span>
-                          <input 
-                            class="input set-input" 
-                            type="number" 
-                            formControlName="weight" 
-                            placeholder="kg"
-                            min="0"
-                            step="0.5"
-                          />
-                        </div>
-                        <button 
-                          mat-icon-button 
-                          type="button" 
-                          (click)="removeSet(i, j)" 
-                          [disabled]="getSets(i).length === 1"
-                          class="remove-set-btn"
-                          matTooltip="Eliminar serie"
-                        >
-                          <mat-icon>close</mat-icon>
-                        </button>
-                      </div>
-                    </div>
-                      <button mat-stroked-button color="primary" type="button" (click)="addSet(i)" class="add-set-btn">
-                        <mat-icon>add</mat-icon>
-                        Añadir serie
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </mat-expansion-panel>
-            </mat-accordion>
-          </div>
-
-          <textarea class="input textarea" rows="3" formControlName="notes" placeholder="Notas (opcional)"></textarea>
-
-          <div class="actions">
-            <button mat-raised-button color="primary" type="submit" [disabled]="workoutForm.invalid">Guardar entrenamiento</button>
-          </div>
-        </form>
-      </mat-card-content>
-    </mat-card>
-
-  <!-- Tabs: Historial, Analytics, Before & After -->
-  <mat-tab-group class="progress-tabs" animationDuration="300ms">
-    <!-- Tab Historial -->
+  <!-- 3. Tabs: Historial, Analytics, Before & After -->
+  <mat-tab-group class="progress-tabs" animationDuration="200ms">
     <mat-tab label="Historial">
       <ng-template matTabContent>
         <div class="history-section" *ngIf="summary">
           <div class="history-header">
             <h3>Historial</h3>
-            <span class="count" *ngIf="summary.recentWorkouts?.length">{{ summary.recentWorkouts.length }} entrenos</span>
+            <span class="count" *ngIf="summary.recentWorkouts?.length">{{ summary.recentWorkouts.length }}</span>
           </div>
 
-          <!-- Sin entrenamientos -->
           <div class="empty-history" *ngIf="!summary.recentWorkouts || summary.recentWorkouts.length === 0">
             <mat-icon>fitness_center</mat-icon>
-            <p>Sin entrenamientos registrados</p>
+            <p>Sin entrenamientos</p>
           </div>
 
-          <!-- Lista de entrenamientos -->
           <div class="history-list" *ngIf="summary.recentWorkouts && summary.recentWorkouts.length > 0">
-            <div 
-              class="history-card" 
-              *ngFor="let workout of summary.recentWorkouts; let i = index"
-              [class.expanded]="expandedHistoryIndex === i"
-            >
-              <!-- Cabecera -->
+            <div class="history-card" *ngFor="let workout of summary.recentWorkouts; let i = index" [class.expanded]="expandedHistoryIndex === i">
               <div class="card-head" (click)="toggleHistoryExpand(i)">
                 <div class="head-left">
                   <div class="workout-type-badge">{{ workout.name || 'Entrenamiento' }}</div>
-                  <span class="workout-date-text">{{ workout.date | date:'EEE d MMM' }}</span>
+                  <span class="workout-date-text">{{ workout.date | date:'d MMM' }}</span>
                 </div>
                 <div class="head-right">
-                  <span class="exercise-count" *ngIf="getWorkoutExercises(workout).length">
-                    {{ getWorkoutExercises(workout).length }} ejercicios
-                  </span>
+                  <span class="exercise-count" *ngIf="getWorkoutExercises(workout).length">{{ getWorkoutExercises(workout).length }}</span>
                   <mat-icon class="expand-icon">{{ expandedHistoryIndex === i ? 'expand_less' : 'expand_more' }}</mat-icon>
                 </div>
               </div>
 
-              <!-- Contenido expandido -->
               <div class="card-body" *ngIf="expandedHistoryIndex === i">
-                <!-- Ejercicios del entrenamiento -->
                 <div class="exercises-list" *ngIf="!isEditingHistory">
                   <div class="ex-item" *ngFor="let ex of getWorkoutExercises(workout); let j = index">
                     <div class="ex-name">{{ ex.name || 'Ejercicio ' + (j+1) }}</div>
                     <div class="ex-sets">
-                      <span class="set-chip" *ngFor="let s of ex.sets; let k = index">
-                        {{ s.reps }}×{{ s.weight }}kg
-                      </span>
+                      <span class="set-chip" *ngFor="let s of ex.sets">{{ s.reps }}×{{ s.weight }}kg</span>
                     </div>
                   </div>
-                  <div class="no-exercises" *ngIf="getWorkoutExercises(workout).length === 0">
-                    Sin ejercicios registrados
-                  </div>
+                  <div class="no-exercises" *ngIf="getWorkoutExercises(workout).length === 0">Sin ejercicios</div>
                 </div>
 
-                <!-- Modo edición -->
                 <div class="edit-exercises" *ngIf="isEditingHistory">
                   <div class="edit-ex" *ngFor="let ex of editExercises; let j = index">
-                    <input class="ex-name-input" [(ngModel)]="ex.name" placeholder="Nombre ejercicio" />
+                    <input class="ex-name-input" [(ngModel)]="ex.name" placeholder="Ejercicio" />
                     <div class="sets-edit">
                       <div class="set-edit-row" *ngFor="let s of ex.sets; let k = index">
                         <span class="set-num">{{ k + 1 }}</span>
-                        <input type="number" class="set-val" [(ngModel)]="s.reps" placeholder="reps" min="1" />
+                        <input type="number" class="set-val" [(ngModel)]="s.reps" min="1" />
                         <span class="set-x">×</span>
-                        <input type="number" class="set-val" [(ngModel)]="s.weight" placeholder="kg" min="0" step="0.5" />
-                        <button class="btn-mini" (click)="removeEditSet(j, k)" *ngIf="ex.sets.length > 1">
-                          <mat-icon>close</mat-icon>
-                        </button>
+                        <input type="number" class="set-val" [(ngModel)]="s.weight" min="0" step="0.5" />
+                        <button class="btn-mini" (click)="removeEditSet(j, k)" *ngIf="ex.sets.length > 1"><mat-icon>close</mat-icon></button>
                       </div>
                       <button class="btn-add-set" (click)="addEditSet(j)">+ Serie</button>
-                      <button class="btn-remove-ex" (click)="removeEditExercise(j)" *ngIf="editExercises.length > 1">Eliminar ejercicio</button>
+                      <button class="btn-remove-ex" (click)="removeEditExercise(j)" *ngIf="editExercises.length > 1">Eliminar</button>
                     </div>
                   </div>
-                  <button class="btn-add-ex" (click)="addEditExercise()">
-                    <mat-icon>add</mat-icon> Añadir ejercicio
-                  </button>
+                  <button class="btn-add-ex" (click)="addEditExercise()"><mat-icon>add</mat-icon> Ejercicio</button>
                 </div>
 
-                <!-- Acciones -->
                 <div class="card-actions">
                   <ng-container *ngIf="!isEditingHistory">
-                    <button class="btn-action edit" (click)="startEditHistory(workout, i)">
-                      <mat-icon>edit</mat-icon> Editar
-                    </button>
-                    <button class="btn-action delete" (click)="deleteWorkout(workout, i)">
-                      <mat-icon>delete</mat-icon> Eliminar
-                    </button>
+                    <button class="btn-action edit" (click)="startEditHistory(workout, i)"><mat-icon>edit</mat-icon></button>
+                    <button class="btn-action delete" (click)="deleteWorkout(workout, i)"><mat-icon>delete</mat-icon></button>
                   </ng-container>
                   <ng-container *ngIf="isEditingHistory">
-                    <button class="btn-action save" (click)="saveEditHistory()">
-                      <mat-icon>check</mat-icon> Guardar
-                    </button>
-                    <button class="btn-action cancel" (click)="cancelEditHistory()">
-                      Cancelar
-                    </button>
+                    <button class="btn-action save" (click)="saveEditHistory()"><mat-icon>check</mat-icon></button>
+                    <button class="btn-action cancel" (click)="cancelEditHistory()">×</button>
                   </ng-container>
                 </div>
               </div>
@@ -319,25 +269,20 @@
       </ng-template>
     </mat-tab>
 
-    <!-- Tab Analytics -->
     <mat-tab label="Analytics">
       <ng-template matTabContent>
         <app-progress-charts></app-progress-charts>
       </ng-template>
     </mat-tab>
 
-    <!-- Tab Before & After -->
-    <mat-tab label="Before & After">
+    <mat-tab label="Fotos">
       <ng-template matTabContent>
         <app-before-after></app-before-after>
       </ng-template>
     </mat-tab>
   </mat-tab-group>
 
-  <!-- Loading state -->
   <div class="loading-state" *ngIf="loading">
-    <mat-spinner diameter="50"></mat-spinner>
-    <p>Loading your progress...</p>
+    <mat-spinner diameter="40"></mat-spinner>
   </div>
 </div>
-
