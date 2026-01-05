@@ -110,6 +110,178 @@
       </div>
     </section>
 
+    <!-- Nutrition Section -->
+    <section class="detail-section nutrition-section">
+      <div class="section-header clickable" (click)="toggleNutritionSection()">
+        <h2>
+          <mat-icon>restaurant</mat-icon>
+          Plan Nutricional
+          <mat-icon class="expand-icon" [class.expanded]="nutritionExpanded">expand_more</mat-icon>
+        </h2>
+      </div>
+
+      <div class="nutrition-content" *ngIf="nutritionExpanded">
+        <!-- Loading -->
+        <div class="nutrition-loading" *ngIf="nutritionLoading">
+          <mat-spinner diameter="30"></mat-spinner>
+          <span>Cargando plan...</span>
+        </div>
+
+        <!-- Template banner (when showing example plan not yet saved) -->
+        <div class="template-banner" *ngIf="!nutritionLoading && isTemplatePlan">
+          <mat-icon>info</mat-icon>
+          <div class="banner-text">
+            <strong>Plantilla de ejemplo</strong>
+            <span>Edita el plan y guárdalo para asignarlo a este cliente</span>
+          </div>
+          <button mat-raised-button color="primary" (click)="savePlanToDatabase()" [disabled]="nutritionSaving" class="save-plan-btn">
+            <mat-icon>save</mat-icon>
+            <span>{{ nutritionSaving ? 'Guardando...' : 'Guardar plan' }}</span>
+          </button>
+        </div>
+
+        <!-- Plan content (both template and saved) -->
+        <div class="plan-editor" *ngIf="!nutritionLoading && nutritionPlan">
+          <!-- Plan Header / Macros -->
+          <div class="plan-header-card">
+            <div class="plan-name-row">
+              <input type="text" [(ngModel)]="nutritionPlan.name" class="plan-name-input" placeholder="Nombre del plan">
+              <button mat-icon-button (click)="updatePlanMacros()" [disabled]="nutritionSaving" title="Guardar cambios">
+                <mat-icon>save</mat-icon>
+              </button>
+            </div>
+            
+            <div class="macros-edit-grid">
+              <div class="macro-input">
+                <label>Calorías</label>
+                <input type="number" [(ngModel)]="nutritionPlan.daily_calories" placeholder="kcal">
+              </div>
+              <div class="macro-input">
+                <label>Proteína (g)</label>
+                <input type="number" [(ngModel)]="nutritionPlan.protein_grams" placeholder="g">
+              </div>
+              <div class="macro-input">
+                <label>Carbos (g)</label>
+                <input type="number" [(ngModel)]="nutritionPlan.carbs_grams" placeholder="g">
+              </div>
+              <div class="macro-input">
+                <label>Grasas (g)</label>
+                <input type="number" [(ngModel)]="nutritionPlan.fat_grams" placeholder="g">
+              </div>
+            </div>
+
+            <textarea [(ngModel)]="nutritionPlan.notes" placeholder="Notas del coach..." class="plan-notes-input"></textarea>
+          </div>
+
+          <!-- Day Selector -->
+          <div class="day-selector">
+            <button 
+              *ngFor="let day of nutritionDays" 
+              class="day-btn"
+              [class.active]="selectedNutritionDay === day"
+              (click)="selectNutritionDay(day)"
+            >
+              {{ dayLabels[day] }}
+            </button>
+          </div>
+
+          <!-- Day Summary -->
+          <div class="day-summary" *ngIf="getDayNutritionTotals(selectedNutritionDay) as totals">
+            <span class="total-item cal">{{ totals.calories }} kcal</span>
+            <span class="total-item pro">P: {{ totals.protein }}g</span>
+            <span class="total-item car">C: {{ totals.carbs }}g</span>
+            <span class="total-item fat">G: {{ totals.fat }}g</span>
+          </div>
+
+          <!-- Meals for selected day -->
+          <div class="meals-editor">
+            <div class="meal-edit-card" *ngFor="let meal of getNutritionMealsForDay(selectedNutritionDay)">
+              <!-- View mode -->
+              <div class="meal-view" *ngIf="editingMeal?.id !== meal.id">
+                <div class="meal-header">
+                  <div class="meal-info">
+                    <span class="meal-type-badge">{{ meal.meal_type }}</span>
+                    <h4>{{ meal.name }}</h4>
+                    <span class="meal-time" *ngIf="meal.time_suggestion">{{ meal.time_suggestion }}</span>
+                  </div>
+                  <button mat-icon-button (click)="startEditMeal(meal)" title="Editar">
+                    <mat-icon>edit</mat-icon>
+                  </button>
+                </div>
+                <p class="meal-desc" *ngIf="meal.description">{{ meal.description }}</p>
+                <div class="foods-preview" *ngIf="meal.foods?.length">
+                  <div class="food-item" *ngFor="let food of meal.foods">
+                    <span>{{ food.name }}</span>
+                    <span class="portion">{{ food.portion }}</span>
+                  </div>
+                </div>
+                <div class="meal-macros-preview">
+                  <span *ngIf="meal.calories">{{ meal.calories }} kcal</span>
+                  <span *ngIf="meal.protein_grams">P: {{ meal.protein_grams }}g</span>
+                  <span *ngIf="meal.carbs_grams">C: {{ meal.carbs_grams }}g</span>
+                  <span *ngIf="meal.fat_grams">G: {{ meal.fat_grams }}g</span>
+                </div>
+              </div>
+
+              <!-- Edit mode -->
+              <ng-container *ngIf="editingMeal?.id === meal.id && editingMeal as em">
+                <div class="meal-edit">
+                  <div class="edit-row">
+                    <input type="text" [(ngModel)]="em.name" placeholder="Nombre de la comida">
+                    <select [(ngModel)]="em.meal_type">
+                      <option value="breakfast">Desayuno</option>
+                      <option value="snack">Snack</option>
+                      <option value="lunch">Almuerzo</option>
+                      <option value="pre_workout">Pre-entreno</option>
+                      <option value="post_workout">Post-entreno</option>
+                      <option value="dinner">Cena</option>
+                    </select>
+                  </div>
+                  <input type="text" [(ngModel)]="em.time_suggestion" placeholder="Hora sugerida (ej: 08:00)">
+                  <textarea [(ngModel)]="em.description" placeholder="Descripción..."></textarea>
+                  
+                  <div class="edit-macros">
+                    <input type="number" [(ngModel)]="em.calories" placeholder="kcal">
+                    <input type="number" [(ngModel)]="em.protein_grams" placeholder="Prot (g)">
+                    <input type="number" [(ngModel)]="em.carbs_grams" placeholder="Carbs (g)">
+                    <input type="number" [(ngModel)]="em.fat_grams" placeholder="Grasa (g)">
+                  </div>
+
+                  <!-- Foods editor -->
+                  <div class="foods-editor">
+                    <h5>Alimentos</h5>
+                    <div class="food-edit-row" *ngFor="let food of em.foods; let i = index">
+                      <input type="text" [(ngModel)]="food.name" placeholder="Alimento">
+                      <input type="text" [(ngModel)]="food.portion" placeholder="Porción">
+                      <button mat-icon-button (click)="removeFoodFromMeal(i)" title="Eliminar">
+                        <mat-icon>close</mat-icon>
+                      </button>
+                    </div>
+                    <button mat-stroked-button (click)="addFoodToMeal({ name: '', portion: '' })" class="add-food-btn">
+                      <mat-icon>add</mat-icon> Añadir alimento
+                    </button>
+                  </div>
+
+                  <div class="edit-actions">
+                    <button mat-button (click)="cancelEditMeal()">Cancelar</button>
+                    <button mat-raised-button color="primary" (click)="saveMealEdit()" [disabled]="nutritionSaving">
+                      {{ nutritionSaving ? 'Guardando...' : 'Guardar' }}
+                    </button>
+                  </div>
+                </div>
+              </ng-container>
+            </div>
+
+            <!-- No meals for this day -->
+            <div class="no-meals-msg" *ngIf="getNutritionMealsForDay(selectedNutritionDay).length === 0">
+              <mat-icon>lunch_dining</mat-icon>
+              <p>No hay comidas para {{ dayLabels[selectedNutritionDay] }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <!-- Charts Section -->
     <section class="detail-section">
       <h2>

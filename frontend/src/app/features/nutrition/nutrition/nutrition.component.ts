@@ -2,6 +2,7 @@ import { Component, OnInit, OnDestroy, ViewChild, ElementRef, AfterViewChecked }
 import { NutritionService, NutritionPlan, NutritionMeal, ChatMessage } from '../../../core/services/nutrition.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { interval, Subscription } from 'rxjs';
+import { getExamplePlan, getExampleMeals, DAY_LABELS, DAY_SHORT_LABELS } from './example-plan.data';
 
 @Component({
   selector: 'app-nutrition',
@@ -25,6 +26,12 @@ export class NutritionComponent implements OnInit, OnDestroy, AfterViewChecked {
   
   showChat = false;
   unreadCount = 0;
+  isExamplePlan = false;
+  
+  selectedDay = 'monday';
+  days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+  dayLabels = DAY_LABELS;
+  dayShortLabels = DAY_SHORT_LABELS;
   
   private pollSubscription?: Subscription;
   private shouldScrollToBottom = false;
@@ -33,18 +40,14 @@ export class NutritionComponent implements OnInit, OnDestroy, AfterViewChecked {
     'breakfast': 'Desayuno',
     'lunch': 'Almuerzo',
     'dinner': 'Cena',
-    'snack': 'Snack',
-    'pre_workout': 'Pre-entreno',
-    'post_workout': 'Post-entreno'
+    'snack': 'Merienda'
   };
 
   mealTypeIcons: { [key: string]: string } = {
     'breakfast': 'wb_sunny',
     'lunch': 'restaurant',
     'dinner': 'nights_stay',
-    'snack': 'local_cafe',
-    'pre_workout': 'fitness_center',
-    'post_workout': 'sports_score'
+    'snack': 'coffee'
   };
 
   constructor(
@@ -53,6 +56,11 @@ export class NutritionComponent implements OnInit, OnDestroy, AfterViewChecked {
   ) {}
 
   ngOnInit(): void {
+    // Seleccionar el día actual
+    const today = new Date().getDay();
+    const dayMap = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+    this.selectedDay = dayMap[today];
+    
     this.authService.currentUser$.subscribe(user => {
       if (user) {
         this.userId = user.id;
@@ -79,14 +87,56 @@ export class NutritionComponent implements OnInit, OnDestroy, AfterViewChecked {
     this.loading = true;
     this.nutritionService.getUserPlan(this.userId).subscribe({
       next: (response) => {
-        this.plan = response.plan;
-        this.meals = response.meals || [];
+        if (response.plan) {
+          this.plan = response.plan;
+          this.meals = response.meals || [];
+          this.isExamplePlan = false;
+        } else {
+          this.loadExamplePlan();
+        }
         this.loading = false;
       },
       error: () => {
+        this.loadExamplePlan();
         this.loading = false;
       }
     });
+  }
+
+  loadExamplePlan(): void {
+    this.isExamplePlan = true;
+    this.plan = getExamplePlan(this.userId);
+    this.meals = getExampleMeals();
+  }
+
+  selectDay(day: string): void {
+    this.selectedDay = day;
+  }
+
+  getMealsForDay(day: string): NutritionMeal[] {
+    return this.meals
+      .filter(m => m.day_of_week === day)
+      .sort((a, b) => a.meal_order - b.meal_order);
+  }
+
+  getMealsForSelectedDay(): NutritionMeal[] {
+    return this.getMealsForDay(this.selectedDay);
+  }
+
+  getDayTotals(day: string): { calories: number; protein: number; carbs: number; fat: number } {
+    const dayMeals = this.getMealsForDay(day);
+    return {
+      calories: dayMeals.reduce((sum, m) => sum + (m.calories || 0), 0),
+      protein: dayMeals.reduce((sum, m) => sum + (m.protein_grams || 0), 0),
+      carbs: dayMeals.reduce((sum, m) => sum + (m.carbs_grams || 0), 0),
+      fat: dayMeals.reduce((sum, m) => sum + (m.fat_grams || 0), 0)
+    };
+  }
+
+  isToday(day: string): boolean {
+    const today = new Date().getDay();
+    const dayMap = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+    return dayMap[today] === day;
   }
 
   loadChat(): void {
@@ -97,7 +147,6 @@ export class NutritionComponent implements OnInit, OnDestroy, AfterViewChecked {
         this.chatLoading = false;
         this.shouldScrollToBottom = true;
         
-        // Mark messages as read
         if (this.showChat && this.messages.length > 0) {
           this.markAsRead();
         }
@@ -109,7 +158,6 @@ export class NutritionComponent implements OnInit, OnDestroy, AfterViewChecked {
   }
 
   startPolling(): void {
-    // Poll for new messages every 10 seconds
     this.pollSubscription = interval(10000).subscribe(() => {
       this.checkUnread();
       if (this.showChat) {
@@ -173,20 +221,6 @@ export class NutritionComponent implements OnInit, OnDestroy, AfterViewChecked {
     }
   }
 
-  getMealsByType(type: string): NutritionMeal[] {
-    return this.meals.filter(m => m.meal_type === type);
-  }
-
-  getMealTypes(): string[] {
-    const types = ['breakfast', 'lunch', 'dinner', 'snack', 'pre_workout', 'post_workout'];
-    return types.filter(t => this.meals.some(m => m.meal_type === t));
-  }
-
-  formatTime(time: string | undefined): string {
-    if (!time) return '';
-    return time;
-  }
-
   formatDate(dateStr: string): string {
     const date = new Date(dateStr);
     const now = new Date();
@@ -212,4 +246,3 @@ export class NutritionComponent implements OnInit, OnDestroy, AfterViewChecked {
     return msg.id || index.toString();
   }
 }
-

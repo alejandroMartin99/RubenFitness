@@ -2,20 +2,20 @@
   <div class="header-section">
     <h3>
       <mat-icon>compare_arrows</mat-icon>
-      Before & After Progress
+      Fotos Antes y Después
     </h3>
-    <p>Track your transformation with photos and measurements</p>
+    <p>Sigue tu transformación con fotos y medidas</p>
   </div>
 
   <!-- Action Buttons -->
   <div class="action-buttons">
     <button mat-raised-button color="primary" (click)="openUploadDialog('before')">
       <mat-icon>add_photo_alternate</mat-icon>
-      Upload Before Photo
+      Subir foto Antes
     </button>
     <button mat-raised-button color="accent" (click)="openUploadDialog('after')">
       <mat-icon>add_photo_alternate</mat-icon>
-      Upload After Photo
+      Subir foto Después
     </button>
   </div>
 
@@ -25,18 +25,18 @@
     <div class="photo-category">
       <h4>
         <mat-icon>arrow_back</mat-icon>
-        Before Photos
+        Fotos Antes
         <span class="count">({{ beforePhotos.length }})</span>
       </h4>
       <div class="photos-grid" *ngIf="beforePhotos.length > 0">
         <mat-card class="photo-card" *ngFor="let photo of beforePhotos">
-          <img [src]="photo.thumbnailUrl || photo.photoUrl" [alt]="'Before photo from ' + (photo.takenAt | date:'short')" />
+          <img [src]="photo.thumbnailUrl || photo.photoUrl" [alt]="'Foto antes del ' + (photo.takenAt | date:'short')" />
           <div class="photo-overlay">
             <div class="photo-actions">
-              <button mat-icon-button (click)="selectedPhoto = photo" matTooltip="View Details">
+              <button mat-icon-button (click)="selectedPhoto = photo" matTooltip="Ver detalles">
                 <mat-icon>visibility</mat-icon>
               </button>
-              <button mat-icon-button color="warn" (click)="deletePhoto(photo)" matTooltip="Delete">
+              <button mat-icon-button color="warn" (click)="deletePhoto(photo)" matTooltip="Eliminar">
                 <mat-icon>delete</mat-icon>
               </button>
             </div>
@@ -48,7 +48,7 @@
       </div>
       <div class="empty-state" *ngIf="beforePhotos.length === 0">
         <mat-icon>photo_camera</mat-icon>
-        <p>No before photos yet</p>
+        <p>Sin fotos de antes</p>
       </div>
     </div>
 
@@ -56,18 +56,18 @@
     <div class="photo-category">
       <h4>
         <mat-icon>arrow_forward</mat-icon>
-        After Photos
+        Fotos Después
         <span class="count">({{ afterPhotos.length }})</span>
       </h4>
       <div class="photos-grid" *ngIf="afterPhotos.length > 0">
         <mat-card class="photo-card" *ngFor="let photo of afterPhotos">
-          <img [src]="photo.thumbnailUrl || photo.photoUrl" [alt]="'After photo from ' + (photo.takenAt | date:'short')" />
+          <img [src]="photo.thumbnailUrl || photo.photoUrl" [alt]="'Foto después del ' + (photo.takenAt | date:'short')" />
           <div class="photo-overlay">
             <div class="photo-actions">
-              <button mat-icon-button (click)="selectedPhoto = photo" matTooltip="View Details">
+              <button mat-icon-button (click)="selectedPhoto = photo" matTooltip="Ver detalles">
                 <mat-icon>visibility</mat-icon>
               </button>
-              <button mat-icon-button color="warn" (click)="deletePhoto(photo)" matTooltip="Delete">
+              <button mat-icon-button color="warn" (click)="deletePhoto(photo)" matTooltip="Eliminar">
                 <mat-icon>delete</mat-icon>
               </button>
             </div>
@@ -79,7 +79,7 @@
       </div>
       <div class="empty-state" *ngIf="afterPhotos.length === 0">
         <mat-icon>photo_camera</mat-icon>
-        <p>No after photos yet</p>
+        <p>Sin fotos de después</p>
       </div>
     </div>
   </div>
@@ -87,7 +87,7 @@
   <!-- Loading State -->
   <div class="loading-state" *ngIf="loading">
     <mat-spinner diameter="50"></mat-spinner>
-    <p>Loading photos...</p>
+    <p>Cargando fotos...</p>
   </div>
 
   <!-- Upload Dialog -->
@@ -95,7 +95,7 @@
     <mat-card class="upload-dialog" (click)="$event.stopPropagation()">
       <mat-card-header>
         <mat-card-title>
-          Upload {{ selectedPhotoType === 'before' ? 'Before' : 'After' }} Photo
+          Subir foto {{ selectedPhotoType === 'before' ? 'Antes' : 'Después' }}
         </mat-card-title>
         <button mat-icon-button (click)="closeUploadDialog()">
           <mat-icon>close</mat-icon>
@@ -105,7 +105,7 @@
         <div class="upload-form">
           <!-- Photo Preview -->
           <div class="photo-preview" *ngIf="photoPreview">
-            <img [src]="photoPreview" alt="Preview" />
+            <img [src]="photoPreview" alt="Vista previa" />
           </div>
 
           <!-- File Input -->
@@ -113,46 +113,46 @@
             <input type="file" accept="image/*" (change)="onFileSelected($event)" id="photoFile" />
             <label for="photoFile" class="file-label">
               <mat-icon>cloud_upload</mat-icon>
-              <span>{{ photoFile ? photoFile.name : 'Choose Photo' }}</span>
+              <span>{{ photoFile ? photoFile.name : 'Elegir foto' }}</span>
             </label>
           </div>
 
           <!-- Notes -->
           <mat-form-field appearance="outline" class="full-width">
-            <mat-label>Notes (optional)</mat-label>
-            <textarea matInput [(ngModel)]="photoNotes" rows="3" placeholder="Add any notes about this photo..."></textarea>
+            <mat-label>Notas (opcional)</mat-label>
+            <textarea matInput [(ngModel)]="photoNotes" rows="3" placeholder="Añade notas sobre esta foto..."></textarea>
           </mat-form-field>
 
           <!-- Measurements -->
           <div class="measurements-section">
-            <h5>Measurements (optional)</h5>
+            <h5>Medidas (opcional)</h5>
             <div class="measurements-simple">
               <mat-form-field appearance="outline">
-                <mat-label>Weight (kg)</mat-label>
+                <mat-label>Peso (kg)</mat-label>
                 <input matInput type="number" [(ngModel)]="measurements.weight" />
               </mat-form-field>
               <mat-form-field appearance="outline">
-                <mat-label>Body Fat (%)</mat-label>
+                <mat-label>% Grasa</mat-label>
                 <input matInput type="number" [(ngModel)]="measurements.bodyFat" />
               </mat-form-field>
               <mat-form-field appearance="outline">
-                <mat-label>Chest (cm)</mat-label>
+                <mat-label>Pecho (cm)</mat-label>
                 <input matInput type="number" [(ngModel)]="measurements.chest" />
               </mat-form-field>
               <mat-form-field appearance="outline">
-                <mat-label>Waist (cm)</mat-label>
+                <mat-label>Cintura (cm)</mat-label>
                 <input matInput type="number" [(ngModel)]="measurements.waist" />
               </mat-form-field>
               <mat-form-field appearance="outline">
-                <mat-label>Hips (cm)</mat-label>
+                <mat-label>Cadera (cm)</mat-label>
                 <input matInput type="number" [(ngModel)]="measurements.hips" />
               </mat-form-field>
               <mat-form-field appearance="outline">
-                <mat-label>Arms (cm)</mat-label>
+                <mat-label>Brazos (cm)</mat-label>
                 <input matInput type="number" [(ngModel)]="measurements.arms" />
               </mat-form-field>
               <mat-form-field appearance="outline">
-                <mat-label>Thighs (cm)</mat-label>
+                <mat-label>Muslos (cm)</mat-label>
                 <input matInput type="number" [(ngModel)]="measurements.thighs" />
               </mat-form-field>
             </div>
@@ -160,10 +160,10 @@
         </div>
       </mat-card-content>
       <mat-card-actions>
-        <button mat-button (click)="closeUploadDialog()" [disabled]="uploading">Cancel</button>
+        <button mat-button (click)="closeUploadDialog()" [disabled]="uploading">Cancelar</button>
         <button mat-raised-button color="primary" (click)="uploadPhoto()" [disabled]="!photoFile || uploading">
           <mat-spinner diameter="20" *ngIf="uploading"></mat-spinner>
-          <span *ngIf="!uploading">Upload</span>
+          <span *ngIf="!uploading">Subir</span>
         </button>
       </mat-card-actions>
     </mat-card>
@@ -173,29 +173,28 @@
   <div class="photo-detail-overlay" *ngIf="selectedPhoto && !showComparisonView" (click)="selectedPhoto = null">
     <mat-card class="photo-detail-card" (click)="$event.stopPropagation()">
       <mat-card-header>
-        <mat-card-title>{{ selectedPhoto.photoType === 'before' ? 'Before' : 'After' }} Photo</mat-card-title>
+        <mat-card-title>Foto {{ selectedPhoto.photoType === 'before' ? 'Antes' : 'Después' }}</mat-card-title>
         <button mat-icon-button (click)="selectedPhoto = null">
           <mat-icon>close</mat-icon>
         </button>
       </mat-card-header>
       <mat-card-content>
-        <img [src]="selectedPhoto.photoUrl" [alt]="selectedPhoto.photoType + ' photo'" />
+        <img [src]="selectedPhoto.photoUrl" [alt]="selectedPhoto.photoType + ' foto'" />
         <div class="photo-info" *ngIf="selectedPhoto.notes || selectedPhoto.measurements">
-          <p *ngIf="selectedPhoto.notes"><strong>Notes:</strong> {{ selectedPhoto.notes }}</p>
+          <p *ngIf="selectedPhoto.notes"><strong>Notas:</strong> {{ selectedPhoto.notes }}</p>
           <div *ngIf="selectedPhoto?.measurements" class="measurements-display">
-            <h5>Measurements:</h5>
+            <h5>Medidas:</h5>
             <div class="measurements-list">
-              <span *ngIf="selectedPhoto?.measurements?.weight">Weight: {{ selectedPhoto.measurements?.weight }} kg</span>
-              <span *ngIf="selectedPhoto?.measurements?.bodyFat">Body Fat: {{ selectedPhoto.measurements?.bodyFat }}%</span>
-              <span *ngIf="selectedPhoto?.measurements?.measurements?.chest">Chest: {{ selectedPhoto.measurements?.measurements?.chest }} cm</span>
-              <span *ngIf="selectedPhoto?.measurements?.measurements?.waist">Waist: {{ selectedPhoto.measurements?.measurements?.waist }} cm</span>
-              <span *ngIf="selectedPhoto?.measurements?.measurements?.hips">Hips: {{ selectedPhoto.measurements?.measurements?.hips }} cm</span>
+              <span *ngIf="selectedPhoto?.measurements?.weight">Peso: {{ selectedPhoto.measurements?.weight }} kg</span>
+              <span *ngIf="selectedPhoto?.measurements?.bodyFat">% Grasa: {{ selectedPhoto.measurements?.bodyFat }}%</span>
+              <span *ngIf="selectedPhoto?.measurements?.measurements?.chest">Pecho: {{ selectedPhoto.measurements?.measurements?.chest }} cm</span>
+              <span *ngIf="selectedPhoto?.measurements?.measurements?.waist">Cintura: {{ selectedPhoto.measurements?.measurements?.waist }} cm</span>
+              <span *ngIf="selectedPhoto?.measurements?.measurements?.hips">Cadera: {{ selectedPhoto.measurements?.measurements?.hips }} cm</span>
             </div>
           </div>
         </div>
-        <p class="photo-date">Taken on: {{ selectedPhoto.takenAt | date:'full' }}</p>
+        <p class="photo-date">Tomada el: {{ selectedPhoto.takenAt | date:'full' }}</p>
       </mat-card-content>
     </mat-card>
   </div>
 </div>
-

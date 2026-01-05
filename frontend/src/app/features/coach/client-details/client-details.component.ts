@@ -1,9 +1,11 @@
 import { Component, OnInit, OnDestroy, AfterViewInit, ViewChild, ElementRef } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { CoachService } from '../../../core/services/coach.service';
+import { NutritionService, NutritionPlan, NutritionMeal } from '../../../core/services/nutrition.service';
 import { Chart, ChartConfiguration, registerables } from 'chart.js';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
+import { getExamplePlan, getExampleMeals, DAY_LABELS } from '../../nutrition/nutrition/example-plan.data';
 
 Chart.register(...registerables);
 
@@ -37,10 +39,23 @@ export class ClientDetailsComponent implements OnInit, AfterViewInit, OnDestroy 
   } | null = null;
   workoutRange: '30' | '90' | 'all' = '30';
 
+  // Nutrition
+  nutritionPlan: NutritionPlan | null = null;
+  nutritionMeals: NutritionMeal[] = [];
+  nutritionLoading = false;
+  nutritionSaving = false;
+  nutritionExpanded = true;
+  selectedNutritionDay = 'monday';
+  nutritionDays = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+  dayLabels = DAY_LABELS;
+  editingMeal: NutritionMeal | null = null;
+  isTemplatePlan = false; // true when showing example plan (not yet saved)
+
   private destroy$ = new Subject<void>();
 
   constructor(
     private coachService: CoachService,
+    private nutritionService: NutritionService,
     private route: ActivatedRoute,
     private router: Router
   ) {}
@@ -183,6 +198,10 @@ export class ClientDetailsComponent implements OnInit, AfterViewInit, OnDestroy 
               setTimeout(() => {
                 if (!this.destroy$.closed) {
                   this.createCharts();
+                  // Load nutrition plan since section is expanded by default
+                  if (this.nutritionExpanded) {
+                    this.loadNutritionPlan();
+                  }
                 }
               }, 200);
             } catch (e) {
@@ -784,6 +803,216 @@ export class ClientDetailsComponent implements OnInit, AfterViewInit, OnDestroy 
     const target = event.target as HTMLImageElement;
     if (target) {
       target.style.display = 'none';
+    }
+  }
+
+  // =====================================================
+  // NUTRITION METHODS
+  // =====================================================
+
+  loadNutritionPlan(): void {
+    if (!this.userId) return;
+    
+    this.nutritionLoading = true;
+    this.nutritionService.getUserPlan(this.userId)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (response) => {
+          if (response.plan) {
+            this.nutritionPlan = response.plan;
+            this.nutritionMeals = response.meals || [];
+            this.isTemplatePlan = false;
+          } else {
+            // No plan exists - load example plan as editable template
+            this.loadExamplePlanAsTemplate();
+          }
+          this.nutritionLoading = false;
+        },
+        error: (err) => {
+          console.error('Error loading nutrition plan:', err);
+          // On error, also show template
+          this.loadExamplePlanAsTemplate();
+          this.nutritionLoading = false;
+        }
+      });
+  }
+
+  private loadExamplePlanAsTemplate(): void {
+    this.nutritionPlan = getExamplePlan(this.userId);
+    this.nutritionMeals = getExampleMeals();
+    this.isTemplatePlan = true;
+  }
+
+  savePlanToDatabase(): void {
+    if (!this.userId || !this.nutritionPlan) return;
+    
+    this.nutritionSaving = true;
+
+    // Use the current plan data (which may have been edited)
+    this.nutritionService.createPlan({
+      user_id: this.userId,
+      name: this.nutritionPlan.name,
+      description: this.nutritionPlan.description,
+      daily_calories: this.nutritionPlan.daily_calories,
+      protein_grams: this.nutritionPlan.protein_grams,
+      carbs_grams: this.nutritionPlan.carbs_grams,
+      fat_grams: this.nutritionPlan.fat_grams,
+      notes: this.nutritionPlan.notes,
+      is_active: true
+    })
+    .pipe(takeUntil(this.destroy$))
+    .subscribe({
+      next: (response) => {
+        const savedPlanId = response.plan.id;
+        // Now create meals for this plan using current meals (may have been edited)
+        this.createMealsForPlan(savedPlanId, this.nutritionMeals);
+      },
+      error: (err) => {
+        console.error('Error creating nutrition plan:', err);
+        this.nutritionSaving = false;
+        alert('Error al guardar el plan nutricional');
+      }
+    });
+  }
+
+  private createMealsForPlan(planId: string, meals: NutritionMeal[]): void {
+    let completed = 0;
+    const total = meals.length;
+
+    meals.forEach(meal => {
+      const mealData = {
+        meal_type: meal.meal_type,
+        meal_order: meal.meal_order,
+        name: meal.name,
+        description: meal.description,
+        day_of_week: meal.day_of_week,
+        calories: meal.calories,
+        protein_grams: meal.protein_grams,
+        carbs_grams: meal.carbs_grams,
+        fat_grams: meal.fat_grams,
+        time_suggestion: meal.time_suggestion,
+        foods: meal.foods
+      };
+
+      this.nutritionService.addMeal(planId, mealData)
+        .pipe(takeUntil(this.destroy$))
+        .subscribe({
+          next: (response) => {
+            completed++;
+            if (completed === total) {
+              this.nutritionSaving = false;
+              this.isTemplatePlan = false;
+              // Reload to ensure all data is synced
+              this.loadNutritionPlan();
+            }
+          },
+          error: (err) => {
+            console.error('Error creating meal:', err);
+            completed++;
+            if (completed === total) {
+              this.nutritionSaving = false;
+            }
+          }
+        });
+    });
+  }
+
+  getNutritionMealsForDay(day: string): NutritionMeal[] {
+    return this.nutritionMeals
+      .filter(m => m.day_of_week === day)
+      .sort((a, b) => a.meal_order - b.meal_order);
+  }
+
+  selectNutritionDay(day: string): void {
+    this.selectedNutritionDay = day;
+  }
+
+  getDayNutritionTotals(day: string): { calories: number; protein: number; carbs: number; fat: number } {
+    const dayMeals = this.getNutritionMealsForDay(day);
+    return {
+      calories: dayMeals.reduce((sum, m) => sum + (m.calories || 0), 0),
+      protein: dayMeals.reduce((sum, m) => sum + (m.protein_grams || 0), 0),
+      carbs: dayMeals.reduce((sum, m) => sum + (m.carbs_grams || 0), 0),
+      fat: dayMeals.reduce((sum, m) => sum + (m.fat_grams || 0), 0)
+    };
+  }
+
+  startEditMeal(meal: NutritionMeal): void {
+    this.editingMeal = { ...meal };
+  }
+
+  cancelEditMeal(): void {
+    this.editingMeal = null;
+  }
+
+  saveMealEdit(): void {
+    if (!this.editingMeal) return;
+    
+    this.nutritionSaving = true;
+    this.nutritionService.updateMeal(this.editingMeal.id, this.editingMeal)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (response) => {
+          // Update in local array
+          const index = this.nutritionMeals.findIndex(m => m.id === response.meal.id);
+          if (index !== -1) {
+            this.nutritionMeals[index] = response.meal;
+          }
+          this.editingMeal = null;
+          this.nutritionSaving = false;
+        },
+        error: (err) => {
+          console.error('Error updating meal:', err);
+          this.nutritionSaving = false;
+          alert('Error al guardar la comida');
+        }
+      });
+  }
+
+  updatePlanMacros(): void {
+    if (!this.nutritionPlan) return;
+    
+    this.nutritionSaving = true;
+    this.nutritionService.updatePlan(this.nutritionPlan.id, {
+      name: this.nutritionPlan.name,
+      description: this.nutritionPlan.description,
+      daily_calories: this.nutritionPlan.daily_calories,
+      protein_grams: this.nutritionPlan.protein_grams,
+      carbs_grams: this.nutritionPlan.carbs_grams,
+      fat_grams: this.nutritionPlan.fat_grams,
+      notes: this.nutritionPlan.notes
+    })
+    .pipe(takeUntil(this.destroy$))
+    .subscribe({
+      next: (response) => {
+        this.nutritionPlan = response.plan;
+        this.nutritionSaving = false;
+      },
+      error: (err) => {
+        console.error('Error updating plan:', err);
+        this.nutritionSaving = false;
+        alert('Error al guardar el plan');
+      }
+    });
+  }
+
+  addFoodToMeal(food: { name: string; portion: string }): void {
+    if (!this.editingMeal) return;
+    if (!this.editingMeal.foods) {
+      this.editingMeal.foods = [];
+    }
+    this.editingMeal.foods.push(food);
+  }
+
+  removeFoodFromMeal(index: number): void {
+    if (!this.editingMeal?.foods) return;
+    this.editingMeal.foods.splice(index, 1);
+  }
+
+  toggleNutritionSection(): void {
+    this.nutritionExpanded = !this.nutritionExpanded;
+    if (this.nutritionExpanded && !this.nutritionPlan && !this.nutritionLoading) {
+      this.loadNutritionPlan();
     }
   }
 }

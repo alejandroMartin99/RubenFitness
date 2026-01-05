@@ -4,18 +4,15 @@
   <div class="hero-section">
     <div class="hero-content">
       <h1 class="hero-title">
-        Welcome back, <span class="text-gradient">{{ user?.fullName || user?.email }}</span>
+        Bienvenido, <span class="text-gradient">{{ user?.fullName || user?.email }}</span>
       </h1>
-      <p class="hero-subtitle">Ready to crush your fitness goals today?</p>
+      <p class="hero-subtitle">¿Listo para alcanzar tus objetivos hoy?</p>
     </div>
   </div>
 
-  <!-- Daily Workout Panel -->
-  <!-- Daily Workout Panel removed -->
-
   <!-- Daily Progress Indicators -->
   <div class="progress-indicators">
-    <h2 class="section-title">Today's Progress</h2>
+    <h2 class="section-title">Tu progreso de hoy</h2>
     <div class="indicators-grid">
       <!-- Workout Calendar Compact -->
       <app-workout-calendar-compact [user]="user"></app-workout-calendar-compact>
@@ -39,11 +36,11 @@
         </div>
       </div>
       <mat-card-content>
-        <h2>Your Progress</h2>
-        <p>Track your fitness journey with detailed analytics. Monitor strength gains, body measurements, and consistency.</p>
+        <h2>Tu Progreso</h2>
+        <p>Monitoriza tu evolución con analíticas detalladas. Fuerza, medidas corporales y constancia.</p>
         <button mat-raised-button color="primary" class="feature-button" routerLink="/progress">
           <mat-icon>arrow_forward</mat-icon>
-          View Progress
+          Ver progreso
         </button>
       </mat-card-content>
     </mat-card>
@@ -57,11 +54,11 @@
         </div>
       </div>
       <mat-card-content>
-        <h2>AI Assistant</h2>
-        <p>Get personalized fitness advice from Rubén. Chat about workouts, nutrition, and motivation anytime.</p>
+        <h2>Asistente IA</h2>
+        <p>Recibe consejos personalizados de Rubén. Entrenamientos, nutrición y motivación cuando lo necesites.</p>
         <button mat-raised-button color="primary" class="feature-button" routerLink="/assistant">
           <mat-icon>arrow_forward</mat-icon>
-          Start Chat
+          Iniciar chat
         </button>
       </mat-card-content>
     </mat-card>
@@ -87,7 +84,7 @@
 
   <!-- Stats Section -->
   <div class="stats-section">
-    <h2 class="section-title">Your Fitness Stats</h2>
+    <h2 class="section-title">Tus estadísticas</h2>
     <div class="stats-grid" *ngIf="stats">
       <div class="stat-card">
         <div class="stat-icon">
@@ -95,7 +92,7 @@
         </div>
         <div class="stat-content">
           <div class="stat-value">{{ stats.daysActive !== null ? stats.daysActive : '-' }}</div>
-          <div class="stat-label">Days Active (mes)</div>
+          <div class="stat-label">Días activo (mes)</div>
         </div>
       </div>
       <div class="stat-card">
@@ -108,7 +105,7 @@
             /
             <ng-container *ngIf="stats.weeklyTarget !== null; else dash">{{ stats.weeklyTarget }}</ng-container>
           </div>
-          <div class="stat-label">Workouts esta semana</div>
+          <div class="stat-label">Entrenos esta semana</div>
         </div>
       </div>
       <div class="stat-card">
@@ -143,15 +140,15 @@
   <div class="hero-section">
     <div class="hero-content">
       <h1 class="hero-title">
-        Coach Dashboard, <span class="text-gradient">{{ user?.fullName || 'Rubén' }}</span>
+        Panel de Coach, <span class="text-gradient">{{ user?.fullName || 'Rubén' }}</span>
       </h1>
-      <p class="hero-subtitle">Manage your clients and track their progress</p>
+      <p class="hero-subtitle">Gestiona a tus clientes y su progreso</p>
     </div>
   </div>
 
   <!-- Quick Stats -->
   <div class="stats-section">
-    <h2 class="section-title">Overview</h2>
+    <h2 class="section-title">Resumen</h2>
     <div class="stats-grid">
       <div class="stat-card admin-stat">
         <div class="stat-icon">
@@ -159,7 +156,7 @@
         </div>
         <div class="stat-content">
           <div class="stat-value">24</div>
-          <div class="stat-label">Active Clients</div>
+          <div class="stat-label">Clientes activos</div>
         </div>
       </div>
       <div class="stat-card admin-stat">
@@ -168,7 +165,7 @@
         </div>
         <div class="stat-content">
           <div class="stat-value">87%</div>
-          <div class="stat-label">Completion Rate</div>
+          <div class="stat-label">Tasa de completado</div>
         </div>
       </div>
       <div class="stat-card admin-stat">
@@ -177,7 +174,7 @@
         </div>
         <div class="stat-content">
           <div class="stat-value">3</div>
-          <div class="stat-label">At Risk</div>
+          <div class="stat-label">En riesgo</div>
         </div>
       </div>
       <div class="stat-card admin-stat">
@@ -186,7 +183,7 @@
         </div>
         <div class="stat-content">
           <div class="stat-value">12%</div>
-          <div class="stat-label">Growth</div>
+          <div class="stat-label">Crecimiento</div>
         </div>
       </div>
     </div>
@@ -203,11 +200,11 @@
         </div>
       </div>
       <mat-card-content>
-        <h2>Client Management</h2>
-        <p>View and manage all your clients. Filter by activity level, progress, and risk of abandonment.</p>
+        <h2>Gestión de Clientes</h2>
+        <p>Visualiza y gestiona todos tus clientes. Filtra por actividad, progreso y riesgo de abandono.</p>
         <button mat-raised-button color="primary" class="feature-button" routerLink="/coach">
           <mat-icon>arrow_forward</mat-icon>
-          Manage Clients
+          Ver clientes
         </button>
       </mat-card-content>
     </mat-card>
@@ -221,11 +218,11 @@
         </div>
       </div>
       <mat-card-content>
-        <h2>Automated Messages</h2>
-        <p>AI-generated motivational messages. Quick response templates for personalized communication.</p>
+        <h2>Mensajes Automáticos</h2>
+        <p>Mensajes motivacionales generados por IA. Plantillas de respuesta rápida para comunicación personalizada.</p>
         <button mat-raised-button color="primary" class="feature-button" routerLink="/coach">
           <mat-icon>arrow_forward</mat-icon>
-          View Messages
+          Ver mensajes
         </button>
       </mat-card-content>
     </mat-card>
@@ -239,11 +236,11 @@
         </div>
       </div>
       <mat-card-content>
-        <h2>Social Content</h2>
-        <p>Generate achievement images and progress posts. Ready-to-share content for testimonials.</p>
+        <h2>Contenido Social</h2>
+        <p>Genera imágenes de logros y posts de progreso. Contenido listo para compartir como testimonios.</p>
         <button mat-raised-button color="primary" class="feature-button" routerLink="/coach">
           <mat-icon>arrow_forward</mat-icon>
-          Generate Content
+          Generar contenido
         </button>
       </mat-card-content>
     </mat-card>
@@ -251,7 +248,7 @@
 
   <!-- Recent Activity -->
   <div class="activity-section">
-    <h2 class="section-title">Recent Activity</h2>
+    <h2 class="section-title">Actividad reciente</h2>
     <mat-card class="activity-card">
       <mat-card-content>
         <div class="activity-list">
@@ -260,8 +257,8 @@
               <mat-icon>check_circle</mat-icon>
             </div>
             <div class="activity-content">
-              <strong>John Doe</strong> completed today's workout
-              <span class="activity-time">2 hours ago</span>
+              <strong>Juan García</strong> completó el entreno de hoy
+              <span class="activity-time">Hace 2 horas</span>
             </div>
           </div>
           <div class="activity-item">
@@ -269,8 +266,8 @@
               <mat-icon>warning</mat-icon>
             </div>
             <div class="activity-content">
-              <strong>Sarah Smith</strong> missed 3 consecutive workouts
-              <span class="activity-time">4 hours ago</span>
+              <strong>María López</strong> faltó a 3 entrenos consecutivos
+              <span class="activity-time">Hace 4 horas</span>
             </div>
           </div>
           <div class="activity-item">
@@ -278,8 +275,8 @@
               <mat-icon>emoji_events</mat-icon>
             </div>
             <div class="activity-content">
-              <strong>Mike Johnson</strong> reached a new PR!
-              <span class="activity-time">6 hours ago</span>
+              <strong>Carlos Martín</strong> alcanzó un nuevo récord personal
+              <span class="activity-time">Hace 6 horas</span>
             </div>
           </div>
         </div>

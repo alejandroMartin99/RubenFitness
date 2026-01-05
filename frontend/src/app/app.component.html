@@ -7,15 +7,15 @@
         <ng-container *ngIf="!authService.isAdmin()">
           <a mat-list-item routerLink="/dashboard" (click)="appSidenav.close()">
             <mat-icon matListIcon>dashboard</mat-icon>
-            <span matLine>Dashboard</span>
+            <span matLine>Inicio</span>
           </a>
           <a mat-list-item routerLink="/assistant" (click)="appSidenav.close()">
             <mat-icon matListIcon>chat</mat-icon>
-            <span matLine>AI Assistant</span>
+            <span matLine>Asistente IA</span>
           </a>
           <a mat-list-item routerLink="/progress" (click)="appSidenav.close()">
             <mat-icon matListIcon>bar_chart</mat-icon>
-            <span matLine>Progress</span>
+            <span matLine>Progreso</span>
           </a>
           <a mat-list-item routerLink="/nutrition" (click)="appSidenav.close()">
             <mat-icon matListIcon>restaurant_menu</mat-icon>
@@ -25,7 +25,7 @@
         <!-- Admin/Coach Menu -->
         <a mat-list-item routerLink="/coach" *ngIf="authService.isAdmin()" (click)="appSidenav.close()">
           <mat-icon matListIcon>supervisor_account</mat-icon>
-          <span matLine>Coach Panel</span>
+          <span matLine>Panel Coach</span>
         </a>
       </mat-nav-list>
     </mat-sidenav>
@@ -55,12 +55,12 @@
       <mat-menu #userMenu="matMenu">
         <button mat-menu-item routerLink="/profile">
           <mat-icon>person</mat-icon>
-          <span>Profile</span>
+          <span>Perfil</span>
         </button>
         <mat-divider></mat-divider>
         <button mat-menu-item (click)="onLogout()">
           <mat-icon>logout</mat-icon>
-          <span>Logout</span>
+          <span>Cerrar sesión</span>
         </button>
       </mat-menu>
     </ng-container>
@@ -78,5 +78,3 @@
     </div>
   </ng-template>
 </div>
-
-

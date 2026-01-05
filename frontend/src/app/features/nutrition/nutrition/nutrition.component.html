@@ -3,8 +3,8 @@
   <header class="page-header">
     <div class="header-content">
       <div class="header-text">
-        <p class="eyebrow">Plan personalizado</p>
-        <h1>{{ plan?.name || 'Tu Plan Nutricional' }}</h1>
+        <p class="eyebrow">{{ isExamplePlan ? 'Plan de ejemplo' : 'Tu plan personalizado' }}</p>
+        <h1>{{ plan?.name || 'Plan Nutricional' }}</h1>
         <p class="subtitle" *ngIf="plan?.description">{{ plan?.description }}</p>
       </div>
       <button class="chat-toggle" (click)="toggleChat()" [class.has-unread]="unreadCount > 0">
@@ -19,94 +19,119 @@
     <mat-spinner diameter="40"></mat-spinner>
   </div>
 
-  <!-- No Plan -->
-  <div class="empty-state" *ngIf="!loading && !plan">
-    <mat-icon>restaurant_menu</mat-icon>
-    <h2>Sin plan asignado</h2>
-    <p>Tu coach aún no ha creado un plan nutricional para ti.</p>
-    <button class="btn-primary" (click)="toggleChat()">
+  <!-- Example Plan Banner -->
+  <div class="example-banner" *ngIf="!loading && isExamplePlan">
+    <mat-icon>lightbulb</mat-icon>
+    <div class="banner-text">
+      <strong>Plan de ejemplo</strong>
+      <span>Esto es orientativo. Tu coach lo personalizará según tus objetivos.</span>
+    </div>
+    <button class="banner-btn" (click)="toggleChat()">
       <mat-icon>chat</mat-icon>
-      Contactar con tu coach
+      Solicitar plan
     </button>
   </div>
 
   <!-- Plan Content -->
   <div class="plan-content" *ngIf="!loading && plan">
     <!-- Macros Summary -->
-    <section class="macros-section" *ngIf="plan.daily_calories || plan.protein_grams || plan.carbs_grams || plan.fat_grams">
+    <section class="macros-section">
       <div class="macros-grid">
-        <div class="macro-card calories" *ngIf="plan.daily_calories">
+        <div class="macro-card calories">
           <div class="macro-icon"><mat-icon>local_fire_department</mat-icon></div>
           <div class="macro-info">
-            <span class="macro-value">{{ plan.daily_calories }}</span>
-            <span class="macro-label">kcal</span>
+            <span class="macro-value">{{ plan.daily_calories || '-' }}</span>
+            <span class="macro-label">kcal/día</span>
           </div>
         </div>
-        <div class="macro-card protein" *ngIf="plan.protein_grams">
+        <div class="macro-card protein">
           <div class="macro-icon"><mat-icon>egg</mat-icon></div>
           <div class="macro-info">
-            <span class="macro-value">{{ plan.protein_grams }}g</span>
+            <span class="macro-value">{{ plan.protein_grams || '-' }}g</span>
             <span class="macro-label">Proteína</span>
           </div>
         </div>
-        <div class="macro-card carbs" *ngIf="plan.carbs_grams">
+        <div class="macro-card carbs">
           <div class="macro-icon"><mat-icon>grain</mat-icon></div>
           <div class="macro-info">
-            <span class="macro-value">{{ plan.carbs_grams }}g</span>
+            <span class="macro-value">{{ plan.carbs_grams || '-' }}g</span>
             <span class="macro-label">Carbos</span>
           </div>
         </div>
-        <div class="macro-card fat" *ngIf="plan.fat_grams">
+        <div class="macro-card fat">
           <div class="macro-icon"><mat-icon>water_drop</mat-icon></div>
           <div class="macro-info">
-            <span class="macro-value">{{ plan.fat_grams }}g</span>
+            <span class="macro-value">{{ plan.fat_grams || '-' }}g</span>
             <span class="macro-label">Grasas</span>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- Meals -->
-    <section class="meals-section">
-      <div class="meals-list" *ngIf="meals.length > 0">
-        <div class="meal-group" *ngFor="let type of getMealTypes()">
-          <div class="meal-type-header">
-            <mat-icon>{{ mealTypeIcons[type] }}</mat-icon>
-            <span>{{ mealTypeLabels[type] }}</span>
-          </div>
-          
-          <div class="meal-cards">
-            <div class="meal-card" *ngFor="let meal of getMealsByType(type); trackBy: trackByMeal">
-              <div class="meal-header">
-                <h3>{{ meal.name }}</h3>
-                <span class="meal-time" *ngIf="meal.time_suggestion">{{ formatTime(meal.time_suggestion) }}</span>
-              </div>
-              
-              <p class="meal-description" *ngIf="meal.description">{{ meal.description }}</p>
-              
-              <!-- Foods list -->
-              <div class="foods-list" *ngIf="meal.foods && meal.foods.length > 0">
-                <div class="food-item" *ngFor="let food of meal.foods">
-                  <span class="food-name">{{ food.name }}</span>
-                  <span class="food-portion">{{ food.portion }}</span>
-                </div>
-              </div>
-              
-              <!-- Meal macros -->
-              <div class="meal-macros" *ngIf="meal.calories || meal.protein_grams || meal.carbs_grams || meal.fat_grams">
-                <span *ngIf="meal.calories">{{ meal.calories }} kcal</span>
-                <span *ngIf="meal.protein_grams">P: {{ meal.protein_grams }}g</span>
-                <span *ngIf="meal.carbs_grams">C: {{ meal.carbs_grams }}g</span>
-                <span *ngIf="meal.fat_grams">G: {{ meal.fat_grams }}g</span>
-              </div>
-            </div>
-          </div>
+    <!-- Week Calendar -->
+    <section class="calendar-section">
+      <div class="week-selector">
+        <button 
+          *ngFor="let day of days" 
+          class="day-btn"
+          [class.active]="selectedDay === day"
+          [class.today]="isToday(day)"
+          (click)="selectDay(day)"
+        >
+          <span class="day-short">{{ dayShortLabels[day] }}</span>
+          <span class="day-full">{{ dayLabels[day] }}</span>
+          <span class="day-indicator" *ngIf="isToday(day)"></span>
+        </button>
+      </div>
+
+      <!-- Day Stats -->
+      <div class="day-stats">
+        <div class="day-title">
+          <h2>{{ dayLabels[selectedDay] }}</h2>
+          <span class="today-badge" *ngIf="isToday(selectedDay)">Hoy</span>
+        </div>
+        <div class="day-macros">
+          <span class="dm-item cal">{{ getDayTotals(selectedDay).calories }} kcal</span>
+          <span class="dm-item pro">P: {{ getDayTotals(selectedDay).protein }}g</span>
+          <span class="dm-item car">C: {{ getDayTotals(selectedDay).carbs }}g</span>
+          <span class="dm-item fat">G: {{ getDayTotals(selectedDay).fat }}g</span>
         </div>
       </div>
 
-      <div class="no-meals" *ngIf="meals.length === 0">
-        <mat-icon>lunch_dining</mat-icon>
-        <p>Las comidas se añadirán pronto</p>
+      <!-- Meals for Selected Day -->
+      <div class="meals-grid">
+        <div class="meal-card" *ngFor="let meal of getMealsForSelectedDay(); trackBy: trackByMeal">
+          <div class="meal-header">
+            <div class="meal-type">
+              <mat-icon>{{ mealTypeIcons[meal.meal_type] || 'restaurant' }}</mat-icon>
+              <span>{{ mealTypeLabels[meal.meal_type] || meal.meal_type }}</span>
+            </div>
+            <span class="meal-time" *ngIf="meal.time_suggestion">{{ meal.time_suggestion }}</span>
+          </div>
+          
+          <h3 class="meal-name">{{ meal.name }}</h3>
+          
+          <!-- Foods list -->
+          <div class="foods-list" *ngIf="meal.foods && meal.foods.length > 0">
+            <div class="food-item" *ngFor="let food of meal.foods">
+              <span class="food-name">{{ food.name }}</span>
+              <span class="food-portion">{{ food.portion }}</span>
+            </div>
+          </div>
+          
+          <!-- Meal macros -->
+          <div class="meal-macros">
+            <span class="mm-cal">{{ meal.calories || 0 }} kcal</span>
+            <span class="mm-pro">P: {{ meal.protein_grams || 0 }}g</span>
+            <span class="mm-car">C: {{ meal.carbs_grams || 0 }}g</span>
+            <span class="mm-fat">G: {{ meal.fat_grams || 0 }}g</span>
+          </div>
+        </div>
+
+        <div class="no-meals" *ngIf="getMealsForSelectedDay().length === 0">
+          <mat-icon>restaurant_menu</mat-icon>
+          <p>No hay comidas para este día</p>
+        </div>
       </div>
     </section>
 
@@ -115,7 +140,7 @@
       <div class="notes-card">
         <div class="notes-header">
           <mat-icon>sticky_note_2</mat-icon>
-          <span>Notas del coach</span>
+          <span>Notas del plan</span>
         </div>
         <p>{{ plan.notes }}</p>
       </div>
@@ -142,7 +167,7 @@
 
         <div class="no-messages" *ngIf="!chatLoading && messages.length === 0">
           <mat-icon>chat_bubble_outline</mat-icon>
-          <p>Envía un mensaje a tu coach</p>
+          <p>Envía un mensaje a tu coach para personalizar tu plan</p>
         </div>
 
         <div class="message" 
@@ -171,4 +196,3 @@
     </div>
   </div>
 </div>
-

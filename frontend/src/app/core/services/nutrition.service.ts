@@ -25,6 +25,7 @@ export interface NutritionMeal {
   meal_order: number;
   name: string;
   description?: string;
+  day_of_week?: string;
   calories?: number;
   protein_grams?: number;
   carbs_grams?: number;
@@ -68,23 +69,23 @@ export class NutritionService {
   // =====================================================
 
   getUserPlan(userId: string): Observable<{ plan: NutritionPlan | null; meals: NutritionMeal[] }> {
-    return this.api.get(`/nutrition/plan/${userId}`);
+    return this.api.get(`/api/v1/nutrition/plan/${userId}`);
   }
 
   getAllUserPlans(userId: string): Observable<{ plans: NutritionPlan[] }> {
-    return this.api.get(`/nutrition/plans/${userId}`);
+    return this.api.get(`/api/v1/nutrition/plans/${userId}`);
   }
 
   createPlan(plan: Partial<NutritionPlan>): Observable<{ plan: NutritionPlan }> {
-    return this.api.post('/nutrition/plan', plan);
+    return this.api.post('/api/v1/nutrition/plan', plan);
   }
 
   updatePlan(planId: string, updates: Partial<NutritionPlan>): Observable<{ plan: NutritionPlan }> {
-    return this.api.patch(`/nutrition/plan/${planId}`, updates);
+    return this.api.patch(`/api/v1/nutrition/plan/${planId}`, updates);
   }
 
   deletePlan(planId: string): Observable<{ success: boolean }> {
-    return this.api.delete(`/nutrition/plan/${planId}`);
+    return this.api.delete(`/api/v1/nutrition/plan/${planId}`);
   }
 
   // =====================================================
@@ -92,15 +93,15 @@ export class NutritionService {
   // =====================================================
 
   addMeal(planId: string, meal: Partial<NutritionMeal>): Observable<{ meal: NutritionMeal }> {
-    return this.api.post(`/nutrition/meal/${planId}`, meal);
+    return this.api.post(`/api/v1/nutrition/meal/${planId}`, meal);
   }
 
   updateMeal(mealId: string, updates: Partial<NutritionMeal>): Observable<{ meal: NutritionMeal }> {
-    return this.api.patch(`/nutrition/meal/${mealId}`, updates);
+    return this.api.patch(`/api/v1/nutrition/meal/${mealId}`, updates);
   }
 
   deleteMeal(mealId: string): Observable<{ success: boolean }> {
-    return this.api.delete(`/nutrition/meal/${mealId}`);
+    return this.api.delete(`/api/v1/nutrition/meal/${mealId}`);
   }
 
   // =====================================================
@@ -108,19 +109,19 @@ export class NutritionService {
   // =====================================================
 
   getChatMessages(userId: string, limit: number = 50): Observable<{ messages: ChatMessage[] }> {
-    return this.api.get(`/nutrition/chat/${userId}?limit=${limit}`);
+    return this.api.get(`/api/v1/nutrition/chat/${userId}?limit=${limit}`);
   }
 
   sendMessage(message: ChatMessage): Observable<{ message: ChatMessage }> {
-    return this.api.post('/nutrition/chat', message);
+    return this.api.post('/api/v1/nutrition/chat', message);
   }
 
   markMessagesRead(userId: string, readerRole: 'user' | 'coach'): Observable<{ success: boolean }> {
-    return this.api.patch(`/nutrition/chat/read/${userId}?reader_role=${readerRole}`, {});
+    return this.api.patch(`/api/v1/nutrition/chat/read/${userId}?reader_role=${readerRole}`, {});
   }
 
   getUnreadCount(userId: string, readerRole: 'user' | 'coach'): Observable<{ unread: number }> {
-    return this.api.get(`/nutrition/chat/unread/${userId}?reader_role=${readerRole}`);
+    return this.api.get(`/api/v1/nutrition/chat/unread/${userId}?reader_role=${readerRole}`);
   }
 
   // =====================================================
@@ -128,7 +129,7 @@ export class NutritionService {
   // =====================================================
 
   getCoachClients(): Observable<{ clients: any[] }> {
-    return this.api.get('/nutrition/coach/clients');
+    return this.api.get('/api/v1/nutrition/coach/clients');
   }
 }
 

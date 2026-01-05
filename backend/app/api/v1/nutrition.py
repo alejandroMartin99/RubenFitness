@@ -30,6 +30,7 @@ class MealCreate(BaseModel):
     meal_order: Optional[int] = 0
     name: str
     description: Optional[str] = None
+    day_of_week: Optional[str] = None  # monday, tuesday, etc.
     calories: Optional[int] = None
     protein_grams: Optional[float] = None
     carbs_grams: Optional[float] = None
@@ -43,6 +44,7 @@ class MealUpdate(BaseModel):
     meal_order: Optional[int] = None
     name: Optional[str] = None
     description: Optional[str] = None
+    day_of_week: Optional[str] = None
     calories: Optional[int] = None
     protein_grams: Optional[float] = None
     carbs_grams: Optional[float] = None
